@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b57d0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="PJT 현황">
+  <title>프로젝트 진행현황</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root{
+      --bg:#f4f6f9; --card:#fff; --line:#e2e7ef; --text:#172033; --muted:#667085;
+      --primary:#0b57d0; --primary2:#0848ad; --danger:#d92d20; --ok:#067647;
+      --warn:#b54708; --radius:16px; --shadow:0 4px 18px rgba(16,24,40,.07);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Segoe UI",sans-serif}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:1100px;margin:0 auto;padding-bottom:96px}
+    .topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:12px 14px}
+    .toprow{display:flex;align-items:center;gap:10px}
+    .brand{font-weight:800;font-size:18px;flex:1}
+    .badge{font-size:12px;background:#eef4ff;color:#1849a9;padding:5px 8px;border-radius:999px}
+    .toolbar{display:flex;gap:8px;margin-top:10px;overflow:auto;padding-bottom:2px}
+    .btn{border:1px solid var(--line);background:white;color:var(--text);padding:10px 13px;border-radius:12px;white-space:nowrap;font-weight:700}
+    .btn.primary{background:var(--primary);border-color:var(--primary);color:white}
+    .btn.danger{color:var(--danger)}
+    .btn.small{padding:7px 10px;border-radius:9px;font-size:13px}
+    .content{padding:14px}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+    .stat{background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:12px}
+    .stat .n{font-size:22px;font-weight:900}
+    .stat .t{font-size:12px;color:var(--muted);margin-top:3px}
+    .filters{background:white;border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:14px;box-shadow:var(--shadow)}
+    .searchrow{display:grid;grid-template-columns:1fr 150px 120px;gap:8px}
+    input,select,textarea{width:100%;border:1px solid #d0d5dd;border-radius:11px;padding:11px 12px;background:#fff;color:var(--text);outline:none}
+    input:focus,select:focus,textarea:focus{border-color:#84adff;box-shadow:0 0 0 3px #dbe8ff}
+    .list{display:grid;gap:10px}
+    .card{background:white;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .cardtop{display:flex;gap:10px;align-items:flex-start}
+    .title{font-weight:850;font-size:16px;line-height:1.35;flex:1}
+    .status{font-size:12px;font-weight:800;border-radius:999px;padding:5px 8px;background:#f2f4f7;color:#475467}
+    .status.완료{background:#ecfdf3;color:#067647}
+    .status.현장점검{background:#eff8ff;color:#175cd3}
+    .status.보고서작성중{background:#fffaeb;color:#b54708}
+    .status.검토중{background:#f9f5ff;color:#6941c6}
+    .status.지연{background:#fef3f2;color:#b42318}
+    .meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:11px;color:#475467;font-size:13px}
+    .meta b{color:#344054}
+    .memo{margin-top:10px;padding:9px 10px;border-radius:10px;background:#f8fafc;font-size:13px;color:#475467;white-space:pre-wrap}
+    .actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}
+    .empty{text-align:center;padding:50px 16px;color:var(--muted)}
+    .fab{position:fixed;right:max(18px,calc((100vw - 1100px)/2 + 18px));bottom:22px;z-index:25;width:58px;height:58px;border-radius:18px;border:0;background:var(--primary);color:#fff;font-size:28px;box-shadow:0 10px 30px rgba(11,87,208,.35)}
+    dialog{border:0;border-radius:20px;padding:0;width:min(680px,calc(100vw - 24px));max-height:88vh;box-shadow:0 24px 60px rgba(16,24,40,.25)}
+    dialog::backdrop{background:rgba(16,24,40,.46);backdrop-filter:blur(2px)}
+    .modalhead{position:sticky;top:0;background:white;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;gap:10px;z-index:2}
+    .modalhead h2{font-size:18px;margin:0;flex:1}
+    .modalbody{padding:16px;overflow:auto}
+    .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .field.full{grid-column:1/-1}
+    label{display:block;font-size:12px;font-weight:800;color:#475467;margin:0 0 6px}
+    .modalfoot{position:sticky;bottom:0;background:white;border-top:1px solid var(--line);padding:12px 16px;display:flex;justify-content:flex-end;gap:8px}
+    .note{font-size:12px;color:var(--muted);line-height:1.55}
+    .syncbox{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px}
+    .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#101828;color:white;padding:10px 14px;border-radius:10px;z-index:60;font-size:13px;opacity:0;pointer-events:none;transition:.2s}
+    .toast.show{opacity:1}
+    @media(max-width:720px){
+      .summary{grid-template-columns:repeat(2,1fr)}
+      .searchrow{grid-template-columns:1fr}
+      .meta{grid-template-columns:1fr}
+      .formgrid{grid-template-columns:1fr}
+      .field.full{grid-column:auto}
+      .toolbar .btn{font-size:13px;padding:9px 11px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="toprow">
+      <div class="brand">📋 프로젝트 진행현황</div>
+      <div class="badge" id="storageBadge">내 기기 저장</div>
+    </div>
+    <div class="toolbar">
+      <button class="btn primary" onclick="openForm()">＋ 신규 등록</button>
+      <button class="btn" onclick="document.getElementById('fileInput').click()">엑셀 가져오기</button>
+      <button class="btn" onclick="exportXlsx()">엑셀 내보내기</button>
+      <button class="btn" onclick="openSettings()">⚙ 데이터 연결</button>
+      <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden onchange="importFile(this.files[0])">
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="summary">
+      <div class="stat"><div class="n" id="cntAll">0</div><div class="t">전체 프로젝트</div></div>
+      <div class="stat"><div class="n" id="cntActive">0</div><div class="t">진행중</div></div>
+      <div class="stat"><div class="n" id="cntReport">0</div><div class="t">보고서/검토</div></div>
+      <div class="stat"><div class="n" id="cntDone">0</div><div class="t">완료</div></div>
+    </section>
+
+    <section class="filters">
+      <div class="searchrow">
+        <input id="q" placeholder="현장명, PM, 점검원, 주소, 메모 검색" oninput="render()">
+        <select id="statusFilter" onchange="render()">
+          <option value="">전체 상태</option>
+          <option>예정</option><option>현장점검</option><option>보고서작성중</option>
+          <option>검토중</option><option>완료</option><option>지연</option><option>보류</option>
+        </select>
+        <select id="sortBy" onchange="render()">
+          <option value="updated">최근 수정순</option>
+          <option value="site">현장명순</option>
+          <option value="date">점검일순</option>
+        </select>
+      </div>
+    </section>
+
+    <section id="list" class="list"></section>
+  </main>
+</div>
+
+<button class="fab" aria-label="신규 등록" onclick="openForm()">＋</button>
+
+<dialog id="formDialog">
+  <div class="modalhead">
+    <h2 id="formTitle">프로젝트 등록</h2>
+    <button class="btn small" onclick="formDialog.close()">닫기</button>
+  </div>
+  <form id="projectForm" onsubmit="saveProject(event)">
+    <div class="modalbody">
+      <input type="hidden" id="editId">
+      <div class="formgrid">
+        <div class="field full"><label>현장명 *</label><input id="siteName" required placeholder="예: 동탄역 파라곤스퀘어"></div>
+        <div class="field"><label>발주처 / 관리주체</label><input id="client"></div>
+        <div class="field"><label>PM</label><input id="pm"></div>
+        <div class="field"><label>현장점검원</label><input id="inspector" placeholder="여러 명이면 쉼표로 구분"></div>
+        <div class="field"><label>보고서 담당</label><input id="reporter"></div>
+        <div class="field"><label>계약일</label><input id="contractDate" type="date"></div>
+        <div class="field"><label>점검예정/점검일</label><input id="inspectionDate" type="date"></div>
+        <div class="field"><label>완료예정일</label><input id="dueDate" type="date"></div>
+        <div class="field"><label>진행상태</label>
+          <select id="status"><option>예정</option><option>현장점검</option><option>보고서작성중</option><option>검토중</option><option>완료</option><option>지연</option><option>보류</option></select>
+        </div>
+        <div class="field"><label>진행률(%)</label><input id="progress" type="number" min="0" max="100" value="0"></div>
+        <div class="field"><label>연락처</label><input id="phone" type="tel"></div>
+        <div class="field full"><label>주소</label><input id="address"></div>
+        <div class="field full"><label>특이사항 / 메모</label><textarea id="memo" rows="4"></textarea></div>
+      </div>
+    </div>
+    <div class="modalfoot">
+      <button type="button" class="btn" onclick="formDialog.close()">취소</button>
+      <button class="btn primary" type="submit">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="settingsDialog">
+  <div class="modalhead">
+    <h2>데이터 연결 설정</h2>
+    <button class="btn small" onclick="settingsDialog.close()">닫기</button>
+  </div>
+  <div class="modalbody">
+    <p class="note">
+      기본 상태에서는 데이터가 현재 휴대폰/PC의 브라우저에 저장됩니다.
+      여러 사람이 같은 데이터를 사용하려면 Supabase URL과 anon key를 입력하세요.
+      아래 SQL 파일을 Supabase에서 한 번 실행해야 합니다.
+    </p>
+    <div class="syncbox">
+      <label>Supabase Project URL</label>
+      <input id="supabaseUrl" placeholder="https://xxxx.supabase.co">
+      <div style="height:10px"></div>
+      <label>Supabase anon public key</label>
+      <textarea id="supabaseKey" rows="4" placeholder="eyJ..."></textarea>
+      <div style="height:10px"></div>
+      <button class="btn primary" onclick="saveSettings()">연결 설정 저장</button>
+      <button class="btn danger" onclick="disableCloud()">클라우드 연결 해제</button>
+    </div>
+    <p class="note" style="margin-top:12px">
+      ※ anon key는 공개 웹앱에서 사용하는 키입니다. 반드시 Supabase의 RLS 정책을 설정해야 하며,
+      service_role 키는 절대 입력하지 마세요.
+    </p>
+  </div>
+</dialog>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const STORE_KEY='pjt_mobile_projects_v1';
+const CFG_KEY='pjt_mobile_config_v1';
+let projects=[];
+let cloudCfg={url:'',key:''};
+let isCloud=false;
+
+const $=id=>document.getElementById(id);
+const formDialog=$('formDialog'), settingsDialog=$('settingsDialog');
+
+function uid(){ return 'p_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8); }
+function nowIso(){ return new Date().toISOString(); }
+function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+
+function normalize(p={}){
+  return {
+    id:p.id||uid(),
+    siteName:p.siteName||p['현장명']||p['프로젝트명']||p['PJT명']||'',
+    client:p.client||p['발주처']||p['관리주체']||'',
+    pm:p.pm||p['PM']||p['P.M']||'',
+    inspector:p.inspector||p['현장점검원']||p['점검원']||'',
+    reporter:p.reporter||p['보고서 담당']||p['보고서작성자']||p['작성자']||'',
+    contractDate:excelDate(p.contractDate||p['계약일']||''),
+    inspectionDate:excelDate(p.inspectionDate||p['점검일']||p['점검예정일']||''),
+    dueDate:excelDate(p.dueDate||p['완료예정일']||p['제출예정일']||''),
+    status:p.status||p['진행상태']||p['상태']||'예정',
+    progress:Number(p.progress??p['진행률']??0)||0,
+    phone:p.phone||p['연락처']||'',
+    address:p.address||p['주소']||p['현장주소']||'',
+    memo:p.memo||p['특이사항']||p['비고']||p['메모']||'',
+    updatedAt:p.updatedAt||nowIso(),
+    extra:p.extra||{}
+  };
+}
+function excelDate(v){
+  if(!v) return '';
+  if(typeof v==='number' && window.XLSX){
+    try{
+      const d=XLSX.SSF.parse_date_code(v);
+      if(d) return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+    }catch(e){}
+  }
+  const s=String(v).trim().replace(/[./]/g,'-');
+  const m=s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  return m?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:s;
+}
+function statusClass(s){ return String(s||'').replace(/\s/g,''); }
+
+async function init(){
+  try{ cloudCfg=JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); }catch(e){}
+  if(cloudCfg.url && cloudCfg.key){
+    try{ await loadCloud(); isCloud=true; $('storageBadge').textContent='☁ 공동 DB'; }
+    catch(e){ console.warn(e); loadLocal(); toast('클라우드 연결 실패 → 내 기기 데이터 사용'); }
+  } else loadLocal();
+  render();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+function loadLocal(){
+  try{ projects=(JSON.parse(localStorage.getItem(STORE_KEY)||'[]')).map(normalize); }catch(e){ projects=[]; }
+  isCloud=false;$('storageBadge').textContent='내 기기 저장';
+}
+function saveLocal(){ localStorage.setItem(STORE_KEY,JSON.stringify(projects)); }
+
+async function api(path,opts={}){
+  const r=await fetch(cloudCfg.url.replace(/\/$/,'')+'/rest/v1/'+path,{
+    ...opts,
+    headers:{
+      'apikey':cloudCfg.key,'Authorization':'Bearer '+cloudCfg.key,
+      'Content-Type':'application/json','Prefer':'return=representation',
+      ...(opts.headers||{})
+    }
+  });
+  if(!r.ok) throw new Error(await r.text());
+  const txt=await r.text(); return txt?JSON.parse(txt):[];
+}
+async function loadCloud(){
+  const rows=await api('projects?select=*&order=updated_at.desc');
+  projects=rows.map(r=>normalize({
+    id:r.id, siteName:r.site_name, client:r.client, pm:r.pm, inspector:r.inspector,
+    reporter:r.reporter, contractDate:r.contract_date, inspectionDate:r.inspection_date,
+    dueDate:r.due_date,status:r.status,progress:r.progress,phone:r.phone,address:r.address,
+    memo:r.memo,updatedAt:r.updated_at,extra:r.extra||{}
+  }));
+}
+function toDb(p){ return {
+  id:p.id, site_name:p.siteName, client:p.client, pm:p.pm, inspector:p.inspector,
+  reporter:p.reporter, contract_date:p.contractDate||null, inspection_date:p.inspectionDate||null,
+  due_date:p.dueDate||null,status:p.status,progress:p.progress||0,phone:p.phone,address:p.address,
+  memo:p.memo,updated_at:nowIso(),extra:p.extra||{}
+};}
+async function cloudUpsert(p){
+  return api('projects?on_conflict=id',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(toDb(p))});
+}
+async function cloudDelete(id){ return api('projects?id=eq.'+encodeURIComponent(id),{method:'DELETE'}); }
+
+function render(){
+  const q=$('q').value.trim().toLowerCase(), sf=$('statusFilter').value, sort=$('sortBy').value;
+  let rows=projects.filter(p=>{
+    const hay=[p.siteName,p.client,p.pm,p.inspector,p.reporter,p.address,p.memo,p.status].join(' ').toLowerCase();
+    return (!q||hay.includes(q)) && (!sf||p.status===sf);
+  });
+  rows.sort((a,b)=>{
+    if(sort==='site') return (a.siteName||'').localeCompare(b.siteName||'','ko');
+    if(sort==='date') return (a.inspectionDate||'9999').localeCompare(b.inspectionDate||'9999');
+    return (b.updatedAt||'').localeCompare(a.updatedAt||'');
+  });
+  $('cntAll').textContent=projects.length;
+  $('cntDone').textContent=projects.filter(p=>p.status==='완료').length;
+  $('cntReport').textContent=projects.filter(p=>['보고서작성중','검토중'].includes(p.status)).length;
+  $('cntActive').textContent=projects.filter(p=>!['완료','보류'].includes(p.status)).length;
+  $('list').innerHTML=rows.length?rows.map(cardHtml).join(''):`<div class="empty">등록된 프로젝트가 없습니다.<br><br><button class="btn primary" onclick="openForm()">첫 프로젝트 등록</button></div>`;
+}
+function cardHtml(p){
+  const phone=p.phone?`<a href="tel:${esc(p.phone)}" style="color:var(--primary);text-decoration:none">${esc(p.phone)}</a>`:'-';
+  const addr=p.address?`<a target="_blank" rel="noopener" href="https://map.naver.com/p/search/${encodeURIComponent(p.address)}" style="color:var(--primary);text-decoration:none">${esc(p.address)}</a>`:'-';
+  return `<article class="card">
+    <div class="cardtop"><div class="title">${esc(p.siteName||'(현장명 없음)')}</div><div class="status ${statusClass(p.status)}">${esc(p.status||'예정')}</div></div>
+    <div class="meta">
+      <div><b>PM</b> ${esc(p.pm||'-')}</div><div><b>점검원</b> ${esc(p.inspector||'-')}</div>
+      <div><b>점검일</b> ${esc(p.inspectionDate||'-')}</div><div><b>보고서</b> ${esc(p.reporter||'-')}</div>
+      <div><b>진행률</b> ${Number(p.progress||0)}%</div><div><b>연락처</b> ${phone}</div>
+      <div style="grid-column:1/-1"><b>주소</b> ${addr}</div>
+    </div>
+    ${p.memo?`<div class="memo">${esc(p.memo)}</div>`:''}
+    <div class="actions">
+      <button class="btn small" onclick="openForm('${p.id}')">수정</button>
+      <button class="btn small danger" onclick="removeProject('${p.id}')">삭제</button>
+    </div>
+  </article>`;
+}
+function openForm(id=''){
+  $('projectForm').reset(); $('editId').value=''; $('progress').value=0; $('status').value='예정';
+  if(id){
+    const p=projects.find(x=>x.id===id); if(!p)return;
+    $('formTitle').textContent='프로젝트 수정'; $('editId').value=p.id;
+    for(const k of ['siteName','client','pm','inspector','reporter','contractDate','inspectionDate','dueDate','status','progress','phone','address','memo']) $(k).value=p[k]??'';
+  }else $('formTitle').textContent='프로젝트 등록';
+  formDialog.showModal();
+}
+async function saveProject(e){
+  e.preventDefault();
+  const id=$('editId').value||uid();
+  const old=projects.find(p=>p.id===id)||{};
+  const p=normalize({...old,id,
+    siteName:$('siteName').value.trim(),client:$('client').value.trim(),pm:$('pm').value.trim(),
+    inspector:$('inspector').value.trim(),reporter:$('reporter').value.trim(),
+    contractDate:$('contractDate').value,inspectionDate:$('inspectionDate').value,dueDate:$('dueDate').value,
+    status:$('status').value,progress:Number($('progress').value||0),phone:$('phone').value.trim(),
+    address:$('address').value.trim(),memo:$('memo').value.trim(),updatedAt:nowIso()
+  });
+  const idx=projects.findIndex(x=>x.id===id); if(idx>=0) projects[idx]=p; else projects.unshift(p);
+  if(isCloud){ try{await cloudUpsert(p);await loadCloud();}catch(err){alert('공동 DB 저장 실패:\n'+err.message);return;} }
+  else saveLocal();
+  formDialog.close();render();toast('저장했습니다');
+}
+async function removeProject(id){
+  const p=projects.find(x=>x.id===id); if(!confirm(`"${p?.siteName||''}" 프로젝트를 삭제할까요?`))return;
+  if(isCloud){try{await cloudDelete(id);await loadCloud();}catch(err){alert('삭제 실패:\n'+err.message);return;}}
+  else{projects=projects.filter(x=>x.id!==id);saveLocal();}
+  render();toast('삭제했습니다');
+}
+
+async function importFile(file){
+  if(!file)return;
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array',cellDates:false});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+    if(!rows.length) throw new Error('읽을 데이터가 없습니다.');
+    const known=['현장명','프로젝트명','PJT명','발주처','관리주체','PM','P.M','현장점검원','점검원','보고서 담당','보고서작성자','작성자','계약일','점검일','점검예정일','완료예정일','제출예정일','진행상태','상태','진행률','연락처','주소','현장주소','특이사항','비고','메모'];
+    const newRows=rows.map(r=>{
+      const p=normalize(r);
+      const extra={}; Object.keys(r).forEach(k=>{if(!known.includes(k))extra[k]=r[k]});
+      p.extra=extra; return p;
+    }).filter(p=>p.siteName);
+    if(!newRows.length) throw new Error('현장명/프로젝트명/PJT명 열을 찾지 못했습니다.');
+    if(!confirm(`${newRows.length}건을 가져옵니다.\n기존 데이터 뒤에 추가할까요?\n\n[확인] 추가 / [취소] 기존 데이터 유지`)) return;
+    if(isCloud){
+      for(const p of newRows) await cloudUpsert(p);
+      await loadCloud();
+    }else{ projects=[...newRows,...projects];saveLocal(); }
+    render();toast(`${newRows.length}건 가져오기 완료`);
+  }catch(err){alert('엑셀 가져오기 실패:\n'+err.message);}
+  finally{$('fileInput').value='';}
+}
+function exportXlsx(){
+  if(!window.XLSX){alert('엑셀 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하세요.');return;}
+  const rows=projects.map(p=>({
+    '현장명':p.siteName,'발주처/관리주체':p.client,'PM':p.pm,'현장점검원':p.inspector,
+    '보고서 담당':p.reporter,'계약일':p.contractDate,'점검일':p.inspectionDate,'완료예정일':p.dueDate,
+    '진행상태':p.status,'진행률(%)':p.progress,'연락처':p.phone,'주소':p.address,'특이사항':p.memo,
+    ...p.extra
+  }));
+  const ws=XLSX.utils.json_to_sheet(rows), wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'진행현황');
+  XLSX.writeFile(wb,'PJT_진행현황_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+function openSettings(){
+  $('supabaseUrl').value=cloudCfg.url||'';$('supabaseKey').value=cloudCfg.key||'';
+  settingsDialog.showModal();
+}
+async function saveSettings(){
+  const url=$('supabaseUrl').value.trim(),key=$('supabaseKey').value.trim();
+  if(!url||!key){alert('URL과 anon key를 모두 입력하세요.');return;}
+  const before=[...projects];
+  cloudCfg={url,key};localStorage.setItem(CFG_KEY,JSON.stringify(cloudCfg));
+  try{
+    await loadCloud(); isCloud=true; $('storageBadge').textContent='☁ 공동 DB';
+    if(projects.length===0 && before.length && confirm('공동 DB가 비어 있습니다. 현재 기기의 데이터를 공동 DB로 올릴까요?')){
+      for(const p of before) await cloudUpsert(p);
+      await loadCloud();
+    }
+    render();settingsDialog.close();toast('공동 DB 연결 완료');
+  }catch(err){
+    localStorage.removeItem(CFG_KEY);cloudCfg={};isCloud=false;projects=before;saveLocal();
+    alert('연결 실패:\n'+err.message+'\n\nSupabase URL, anon key, SQL 설정을 확인하세요.');
+    render();
+  }
+}
+function disableCloud(){
+  if(!confirm('공동 DB 연결을 해제하고 현재 화면 데이터를 이 기기에 저장할까요?'))return;
+  localStorage.removeItem(CFG_KEY);cloudCfg={};isCloud=false;saveLocal();
+  $('storageBadge').textContent='내 기기 저장';settingsDialog.close();toast('내 기기 저장으로 변경');
+}
+init();
+</script>
+</body>
+</html>
