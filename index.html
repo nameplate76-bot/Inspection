@@ -22,6 +22,7 @@ main{padding:0 14px}.dashboard{margin-top:-16px}.sectiontitle{display:flex;align
 .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}.kpi{background:#fff;border:1px solid var(--line);border-radius:15px;padding:12px;box-shadow:var(--shadow);min-height:88px}.kpi .label{font-size:12px;color:var(--muted);font-weight:700}.kpi .num{font-size:25px;font-weight:900;margin-top:7px}.kpi .hint{font-size:10px;color:#98a2b3;margin-top:3px}.kpi.primary{background:var(--navy);border-color:var(--navy);color:#fff}.kpi.primary .label,.kpi.primary .hint{color:#d7e4f6}
 .legend{display:flex;gap:8px;flex-wrap:wrap;margin:10px 2px 0;font-size:11px;color:var(--muted)}.dot{display:inline-block;width:8px;height:8px;border-radius:99px;margin-right:4px}
 .analytics{display:grid;grid-template-columns:1.2fr .8fr;gap:9px;margin:12px 0}.panel{background:#fff;border:1px solid var(--line);border-radius:15px;padding:11px;box-shadow:var(--shadow)}.panel h3{font-size:14px;margin:0 0 8px}.panel p{font-size:10px;color:var(--muted);margin:-4px 0 8px}.panelhead{display:flex;align-items:start;gap:6px}.panelhead h3{flex:1}.monthchart{display:flex;gap:6px;align-items:end;height:130px;overflow-x:auto;padding:0 2px 28px}.monthbar{min-width:40px;flex:1;position:relative;height:100%;display:flex;align-items:end;justify-content:center}.monthbar i{display:block;width:22px;min-height:3px;background:var(--blue);border-radius:6px 6px 2px 2px}.monthbar i.pale{background:#bed0f9}.monthbar b{position:absolute;bottom:-25px;font-size:10px;color:var(--muted);display:grid;line-height:1.05;text-align:center}.monthbar b span:first-child{font-size:9px}.monthbar em{position:absolute;bottom:calc(var(--p) + 5px);font-style:normal;font-size:10px;color:#315b98}.ownerlist{display:grid;gap:5px;max-height:142px;overflow:auto}.ownerrow{display:grid;grid-template-columns:minmax(72px,1fr) 46px 46px;gap:5px;align-items:center;font-size:11px;border-bottom:1px solid #eef2f6;padding-bottom:5px}.ownerrow:last-child{border:0}.ownerrow b{font-size:10px;color:var(--muted);text-align:right}.ownerrow b.done{color:var(--green)}.ownerrow b.missing{color:var(--amber)}
+.analyticsActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:13px 0}.analyticsActions button{border:1px solid #cdddf3;background:#fff;color:var(--navy);border-radius:13px;padding:13px;font-weight:900;font-size:13px;box-shadow:var(--shadow)}
 .filterbar{display:flex;gap:8px;margin:12px 0;overflow:auto}.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;white-space:nowrap;font-size:12px;font-weight:800;color:#4b5d75}.pill.active{background:var(--navy);border-color:var(--navy);color:#fff}
 .resultHead{display:flex;align-items:center;margin:16px 2px 9px}.resultHead b{flex:1;font-size:14px}.resultHead span{font-size:12px;color:var(--muted)}
 .fieldcfg{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:9px;padding:7px 9px;font-size:11px;font-weight:900;margin-right:8px}
@@ -68,12 +69,10 @@ dialog{border:0;border-radius:20px;padding:0;width:min(860px,calc(100vw - 18px))
  </div>
  <div class="legend"><span><i class="dot" style="background:#e89812"></i>대기/대상</span><span><i class="dot" style="background:#2563eb"></i>진행 중</span><span><i class="dot" style="background:#12a66a"></i>완료</span></div>
 </section>
-<section class="analytics">
- <div class="panel"><h3>월별 보고서 작성 완료 현황</h3><p>선택한 담당자 · 보고서 작성 완료일 기준 최근 12개월 집계</p><div class="monthchart" id="monthChart"></div></div>
- <div class="panel"><div class="panelhead"><h3>담당자별 보고서 현황</h3><button class="fieldcfg" onclick="openOwnerSettings()">🔒 담당자 선택</button></div><p>관리자가 선택한 담당자만 표시 · 앞의 연도·숫자는 제외하여 합산</p><div class="ownerlist" id="ownerReport"></div></div>
-</section>
+<section class="analyticsActions"><button onclick="openMonthlyReport()">▥ 월별 보고서 작성 완료 현황</button><button onclick="openOwnerReport()">♟ 담당자별 보고서 현황</button></section>
 <div class="filterbar" id="filterbar">
- <button class="pill active" data-filter="all" onclick="setFilter(this)">전체 진행 중</button>
+ <button class="pill active" data-filter="registered" onclick="setFilter(this)">전체</button>
+ <button class="pill" data-filter="all" onclick="setFilter(this)">전체 진행 중</button>
  <button class="pill" data-filter="target" onclick="setFilter(this)">점검대상</button>
  <button class="pill" data-filter="inspecting" onclick="setFilter(this)">점검 진행 중</button>
  <button class="pill" data-filter="inspected" onclick="setFilter(this)">점검 완료</button>
@@ -99,6 +98,9 @@ dialog{border:0;border-radius:20px;padding:0;width:min(860px,calc(100vw - 18px))
  </div>
  <div class="mfoot"><button class="btn" onclick="fieldDialog.close()">취소</button><button class="btn primary" onclick="saveFieldSettings()">적용</button></div>
 </dialog>
+
+<dialog id="monthlyDialog"><div class="mhead"><h3>월별 보고서 작성 완료 현황</h3><button class="close" onclick="monthlyDialog.close()">닫기</button></div><div class="mbody"><div class="notice">선택한 담당자 합계 · 보고서 작성 완료일 기준 최근 12개월</div><div class="panel"><div class="monthchart" id="monthChart"></div></div></div></dialog>
+<dialog id="ownerReportDialog"><div class="mhead"><h3>담당자별 보고서 현황</h3><button class="close" onclick="ownerReportDialog.close()">닫기</button></div><div class="mbody"><div class="selectactions"><button class="fieldcfg" onclick="openOwnerSettings()">🔒 담당자 선택 / 변경</button></div><div class="notice">선택한 담당자만 표시 · 앞의 연도·숫자는 제외하여 합산</div><div class="ownerlist" id="ownerReport"></div></div></dialog>
 
 <dialog id="ownerDialog">
  <div class="mhead"><h3>월별·담당자 현황 표시 대상</h3><button class="close" onclick="ownerDialog.close()">닫기</button></div>
@@ -127,6 +129,7 @@ let displayFields=JSON.parse(localStorage.getItem(FIELD_STORE)||'null')||RECOMME
 const ADMIN_PASS_STORE='pjt_webapp_admin_pass_v1';
 const OWNER_STORE='pjt_webapp_report_owners_v1';
 let selectedOwners=JSON.parse(localStorage.getItem(OWNER_STORE)||'null');
+let reopenOwnerReport=false;
 displayFields=displayFields.filter(h=>!isMoneyHeader(h));
 
 const H={
@@ -233,6 +236,8 @@ function availableOwners(){return [...new Set(records().map(r=>ownerName(r[H.doc
 function openOwnerSettings(){
  if(!hasAdminPassword()){alert('먼저 상단의 관리자 설정에서 비밀번호를 등록해야 합니다.');return}
  if(!verifyAdminPassword('담당자 현황 표시 대상을 변경하려면 관리자 비밀번호를 입력하세요.')){alert('비밀번호가 일치하지 않습니다.');return}
+ reopenOwnerReport=ownerReportDialog.open;
+ if(reopenOwnerReport)ownerReportDialog.close();
  const list=availableOwners();
  const selected=new Set(selectedOwners===null?list:selectedOwners);
  document.getElementById('ownerChecks').innerHTML=list.map((n,i)=>`<label class="checkitem"><input type="checkbox" class="ownerCheck" value="${i}" ${selected.has(n)?'checked':''}><span>${esc(n)}</span></label>`).join('');
@@ -243,7 +248,7 @@ function saveOwnerSettings(){
  const list=availableOwners();
  selectedOwners=[...document.querySelectorAll('.ownerCheck:checked')].map(x=>list[Number(x.value)]).filter(Boolean);
  localStorage.setItem(OWNER_STORE,JSON.stringify(selectedOwners));
- ownerDialog.close();render();toast('담당자 현황 표시 대상을 변경했습니다');
+ ownerDialog.close();render();if(reopenOwnerReport){reopenOwnerReport=false;openOwnerReport()}toast('담당자 현황 표시 대상을 변경했습니다');
 }
 function updateAnalytics(a){
  const owners={};
@@ -264,6 +269,8 @@ function updateAnalytics(a){
  const currentYear=String(new Date().getFullYear());
  document.getElementById('monthChart').innerHTML=months.map(m=>{const c=counts[m],p=Math.max(3,Math.round(c/max*88)),pale=m.slice(0,4)!==currentYear?' pale':'';return `<div class="monthbar" style="--p:${p}px"><em>${c}</em><i class="${pale.trim()}" style="height:${p}px"></i><b><span>${m.slice(0,4)}</span><span>${m.slice(5)}월</span></b></div>`}).join('');
 }
+function openMonthlyReport(){updateAnalytics(records());monthlyDialog.showModal()}
+function openOwnerReport(){updateAnalytics(records());ownerReportDialog.showModal()}
 function stage(kind,state){
  const map={done:['완료','done'],doing:['진행 중','doing'],wait:['대기','wait'],target:['점검대상','wait'],missing:['미작성','wait']};
  const [txt,cl]=map[state]; return `<div class="stage ${cl}"><strong>${kind}</strong><small>${txt}</small></div>`;
@@ -420,7 +427,8 @@ function render(){
  let f=a.filter(r=>!q||String(r[H.site]||'').toLowerCase().includes(q));
  f=f.filter(r=>{
   const s=calc(r);
-  return activeFilter==='all'?s.overall
+  return activeFilter==='registered'?true
+   :activeFilter==='all'?s.overall
    :activeFilter==='target'?s.target
    :activeFilter==='inspecting'?s.inspecting
    :activeFilter==='inspected'?s.inspected
