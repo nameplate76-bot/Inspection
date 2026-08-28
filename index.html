@@ -31,7 +31,7 @@ main{padding:0 14px}.dashboard{margin-top:-16px}.sectiontitle{display:flex;align
 .checkgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:10px 0}.checkitem{display:flex;align-items:flex-start;gap:7px;padding:8px;border:1px solid var(--line);border-radius:9px;font-size:11px;background:#fff}.checkitem input{width:auto;margin-top:2px}.selectactions{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 12px}
 @media(max-width:580px){.selectedData{grid-template-columns:1fr}.checkgrid{grid-template-columns:1fr}}
 
-.cards{display:grid;gap:10px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}.cardtop{display:flex;align-items:start;gap:10px}.site{font-size:16px;font-weight:900;line-height:1.35;flex:1}.sn{font-size:11px;color:#8a97a9}
+.cards{display:grid;gap:10px}.moreResults{display:flex;justify-content:center;padding:14px 0 4px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}.cardtop{display:flex;align-items:start;gap:10px}.site{font-size:16px;font-weight:900;line-height:1.35;flex:1}.sn{font-size:11px;color:#8a97a9}
 .meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:#58687e}.meta b{color:#2a3c54}.important{margin-top:9px;background:#f7f9fc;border-radius:9px;padding:8px 10px;font-size:12px;color:#53647b}
 .flow{display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr;align-items:center;margin-top:13px}.stage{border-radius:10px;padding:9px 7px;text-align:center;border:1px solid var(--line);background:#f8fafc}.stage strong{display:block;font-size:12px}.stage small{display:block;font-size:10px;margin-top:3px}.stage.done{background:#ecfdf5;border-color:#b6efd5;color:#087a50}.stage.doing{background:#eff6ff;border-color:#bfdbfe;color:#1d5bc5}.stage.wait{background:#fff8e8;border-color:#f7dfa6;color:#9a6500}.arrow{text-align:center;color:#a6b0bf}
 .cardfoot{display:flex;justify-content:flex-end;margin-top:10px}.edit{border:0;background:#edf3fb;color:var(--navy);font-weight:800;border-radius:9px;padding:7px 10px;font-size:12px}
@@ -57,7 +57,7 @@ dialog{border:0;border-radius:20px;padding:0;width:min(860px,calc(100vw - 18px))
 <input id="excelInput" type="file" accept=".xlsx,.xls,.csv" hidden onchange="importExcel(this.files[0])">
 </div></div>
  <div class="userline" id="userLine"></div>
- <div class="searchwrap"><input id="search" placeholder="현장명을 입력하세요" oninput="render()"><span class="searchicon">⌕</span></div>
+ <div class="searchwrap"><input id="search" placeholder="현장명을 입력하세요" oninput="resetResultLimit()"><span class="searchicon">⌕</span></div>
 </header>
 <main>
 <section class="dashboard">
@@ -83,7 +83,7 @@ dialog{border:0;border-radius:20px;padding:0;width:min(860px,calc(100vw - 18px))
  <button class="pill" data-filter="reportDone" onclick="setFilter(this)">보고서 완료</button>
 </div>
 <div class="resultHead"><b>현장 검색 결과</b><button class="fieldcfg" onclick="openFieldSettings()">⚙ 표시 항목</button><span id="resultCount">0건</span></div>
-<section class="cards" id="cards"></section>
+<section class="cards" id="cards"></section><div id="moreResults" class="moreResults"></div>
 </main>
 </div>
 
@@ -236,7 +236,8 @@ async function saveProjectState(){
  });
  db.close();
 }
-let activeFilter='all', editKey=null;
+let activeFilter='registered', editKey=null;
+let visibleRecordLimit=100;
 const FIELD_STORE='pjt_webapp_v3_display_fields';
 const RECOMMENDED_FIELDS=['현장명','지역','문서작성 > 담당','문서작성 > 제본 입고','현장점검원','현장점검 종료','영업 담당','관리주체 담당자','관리주체 연락처'];
 let displayFields=JSON.parse(localStorage.getItem(FIELD_STORE)||'null')||RECOMMENDED_FIELDS.slice();
@@ -429,7 +430,9 @@ function card(r){
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function jsq(v){return String(v).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
-function setFilter(btn){document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));btn.classList.add('active');activeFilter=btn.dataset.filter;render()}
+function setFilter(btn){document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));btn.classList.add('active');activeFilter=btn.dataset.filter;visibleRecordLimit=100;render()}
+function resetResultLimit(){visibleRecordLimit=100;render()}
+function showMoreResults(){visibleRecordLimit+=100;render()}
 
 function normalizeHeader(s){
  return String(s??'').trim().replace(/\s+/g,' ').replace(/＞/g,'>').replace(/\s*>\s*/g,' > ');
@@ -585,9 +588,10 @@ function render(){
  });
  // 엑셀에서 가져온 모든 행을 표시합니다. 목록은 진행중 우선, 최근 행 우선으로 정렬합니다.
  f.sort((a,b)=>{let sa=calc(a).bindIn?1:0,sb=calc(b).bindIn?1:0;return sa-sb || Number(b._row||0)-Number(a._row||0)});
- const shown=f;
+ const shown=f.slice(0,visibleRecordLimit);
  document.getElementById('resultCount').textContent=`${f.length.toLocaleString()}건`;
  document.getElementById('cards').innerHTML=shown.length?shown.map(card).join(''):'<div class="empty">검색 조건에 맞는 현장이 없습니다.</div>';
+ document.getElementById('moreResults').innerHTML=f.length>shown.length?`<button class="btn" onclick="showMoreResults()">100건 더 보기 (${shown.length.toLocaleString()} / ${f.length.toLocaleString()}건)</button>`:'';
 }
 
 function openFieldSettings(){
