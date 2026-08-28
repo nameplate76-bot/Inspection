@@ -744,12 +744,17 @@ boot();
   };
   showSignup = () => {
     document.getElementById('loginTitle').textContent='직원 회원가입 신청';
-    document.getElementById('loginBody').innerHTML=`<p>가입 후에는 관리자가 승인할 때까지 조회할 수 없습니다.</p><div class="field"><label>사용자 ID</label><input id="signupId" placeholder="예: kimmc"></div><div class="field"><label>회사 이메일</label><input id="signupEmail" type="email" placeholder="name@company.co.kr"></div><div class="field"><label>비밀번호</label><input id="signupPw" type="password" placeholder="6자 이상"></div><button class="btn primary" style="width:100%" onclick="signupUser()">가입 신청</button><button class="btn" style="width:100%;margin-top:8px" onclick="showLogin()">로그인으로 돌아가기</button>`;
+    document.getElementById('loginBody').innerHTML=`<p>가입 후에는 관리자가 승인할 때까지 조회할 수 없습니다.</p><div class="field"><label>사용자 ID</label><input id="signupId" placeholder="예: kimmc"></div><div class="field"><label>회사 이메일</label><input id="signupEmail" type="email" placeholder="name@company.co.kr"></div><div class="field"><label>비밀번호</label><input id="signupPw" type="password" placeholder="6자 이상"></div><div id="signupStatus" class="notice" style="display:none;margin:8px 0"></div><button id="signupSubmit" type="button" class="btn primary" style="width:100%">가입 신청</button><button class="btn" style="width:100%;margin-top:8px" onclick="showLogin()">로그인으로 돌아가기</button>`;
+    document.getElementById('signupSubmit').addEventListener('click', window.signupUser);
   };
-  signupUser = async () => {
+  window.signupUser = async () => {
     const user_id=document.getElementById('signupId').value.trim(), email=document.getElementById('signupEmail').value.trim(), password=document.getElementById('signupPw').value;
     if(user_id.length<4 || password.length<6 || !email.includes('@')) { alert('ID는 4자 이상, 이메일과 비밀번호(6자 이상)를 정확히 입력하세요.'); return; }
-    try { const {error}=await sb.auth.signUp({email,password,options:{data:{user_id}}}); if(error)throw error; alert('가입 신청이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다.'); showLogin(); } catch(e){cloudError(e);}
+    const button=document.getElementById('signupSubmit'), status=document.getElementById('signupStatus');
+    button.disabled=true; button.textContent='가입 신청 중…'; status.style.display='block'; status.textContent='중앙 서버에 계정을 등록하고 있습니다.';
+    try { const {error}=await sb.auth.signUp({email,password,options:{data:{user_id}}}); if(error)throw error; alert('가입 신청이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다.'); showLogin(); }
+    catch(e){status.textContent='가입 신청 실패: '+(e.message||e); cloudError(e);}
+    finally { if(document.getElementById('signupSubmit')){button.disabled=false;button.textContent='가입 신청';} }
   };
   loginUser = async () => {
     const email=document.getElementById('loginEmail').value.trim(), password=document.getElementById('loginPw').value;
