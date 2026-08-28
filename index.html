@@ -578,10 +578,10 @@ function render(){
    :activeFilter==='reportDone'?(s.overall&&s.reportDoneDate)
    :true;
  });
- // 검색어가 없을 때는 진행중 우선, 최근 행 우선으로 80건만 표시
+ // 엑셀에서 가져온 모든 행을 표시합니다. 목록은 진행중 우선, 최근 행 우선으로 정렬합니다.
  f.sort((a,b)=>{let sa=calc(a).bindIn?1:0,sb=calc(b).bindIn?1:0;return sa-sb || Number(b._row||0)-Number(a._row||0)});
- const shown=f.slice(0,q?200:80);
- document.getElementById('resultCount').textContent=`${f.length.toLocaleString()}건${f.length>shown.length?' · 상위 '+shown.length+'건 표시':''}`;
+ const shown=f;
+ document.getElementById('resultCount').textContent=`${f.length.toLocaleString()}건`;
  document.getElementById('cards').innerHTML=shown.length?shown.map(card).join(''):'<div class="empty">검색 조건에 맞는 현장이 없습니다.</div>';
 }
 
