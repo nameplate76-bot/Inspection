@@ -719,8 +719,16 @@ boot();
     if (error) throw error; return data;
   };
   const reloadRows = async () => {
-    const {data,error} = await sb.from('pjt_records').select('id,data').order('updated_at',{ascending:false});
-    if(error) throw error; cloudRows=(data||[]).map(x => Object.assign({_cloudid:x.id},x.data||{}));
+    // Supabase는 한 번의 조회에 최대 1,000행만 돌려줍니다.
+    // 엑셀의 모든 행을 표시하도록 1,000행씩 끝까지 나누어 읽습니다.
+    const pageSize=1000, all=[];
+    for(let from=0;;from+=pageSize){
+      const {data,error}=await sb.from('pjt_records').select('id,data').order('updated_at',{ascending:false}).range(from,from+pageSize-1);
+      if(error) throw error;
+      const page=data||[]; all.push(...page);
+      if(page.length<pageSize) break;
+    }
+    cloudRows=all.map(x => Object.assign({_cloudid:x.id},x.data||{}));
   };
   const reloadUsers = async () => {
     if(!isAdmin()) return;
