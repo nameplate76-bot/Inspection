@@ -1,0 +1,47 @@
+#workPage.managementLayout{padding:0;background:#f3f7f5;min-height:100vh}
+#workPage.managementLayout>.workPageInner{display:none}
+.mgHeader{background:linear-gradient(145deg,#205743,#2c8064);padding:24px;color:white}
+.mgHeaderInner{max-width:1400px;margin:auto;display:flex;align-items:center;gap:24px}
+.mgHeader h1{font-size:28px;line-height:1.3;margin:0 0 8px;font-weight:800}
+.mgHeader p{font-size:15px;color:#e0f6ed;margin:0}
+.mgBack{padding:10px 14px;min-height:44px;border:1px solid #70d6b4;border-radius:8px;background:#ffffff12;color:#fff;font-size:14px;font-weight:700}
+.mgLayout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;min-height:calc(100vh - 132px);margin:auto}
+.mgNav{background:#fff;border-right:1px solid #dce8e1;padding:24px 14px}
+.mgNav p{font-size:14px;color:#647c70;font-weight:700;margin:0 12px 16px}
+.mgNav button{display:block;width:100%;text-align:left;padding:13px 14px;margin-bottom:6px;border:0;border-radius:9px;background:transparent;color:#4d6e5e;font-size:16px;font-weight:700}
+.mgNav button[aria-current="page"]{background:#e8f5ee;color:#205743}
+.mgNav button:hover{background:#f0f7f3}
+.mgContent{min-width:0;padding:28px}
+.mgTitle{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.mgTitle span{font-size:14px;color:#2c8064}.mgTitle h2{margin:6px 0 0;font-size:26px;color:#203f32}
+#mgReload{min-height:44px;background:white;border:1px solid #c6ded1;border-radius:8px;padding:10px 14px;color:#205743;font-size:14px;font-weight:700}
+#mgReload:disabled{opacity:.5}
+.mgMeta{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;color:#60796c;margin:0 0 14px}
+#managementDialog.mgInlineLedger{position:static;inset:auto;display:block;width:100%;max-width:none;max-height:none;margin:0;padding:0;border:1px solid #d7e6dd;border-radius:12px;background:white;box-shadow:0 5px 16px #20574310;overflow:hidden;color:#203f32}
+#managementDialog.mgInlineLedger>.mhead{display:none}
+#managementDialog.mgInlineLedger>.mbody{padding:20px;overflow:visible}
+#managementDialog.mgInlineLedger #managementNotice{font-size:14px;color:#617a6d;padding:0 0 12px;line-height:1.6}
+#managementDialog.mgInlineLedger #managementActions{display:flex;gap:8px;justify-content:flex-end;margin:0 0 16px}
+#managementDialog.mgInlineLedger .btn{font-size:14px;min-height:44px;padding:10px 16px;border-radius:8px}
+#managementDialog.mgInlineLedger .btn.primary{background:#205743;border-color:#205743}
+#managementDialog.mgInlineLedger #managementForm{background:#f4f9f6;border:1px solid #dce9e1;border-radius:10px;padding:18px;gap:16px;margin:0 0 18px;grid-template-columns:repeat(2,minmax(0,1fr))}
+#managementDialog.mgInlineLedger .field label{font-size:14px;color:#466553;margin-bottom:7px}
+#managementDialog.mgInlineLedger .field input,#managementDialog.mgInlineLedger .field select{width:100%;min-height:44px;padding:10px 12px;font-size:16px;border:1px solid #c5dace;border-radius:7px;background:white;color:#203f32}
+#managementDialog.mgInlineLedger .salesWrap{overflow-x:auto;max-height:none}
+#managementDialog.mgInlineLedger .salesTable{border-collapse:collapse;width:100%;min-width:730px;table-layout:auto;font-size:14px}
+#managementDialog.mgInlineLedger .salesTable th{position:static;background:#edf6f0;color:#466553;padding:14px 12px;text-align:left;white-space:nowrap;font-size:14px;border:0;border-bottom:1px solid #d8e7de}
+#managementDialog.mgInlineLedger .salesTable td{padding:14px 12px;border:0;border-bottom:1px solid #e7efe9;background:white;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+#managementDialog.mgInlineLedger .salesTable td:first-child{white-space:nowrap}
+#managementDialog.mgInlineLedger .salesTable td:nth-child(3){min-width:170px}
+#managementDialog.mgInlineLedger .salesTable .num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+#managementDialog.mgInlineLedger .salesTable tr:hover td{background:#f7fcf9}
+#managementDialog.mgInlineLedger .salesTable tr[hidden]{display:none}
+#managementDialog.mgInlineLedger .mgEmpty,#managementDialog.mgInlineLedger .emptyrow{text-align:center;padding:46px 16px;color:#6c8275}
+#mgLoadStatus{font-size:14px;line-height:1.6;color:#5b7365}
+#managementWorkspace button:focus-visible{outline:3px solid #2c8064;outline-offset:2px}
+@media(max-width:900px){.mgLayout{display:block}.mgNav{display:flex;gap:5px;overflow:auto;border-right:0;border-bottom:1px solid #dce8e1;padding:10px}.mgNav p{display:none}.mgNav button{width:auto;white-space:nowrap;margin:0;padding:10px 13px;font-size:14px}.mgContent{padding:20px 14px}.mgHeaderInner{gap:16px}.mgHeader{padding:20px 16px}.mgHeader h1{font-size:24px}}
+@media(max-width:580px){.mgHeaderInner{align-items:flex-start;flex-direction:column}.mgTitle h2{font-size:22px}.mgMeta{align-items:flex-start;flex-direction:column;gap:5px}#managementDialog.mgInlineLedger>.mbody{padding:14px}#managementDialog.mgInlineLedger #managementForm{grid-template-columns:1fr;padding:12px}.mgHeader p{font-size:14px}}
+
+#managementDialog.mgInlineLedger .btn:not(.primary){color:#205743;border-color:#c6ded1;background:#fff}
+#managementDialog.mgInlineLedger .btn.primary{color:#fff}
+#managementDialog.mgInlineLedger .field input:focus,#managementDialog.mgInlineLedger .field select:focus{outline:2px solid #2c8064;outline-offset:1px;box-shadow:0 0 0 3px #e8f5ee}
