@@ -58,7 +58,7 @@ dialog{border:0;border-radius:20px;padding:0;width:min(860px,calc(100vw - 18px))
 body:not(.reportMode):not(.workMode) .homeShell{display:block!important}
 body:not(.reportMode):not(.workMode) .workPage{display:none!important}
 </style>
-<link rel="stylesheet" href="equipment-users-v10.css?v=25">
+<link rel="stylesheet" href="equipment-users-v10.css?v=26">
 </head>
 <body>
 <script>{const page=new URLSearchParams(location.search).get('page');if(page==='sales')document.body.classList.add('salesManagementMode');if(page==='inspection')document.body.classList.add('inspectionDashboardMode')}</script>
@@ -334,7 +334,7 @@ let selectedOwners=JSON.parse(localStorage.getItem(OWNER_STORE)||'null');
 let reopenOwnerReport=false;
 let ownerChartRows=[];
 let salesSourceRows=[];
-let lastExcelImportWasReplace=false, lastExcelImportCount=0;
+let lastExcelImportWasReplace=false, lastExcelImportCount=0, lastExcelImportedRows=[], lastExcelFileDuplicateCount=0;
 const H={
  site:'현장명',sn:'S/N',region:'지역',pm:'PM',inspector:'현장점검원',important:'중요 사항',
  planS:'현장점검 계획 > 시작',planE:'현장점검 계획 > 종료',inspEnd:'현장점검 종료',
@@ -638,6 +638,10 @@ function showMoreResults(){visibleRecordLimit+=100;render()}
 function normalizeHeader(s){
  return String(s??'').trim().replace(/\s+/g,' ').replace(/＞/g,'>').replace(/\s*>\s*/g,' > ');
 }
+function normalizeRecordIdentityText(value){return String(value??'').trim().toLowerCase().replace(/\s+/g,' ')}
+function normalizeRecordSn(value){const text=normalizeRecordIdentityText(value);return /^\d+\.0+$/.test(text)?String(Number(text)):text}
+function recordNaturalKey(record){const sn=normalizeRecordSn(record?.['S/N']);if(sn)return `sn:${sn}`;const parts=['현장명','계약 > 시작','계약 > 종료','문서작성 > 담당','보고서 문서번호','보고서 등급'].map(key=>normalizeRecordIdentityText(record?.[key]));return parts.some(Boolean)?`record:${parts.join('|')}`:''}
+function stableImportedRecordId(record,index=0){const source=recordNaturalKey(record)||`row:${index}|${normalizeRecordIdentityText(record?.['현장명'])}`;let hash=2166136261;for(let i=0;i<source.length;i++){hash^=source.charCodeAt(i);hash=Math.imul(hash,16777619)}return `import_${(hash>>>0).toString(16).padStart(8,'0')}`}
 function excelSerialToDate(v){
  if(typeof v==='number' && v>20000 && v<80000 && window.XLSX){
    try{
@@ -654,7 +658,7 @@ function isLikelyDateHeader(h){
  return /일자|일$|시작|종료|완료|입고|요청|접수|사용승인|만료|PDF e-mail/.test(h);
 }
 function makeImportedRecord(row, idx){
- const rec={_newid:'import_'+Date.now()+'_'+idx};
+ const rec={};
  const normalized={};
  Object.keys(row||{}).forEach(k=>normalized[normalizeHeader(k)]=row[k]);
  HEADERS.forEach(h=>{
@@ -669,6 +673,7 @@ function makeImportedRecord(row, idx){
    if(v===undefined) v='';
    rec[h]=isLikelyDateHeader(h)?excelSerialToDate(v):v;
  });
+ rec._newid=stableImportedRecordId(rec,idx);
  return rec;
 }
 // "PJT 진행 현황" 원본은 3줄 병합 머리글·69열 구조입니다.
@@ -689,6 +694,7 @@ function structuredProgressRows(ws){
 }
 async function importExcel(file){
  if(!file)return;
+ lastExcelImportedRows=[];lastExcelFileDuplicateCount=0;lastExcelImportCount=0;
  if(!requireAdmin()){const inp=document.getElementById('excelInput');if(inp)inp.value='';return}
  try{
    if(!window.XLSX) throw new Error('엑셀 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하세요.');
@@ -717,6 +723,10 @@ async function importExcel(file){
    }
    let imported=rows.map((r,i)=>makeImportedRecord(r,i)).filter(r=>String(r['현장명']||'').trim());
    if(!imported.length) throw new Error('현장명이 있는 데이터를 찾지 못했습니다.');
+   const uniqueImported=new Map();
+   imported.forEach((record,index)=>{const identity=recordNaturalKey(record)||`fallback:${stableImportedRecordId(record,index)}`;if(uniqueImported.has(identity))lastExcelFileDuplicateCount++;uniqueImported.set(identity,record)});
+   imported=[...uniqueImported.values()];
+   lastExcelImportedRows=imported.map(record=>({...record}));
    const replace=confirm(`${imported.length.toLocaleString()}건을 읽었습니다.\n\n[확인] 기존 데이터를 모두 교체\n[취소] 기존 데이터에 추가`);
    lastExcelImportWasReplace=replace;
    lastExcelImportCount=imported.length;
@@ -728,7 +738,7 @@ async function importExcel(file){
    imported.forEach(r=>edits[keyOf(r)]=r);
    await saveProjectState();
    render();
-   toast(`${imported.length.toLocaleString()}건 가져오기 완료`);
+   toast(`${imported.length.toLocaleString()}건 가져오기 완료${lastExcelFileDuplicateCount?` · 파일 내 중복 ${lastExcelFileDuplicateCount.toLocaleString()}건 병합`:''}`);
  }catch(e){
    alert('엑셀 가져오기 실패\n\n'+e.message);
  }finally{
@@ -952,7 +962,7 @@ boot();
     // Supabase는 한 번의 조회에 최대 1,000행만 돌려줍니다.
     // 엑셀의 모든 행을 표시하도록 1,000행씩 끝까지 나누어 읽습니다.
     const pageSize=1000, all=[];
-    const first=await retryServer(()=>sb.from('pjt_records').select('id,data',{count:'exact'}).order('id',{ascending:true}).range(0,pageSize-1),'현장 데이터 조회');
+    const first=await retryServer(()=>sb.from('pjt_records').select('id,data,updated_at',{count:'exact'}).order('id',{ascending:true}).range(0,pageSize-1),'현장 데이터 조회');
     if(first.error)throw first.error;
     all.push(...(first.data||[]));
     const total=first.count||all.length, starts=[];
@@ -960,7 +970,7 @@ boot();
     // 대량 자료는 최대 3개 페이지를 동시에 받아 로그인 후 대기 시간을 줄입니다.
     for(let i=0;i<starts.length;i+=3){
       const group=await Promise.all(starts.slice(i,i+3).map(async from=>{
-        const {data,error}=await retryServer(()=>sb.from('pjt_records').select('id,data').order('id',{ascending:true}).range(from,from+pageSize-1),'현장 데이터 조회');
+        const {data,error}=await retryServer(()=>sb.from('pjt_records').select('id,data,updated_at').order('id',{ascending:true}).range(from,from+pageSize-1),'현장 데이터 조회');
         if(error)throw error;return data||[];
       }));
       group.forEach(page=>all.push(...page));
@@ -975,7 +985,7 @@ boot();
       if(page.length<pageSize) break;
     }
     */
-    cloudRows=all.map(x => Object.assign({_cloudid:x.id},x.data||{}));
+    cloudRows=all.map(x => Object.assign({},x.data||{},{_cloudid:x.id,_cloudUpdatedAt:x.updated_at||''}));
   };
   const reloadUsers = async () => {
     if(!isAdmin()) return;
@@ -1066,9 +1076,9 @@ boot();
   loadUserAccount = id => { const u=cloudUsers.find(x=>x.id===id); if(!u)return; document.getElementById('userId').value=u.user_id; document.getElementById('userId').dataset.profileId=u.id; document.getElementById('userPassword').value=''; document.getElementById('userPassword').disabled=true; document.getElementById('userPassword').placeholder='비밀번호는 본인이 변경'; document.getElementById('userRole').value=u.role==='viewer'?'user':u.role; document.getElementById('userApproved').checked=!!u.approved; document.getElementById('userCanViewMoney').checked=!!u.can_view_money; document.getElementById('userCanViewSales').checked=!!u.can_view_sales; document.getElementById('userCanPrintSales').checked=!!u.can_print_sales; document.getElementById('userCanViewManagement').checked=!!u.can_view_management; document.getElementById('userCanCreateManagement').checked=!!u.can_create_management; document.getElementById('userCanEditManagement').checked=!!u.can_edit_management; document.getElementById('permSalesView').checked=!!u.can_view_sales_work; document.getElementById('permSalesCreate').checked=!!u.can_create_sales_work; document.getElementById('permSalesEdit').checked=!!u.can_edit_sales_work; document.getElementById('permInspectView').checked=!!u.can_view_inspection; document.getElementById('permInspectCreate').checked=!!u.can_create_inspection; document.getElementById('permInspectEdit').checked=!!u.can_edit_inspection; document.getElementById('permReportView').checked=!!u.can_view_report; setTimeout(()=>document.querySelectorAll('[data-all]').forEach(all=>{all.checked=all.dataset.all.split(',').every(x=>document.getElementById(x)?.checked)}),0); };
   openUserManager = async () => { if(!currentUser){showLogin();return;} if(!requireAdmin())return; try{await reloadUsers();renderUserList();document.getElementById('userId').value='';document.getElementById('userId').dataset.profileId='';document.getElementById('userPassword').value='';document.getElementById('userPassword').disabled=true;document.getElementById('userPassword').placeholder='회원가입으로 생성';document.querySelectorAll('#permissionGroups input').forEach(x=>x.checked=false);document.getElementById('userCanViewMoney').checked=false;document.getElementById('userCanViewSales').checked=false;document.getElementById('userCanPrintSales').checked=false;document.getElementById('userCanViewManagement').checked=false;document.getElementById('userCanCreateManagement').checked=false;document.getElementById('userCanEditManagement').checked=false;userDialog.showModal();}catch(e){cloudError(e);} };
   saveUserAccount = async () => { if(!requireAdmin())return; const id=document.getElementById('userId').dataset.profileId; if(!id){alert('직원은 먼저 회원가입을 해야 합니다. 목록에서 해당 직원을 선택한 후 승인 또는 권한을 변경하세요.');return;} const selectedRole=document.getElementById('userRole').value; const role=selectedRole==='user'?'viewer':selectedRole; try{const {error}=await sb.from('pjt_profiles').update({role,approved:document.getElementById('userApproved').checked,can_view_money:document.getElementById('userCanViewMoney').checked,can_view_sales:document.getElementById('userCanViewSales').checked,can_print_sales:document.getElementById('userCanPrintSales').checked,can_view_management:document.getElementById('userCanViewManagement').checked,can_create_management:document.getElementById('userCanCreateManagement').checked,can_edit_management:document.getElementById('userCanEditManagement').checked,can_view_sales_work:document.getElementById('permSalesView').checked,can_create_sales_work:document.getElementById('permSalesCreate').checked,can_edit_sales_work:document.getElementById('permSalesEdit').checked,can_view_inspection:document.getElementById('permInspectView').checked,can_create_inspection:document.getElementById('permInspectCreate').checked,can_edit_inspection:document.getElementById('permInspectEdit').checked,can_view_report:document.getElementById('permReportView').checked,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;await reloadUsers();renderUserList();originalToast('사용자 권한을 저장했습니다');}catch(e){cloudError(e);} };
-  saveRecord = async () => { const before=editKey; await localSaveRecord(); const row=edits[before]; if(!row)return; try{const id=keyOf(row);const {error}=await sb.from('pjt_records').upsert({id,data:row,updated_by:(await sb.auth.getUser()).data.user.id,updated_at:new Date().toISOString()});if(error)throw error; await reloadRows();render();originalToast('모든 직원에게 저장 내용이 반영되었습니다');}catch(e){cloudError(e);} };
+  saveRecord = async () => { const before=editKey; await localSaveRecord(); const row=edits[before]; if(!row)return; try{const id=String(row._cloudid||keyOf(row)),storedRow={...row,_newid:id};delete storedRow._cloudid;delete storedRow._cloudUpdatedAt;const {error}=await sb.from('pjt_records').upsert({id,data:storedRow,updated_by:(await sb.auth.getUser()).data.user.id,updated_at:new Date().toISOString()},{onConflict:'id'});if(error)throw error; await reloadRows();render();originalToast('모든 직원에게 저장 내용이 반영되었습니다');}catch(e){cloudError(e);} };
   const verifiedImportAdmin=async()=>{const refreshed=await retryServer(()=>sb.auth.refreshSession(),'로그인 정보 갱신');if(refreshed.error||!refreshed.data?.session?.user)throw new Error('로그인 시간이 만료되었습니다. 로그아웃 후 다시 로그인하고 엑셀 가져오기를 실행하세요.');const authUser=refreshed.data.session.user,freshProfile=await profileOf(authUser.id);if(!freshProfile.approved||freshProfile.role!=='admin')throw new Error('엑셀 가져오기는 승인된 관리자만 사용할 수 있습니다. 사용자 승인과 관리자 권한을 확인하세요.');currentUser=freshProfile;applyRoleUi();return authUser;};
-  importExcel = async file => { if(!file)return;let uploadStarted=false;try{const authUser=await verifiedImportAdmin();await localImportExcel(file);if(!lastExcelImportCount)return;isBulkUploading=true;uploadStarted=true;const rows=localRecords(),batchSize=100,previousCloudIds=new Set(cloudRows.map(r=>String(r._cloudid||keyOf(r)))),desiredIds=new Set(rows.map(r=>String(keyOf(r))));if(rows.length>50000&&!confirm(`${rows.length.toLocaleString()}건을 저장합니다. 네트워크 상태에 따라 시간이 걸릴 수 있습니다. 계속하시겠습니까?`))return;for(let i=0;i<rows.length;i+=batchSize){const payload=rows.slice(i,i+batchSize).map(r=>({id:keyOf(r),data:r,updated_by:authUser.id,updated_at:new Date().toISOString()}));const result=await retryServer(()=>sb.from('pjt_records').upsert(payload,{onConflict:'id'}).select('id'),'엑셀 데이터 저장');if(result.error)throw result.error;if((result.data||[]).length!==payload.length)throw new Error(`${i+1}번째 행부터 서버 저장 결과를 모두 확인하지 못했습니다.`);if(i%(batchSize*5)===0)originalToast(`${Math.min(i+batchSize,rows.length).toLocaleString()} / ${rows.length.toLocaleString()}건 서버 저장 중…`);}if(lastExcelImportWasReplace){const obsolete=[...previousCloudIds].filter(id=>!desiredIds.has(id));for(let i=0;i<obsolete.length;i+=batchSize){const result=await retryServer(()=>sb.from('pjt_records').delete().in('id',obsolete.slice(i,i+batchSize)).select('id'),'교체 대상 기존 데이터 정리');if(result.error)throw result.error;}}await reloadRows();render();const saved=cloudRows.length;if(lastExcelImportWasReplace&&saved!==lastExcelImportCount)throw new Error(`가져온 ${lastExcelImportCount.toLocaleString()}건 중 ${saved.toLocaleString()}건만 서버에서 확인되었습니다. 다시 가져오기를 실행하세요.`);originalToast(`${saved.toLocaleString()}건이 중앙 서버에 안전하게 저장되었습니다`);}catch(e){console.error(e);if(uploadStarted){try{await reloadRows();render()}catch(reloadError){console.warn(reloadError)}}const message=String(e?.message||e||'');alert('엑셀 가져오기 중 중앙 서버 저장에 실패했습니다.\n\n'+message+( /row-level security|RLS/i.test(message)?'\n\n로그인 정보와 관리자 권한을 다시 확인했습니다. 계속 발생하면 로그아웃 후 다시 로그인하여 실행하세요.':''));}finally{isBulkUploading=false;lastExcelImportCount=0;lastExcelImportWasReplace=false;const input=document.getElementById('excelInput');if(input)input.value='';} };
+  importExcel = async file => { if(!file)return;let uploadStarted=false;try{const authUser=await verifiedImportAdmin();await localImportExcel(file);if(!lastExcelImportCount||!lastExcelImportedRows.length)return;isBulkUploading=true;uploadStarted=true;const rows=lastExcelImportedRows.map(r=>({...r})),batchSize=100,previousCloudIds=new Set(cloudRows.map(r=>String(r._cloudid||keyOf(r)))),groups=new Map();cloudRows.forEach(row=>{const identity=recordNaturalKey(row);if(!identity)return;if(!groups.has(identity))groups.set(identity,[]);groups.get(identity).push(row)});groups.forEach(group=>group.sort((a,b)=>String(b._cloudUpdatedAt||'').localeCompare(String(a._cloudUpdatedAt||''))||String(a._cloudid||'').localeCompare(String(b._cloudid||''))));const assigned=rows.map((row,index)=>{const identity=recordNaturalKey(row)||`fallback:${stableImportedRecordId(row,index)}`,existing=groups.get(identity)?.[0],id=String(existing?._cloudid||stableImportedRecordId(row,index)),data={...row,_newid:id};delete data._cloudid;delete data._cloudUpdatedAt;return{id,identity,data}}),desiredIds=new Set(assigned.map(item=>item.id)),duplicateIds=new Set();assigned.forEach(item=>(groups.get(item.identity)||[]).slice(1).forEach(row=>duplicateIds.add(String(row._cloudid||keyOf(row)))));if(rows.length>50000&&!confirm(`${rows.length.toLocaleString()}건을 저장합니다. 네트워크 상태에 따라 시간이 걸릴 수 있습니다. 계속하시겠습니까?`))return;for(let i=0;i<assigned.length;i+=batchSize){const payload=assigned.slice(i,i+batchSize).map(item=>({id:item.id,data:item.data,updated_by:authUser.id,updated_at:new Date().toISOString()}));const result=await retryServer(()=>sb.from('pjt_records').upsert(payload,{onConflict:'id'}).select('id'),'엑셀 데이터 저장');if(result.error)throw result.error;if((result.data||[]).length!==payload.length)throw new Error(`${i+1}번째 행부터 서버 저장 결과를 모두 확인하지 못했습니다.`);if(i%(batchSize*5)===0)originalToast(`${Math.min(i+batchSize,assigned.length).toLocaleString()} / ${assigned.length.toLocaleString()}건 서버 저장 중…`);}const cleanupIds=lastExcelImportWasReplace?[...previousCloudIds].filter(id=>!desiredIds.has(id)):[...duplicateIds].filter(id=>!desiredIds.has(id));for(let i=0;i<cleanupIds.length;i+=batchSize){const result=await retryServer(()=>sb.from('pjt_records').delete().in('id',cleanupIds.slice(i,i+batchSize)).select('id'),'중복 데이터 정리');if(result.error)throw result.error;}await reloadRows();render();const saved=cloudRows.length;if(lastExcelImportWasReplace&&saved!==assigned.length)throw new Error(`가져온 ${assigned.length.toLocaleString()}건과 서버에서 확인한 ${saved.toLocaleString()}건이 일치하지 않습니다.`);originalToast(`${assigned.length.toLocaleString()}건 반영 완료${cleanupIds.length?` · 중복 ${cleanupIds.length.toLocaleString()}건 정리`:''}${lastExcelFileDuplicateCount?` · 파일 내 중복 ${lastExcelFileDuplicateCount.toLocaleString()}건 병합`:''}`);}catch(e){console.error(e);if(uploadStarted){try{await reloadRows();render()}catch(reloadError){console.warn(reloadError)}}const message=String(e?.message||e||'');alert('엑셀 가져오기 중 중앙 서버 저장에 실패했습니다.\n\n'+message+( /row-level security|RLS/i.test(message)?'\n\n로그인 정보와 관리자 권한을 다시 확인했습니다. 계속 발생하면 로그아웃 후 다시 로그인하여 실행하세요.':''));}finally{isBulkUploading=false;lastExcelImportCount=0;lastExcelImportWasReplace=false;lastExcelImportedRows=[];lastExcelFileDuplicateCount=0;const input=document.getElementById('excelInput');if(input)input.value='';} };
   const startCloud = async () => { try { const {data:{session}}=await sb.auth.getSession(); if(session){const p=await profileOf(session.user.id); if(p.approved){currentUser=p;await reloadRows();await reloadUsers();window.startSalesQuoteCloud?.();}} applyRoleUi();render(); sb.channel('pjt-records-live').on('postgres_changes',{event:'*',schema:'public',table:'pjt_records'},async()=>{if(currentUser&&!isBulkUploading){await reloadRows();render();originalToast('다른 직원의 변경 내용이 반영되었습니다');}}).subscribe(); }catch(e){console.warn('중앙 서버 연결 대기',e);} };
   startCloud();
 })();
@@ -1534,7 +1544,7 @@ document.addEventListener('click',function(event){
  if(target)setTimeout(collapseReportManuals,0);
 },true);
 </script>
-<script src="equipment-users-v10.js?v=25"></script>
+<script src="equipment-users-v10.js?v=26"></script>
 <script>
 /* v11: index.html 자체 보정 — 이전 외부 스크립트가 캐시되어도 적용됩니다. */
 document.addEventListener('DOMContentLoaded',function(){
