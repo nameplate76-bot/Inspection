@@ -26,14 +26,16 @@ main{padding:0 14px}.dashboard{margin-top:-16px}.sectiontitle{display:flex;align
 .analytics{display:grid;grid-template-columns:1.2fr .8fr;gap:9px;margin:12px 0}.panel{background:#fff;border:1px solid var(--line);border-radius:15px;padding:11px;box-shadow:var(--shadow)}.panel h3{font-size:14px;margin:0 0 8px}.panel p{font-size:10px;color:var(--muted);margin:-4px 0 8px}.panelhead{display:flex;align-items:start;gap:6px}.panelhead h3{flex:1}.monthchart{display:flex;gap:6px;align-items:end;height:130px;overflow-x:auto;padding:0 2px 28px}.monthbar{min-width:40px;flex:1;position:relative;height:100%;display:flex;align-items:end;justify-content:center}.monthbar i{display:block;width:22px;min-height:3px;background:var(--blue);border-radius:6px 6px 2px 2px}.monthbar i.pale{background:#bed0f9}.monthbar b{position:absolute;bottom:-25px;font-size:10px;color:var(--muted);display:grid;line-height:1.05;text-align:center}.monthbar b span:first-child{font-size:9px}.monthbar em{position:absolute;bottom:calc(var(--p) + 5px);font-style:normal;font-size:10px;color:#315b98}.ownerlist{display:grid;gap:5px;max-height:142px;overflow:auto}.ownerrow{display:grid;grid-template-columns:minmax(72px,1fr) 46px 46px;gap:5px;align-items:center;font-size:11px;border-bottom:1px solid #eef2f6;padding-bottom:5px}.ownerrow:last-child{border:0}.ownerrow b{font-size:10px;color:var(--muted);text-align:right}.ownerrow b.done{color:var(--green)}.ownerrow b.missing{color:var(--amber)}.reportControls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px}.reportControls select{width:100%;border:1px solid #cdd8e7;border-radius:9px;background:#fff;padding:9px;font-weight:700;color:#294364}.reportLegend{display:flex;gap:12px;font-size:11px;color:#5f6e82;margin:4px 0 9px}.reportLegend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}.ownerMonthChart{display:flex;gap:8px;align-items:end;height:205px;overflow-x:auto;padding:6px 3px 34px}.ownerMonthBar{min-width:52px;flex:1;position:relative;height:100%;display:flex;align-items:end;justify-content:center;gap:4px}.ownerMonthBar .bar{width:17px;min-height:3px;border-radius:5px 5px 2px 2px}.ownerMonthBar .donebar{background:#1677d2}.ownerMonthBar .missingbar{background:#e99a20}.ownerMonthBar .barlabel{position:absolute;bottom:-29px;font-size:10px;color:var(--muted);text-align:center;line-height:1.1}.ownerMonthBar .barvalue{position:absolute;top:calc(100% - var(--top));font-size:9px;font-weight:800}.ownerMonthBar .donevalue{color:#1677d2;left:7px}.ownerMonthBar .missingvalue{color:#b46900;right:5px}
 .analyticsActions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:13px 0}.analyticsActions button{border:1px solid #cdddf3;background:#fff;color:var(--navy);border-radius:13px;padding:13px;font-weight:900;font-size:13px;box-shadow:var(--shadow)}
 .filterbar{display:flex;gap:8px;margin:12px 0;overflow:auto}.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;white-space:nowrap;font-size:12px;font-weight:800;color:#4b5d75}.pill.active{background:var(--navy);border-color:var(--navy);color:#fff}
-.resultHead{display:flex;align-items:center;margin:16px 2px 9px}.resultHead b{flex:1;font-size:14px}.resultHead span{font-size:12px;color:var(--muted)}
+.resultHead{display:flex;align-items:center;gap:8px;margin:16px 2px 9px}.resultHead b{flex:1;font-size:14px}.resultHead span{font-size:12px;color:var(--muted)}
+.resultBulkActions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}.resultSelectAll{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:#43546b;white-space:nowrap}.resultSelectAll input,.searchRecordCheck input{width:17px;height:17px;margin:0;accent-color:var(--navy)}.selectedResultCount{min-width:55px;text-align:right}.deleteSelectedBtn{border:1px solid #e6a4a4;background:#fff;color:#b42323;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:900}.deleteSelectedBtn:disabled{opacity:.45;cursor:not-allowed;background:#f7f7f7}
+@media(max-width:580px){.resultHead{align-items:flex-start;flex-wrap:wrap}.resultHead>b{width:100%;flex-basis:100%}.resultBulkActions{width:100%;justify-content:flex-start}.selectedResultCount{margin-left:auto}.searchRecordCheck span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}}
 .fieldcfg{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:9px;padding:7px 9px;font-size:11px;font-weight:900;margin-right:8px}
 .selectedData{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px;margin-top:11px;padding:10px;border:1px solid #edf1f6;background:#fafbfd;border-radius:11px}
 .dataitem{min-width:0;font-size:12px;line-height:1.4}.dataitem .dk{display:block;color:#7a8799;font-size:10px;font-weight:800;margin-bottom:2px}.dataitem .dv{display:block;color:#26384f;font-weight:700;overflow-wrap:anywhere}
 .checkgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:10px 0}.checkitem{display:flex;align-items:flex-start;gap:7px;padding:8px;border:1px solid var(--line);border-radius:9px;font-size:11px;background:#fff}.checkitem input{width:auto;margin-top:2px}.selectactions{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 12px}
 @media(max-width:580px){.selectedData{grid-template-columns:1fr}.checkgrid{grid-template-columns:1fr}}
 
-.cards{display:grid;gap:10px}.moreResults{display:flex;justify-content:center;padding:14px 0 4px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}.cardtop{display:flex;align-items:start;gap:10px}.site{font-size:16px;font-weight:900;line-height:1.35;flex:1}.sn{font-size:11px;color:#8a97a9}
+.cards{display:grid;gap:10px}.moreResults{display:flex;justify-content:center;padding:14px 0 4px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}.cardtop{display:flex;align-items:start;gap:10px}.searchRecordCheck{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;padding:2px 5px 2px 0;color:#43546b;font-size:11px;font-weight:900}.site{font-size:16px;font-weight:900;line-height:1.35;flex:1}.sn{font-size:11px;color:#8a97a9}
 .meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:#58687e}.meta b{color:#2a3c54}.important{margin-top:9px;background:#f7f9fc;border-radius:9px;padding:8px 10px;font-size:12px;color:#53647b}
 .flow{display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr;align-items:center;margin-top:13px}.stage{border-radius:10px;padding:9px 7px;text-align:center;border:1px solid var(--line);background:#f8fafc}.stage strong{display:block;font-size:12px}.stage small{display:block;font-size:10px;margin-top:3px}.stage.done{background:#ecfdf5;border-color:#b6efd5;color:#087a50}.stage.doing{background:#eff6ff;border-color:#bfdbfe;color:#1d5bc5}.stage.wait{background:#fff8e8;border-color:#f7dfa6;color:#9a6500}.arrow{text-align:center;color:#a6b0bf}
 .cardfoot{display:flex;justify-content:flex-end;gap:7px;margin-top:10px}.edit{border:0;background:#edf3fb;color:var(--navy);font-weight:800;border-radius:9px;padding:7px 10px;font-size:12px}.deleteRecordBtn{border:1px solid #efb4b4;background:#fff2f2;color:#b42323;font-weight:900;border-radius:9px;padding:7px 11px;font-size:12px}.deleteRecordBtn:hover{background:#ffe4e4;border-color:#df8585}
@@ -132,7 +134,7 @@ body:not(.reportMode):not(.workMode) .app{display:none!important}
  <button class="pill" data-filter="reportMissing" onclick="setFilter(this)">보고서 미작성</button>
  <button class="pill" data-filter="reportDone" onclick="setFilter(this)">보고서 완료</button>
 </div>
-<div class="resultHead"><b>현장 검색 결과</b><button class="fieldcfg" onclick="openFieldSettings()">⚙ 표시 항목</button><span id="resultCount">0건</span></div>
+<div class="resultHead"><b>현장 검색 결과</b><div class="resultBulkActions adminOnly" id="resultBulkActions"><label class="resultSelectAll"><input id="selectAllSearchRecords" type="checkbox" onchange="toggleAllSearchRecords(this.checked)"><span>검색 결과 전체 선택</span></label><span class="selectedResultCount" id="selectedResultCount">선택 0건</span><button type="button" class="deleteSelectedBtn" id="deleteSelectedRecordsButton" onclick="deleteSelectedSearchRecords()" disabled>선택 삭제</button></div><button class="fieldcfg" onclick="openFieldSettings()">⚙ 표시 항목</button><span id="resultCount">0건</span></div>
 <section class="cards" id="cards"></section><div id="moreResults" class="moreResults"></div>
 </section>
 </main>
@@ -325,6 +327,7 @@ async function saveProjectState(){
 }
 let activeFilter='registered', editKey=null;
 let visibleRecordLimit=100;
+let selectedSearchRecords=new Set(),currentSearchResultKeys=[];
 const FIELD_STORE='pjt_webapp_v3_display_fields';
 const RECOMMENDED_FIELDS=['현장명','지역','문서작성 > 담당','문서작성 > 제본 입고','현장점검원','현장점검 종료','영업 담당','관리주체 담당자','관리주체 연락처'];
 let displayFields=JSON.parse(localStorage.getItem(FIELD_STORE)||'null')||RECOMMENDED_FIELDS.slice();
@@ -615,12 +618,34 @@ function card(r){
  let planState=s.inspectionDone?'done':(s.planned?'doing':'target');
  let inspectState=s.inspectionDone?'done':(s.planned?'doing':'wait');
  let reportState=s.reportDoneDate?'done':(s.reportWork?'doing':'missing');
+ const selectionKey=recordSelectionKey(r);
  return `<article class="card">
-  <div class="cardtop"><div class="site">${esc(r[H.site]||'(현장명 없음)')}</div><div class="sn">${esc(r[H.sn]||'')}</div></div>
+  <div class="cardtop">${isAdmin()?`<label class="searchRecordCheck"><input type="checkbox" aria-label="${esc(r[H.site]||'현장')} 선택" onchange="toggleSearchRecordSelection('${jsq(selectionKey)}',this.checked)" ${selectedSearchRecords.has(selectionKey)?'checked':''}><span>선택</span></label>`:''}<div class="site">${esc(r[H.site]||'(현장명 없음)')}</div><div class="sn">${esc(r[H.sn]||'')}</div></div>
   <div class="flow">${stage('점검계획',planState)}<div class="arrow">›</div>${stage('현장점검',inspectState)}<div class="arrow">›</div>${stage('보고서',reportState)}</div>
   ${selectedDataHtml(r)}
   <div class="cardfoot"><button class="edit" onclick="openEdit('${jsq(keyOf(r))}')">상세 / 수정</button>${isAdmin()?`<button class="deleteRecordBtn" onclick="deleteProjectRecord('${jsq(keyOf(r))}')">삭제</button>`:''}</div>
  </article>`;
+}
+function recordSelectionKey(r){return String(r?._cloudid||keyOf(r))}
+function clearSearchRecordSelection(){selectedSearchRecords.clear();currentSearchResultKeys=[];updateSearchSelectionControls()}
+function toggleSearchRecordSelection(k,checked){checked?selectedSearchRecords.add(String(k)):selectedSearchRecords.delete(String(k));updateSearchSelectionControls()}
+function toggleAllSearchRecords(checked){if(checked)currentSearchResultKeys.forEach(k=>selectedSearchRecords.add(k));else currentSearchResultKeys.forEach(k=>selectedSearchRecords.delete(k));render()}
+function updateSearchSelectionControls(){
+ const master=document.getElementById('selectAllSearchRecords'),count=document.getElementById('selectedResultCount'),button=document.getElementById('deleteSelectedRecordsButton');
+ const selectedHere=currentSearchResultKeys.filter(k=>selectedSearchRecords.has(k)).length,all=currentSearchResultKeys.length>0&&selectedHere===currentSearchResultKeys.length;
+ if(master){master.checked=all;master.indeterminate=selectedHere>0&&!all;master.disabled=!isAdmin()||!currentSearchResultKeys.length}
+ if(count)count.textContent=`선택 ${selectedSearchRecords.size.toLocaleString()}건`;
+ if(button)button.disabled=!isAdmin()||selectedSearchRecords.size===0;
+}
+async function deleteSelectedSearchRecords(){
+ if(!requireAdmin())return;
+ const targets=records().filter(r=>selectedSearchRecords.has(recordSelectionKey(r)));
+ if(!targets.length){alert('삭제할 현장을 선택해 주세요.');clearSearchRecordSelection();return}
+ const allRegistered=targets.length===records().length;
+ if(!confirm(`선택한 현장 ${targets.length.toLocaleString()}건을 삭제하시겠습니까?\n\n삭제 후에는 현장 검색과 각종 집계에서 제외되며 복구할 수 없습니다.`))return;
+ if(allRegistered&&!confirm(`등록된 현장 전체 ${targets.length.toLocaleString()}건이 선택되었습니다.\n\n정말 전체 자료를 삭제하시겠습니까?`))return;
+ targets.forEach(r=>{const k=keyOf(r);deleted.add(k);delete edits[k]});
+ await saveProjectState();clearSearchRecordSelection();render();toast(`${targets.length.toLocaleString()}건을 삭제했습니다`);
 }
 async function deleteProjectRecord(k){
  if(!requireAdmin())return;
@@ -631,8 +656,8 @@ async function deleteProjectRecord(k){
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function jsq(v){return String(v).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
-function setFilter(btn){document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));btn.classList.add('active');activeFilter=btn.dataset.filter;visibleRecordLimit=100;render()}
-function resetResultLimit(){visibleRecordLimit=100;render()}
+function setFilter(btn){document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));btn.classList.add('active');activeFilter=btn.dataset.filter;visibleRecordLimit=100;clearSearchRecordSelection();render()}
+function resetResultLimit(){visibleRecordLimit=100;clearSearchRecordSelection();render()}
 function showMoreResults(){visibleRecordLimit+=100;render()}
 
 function normalizeHeader(s){
@@ -802,9 +827,12 @@ function render(){
  // 엑셀에서 가져온 모든 행을 표시합니다. 목록은 진행중 우선, 최근 행 우선으로 정렬합니다.
  f.sort((a,b)=>{let sa=calc(a).bindIn?1:0,sb=calc(b).bindIn?1:0;return sa-sb || Number(b._row||0)-Number(a._row||0)});
  const shown=f.slice(0,visibleRecordLimit);
+ currentSearchResultKeys=f.map(recordSelectionKey);
+ selectedSearchRecords=new Set([...selectedSearchRecords].filter(k=>a.some(r=>recordSelectionKey(r)===k)));
  document.getElementById('resultCount').textContent=`${f.length.toLocaleString()}건`;
  document.getElementById('cards').innerHTML=shown.length?shown.map(card).join(''):'<div class="empty">검색 조건에 맞는 현장이 없습니다.</div>';
  document.getElementById('moreResults').innerHTML=f.length>shown.length?`<button class="btn" onclick="showMoreResults()">100건 더 보기 (${shown.length.toLocaleString()} / ${f.length.toLocaleString()}건)</button>`:'';
+ updateSearchSelectionControls();
 }
 
 function openFieldSettings(){
@@ -1009,6 +1037,28 @@ boot();
       }
       cloudError(e)
     }
+  };
+  deleteSelectedSearchRecords = async () => {
+    if(!requireAdmin())return;
+    const targets=records().filter(r=>selectedSearchRecords.has(recordSelectionKey(r)));
+    if(!targets.length){alert('삭제할 현장을 선택해 주세요.');clearSearchRecordSelection();return}
+    const allRegistered=targets.length===records().length;
+    if(!confirm(`선택한 현장 ${targets.length.toLocaleString()}건을 중앙 데이터에서 삭제하시겠습니까?\n\n모든 사용자의 현장 검색과 집계에서 제외되며 복구할 수 없습니다.`))return;
+    if(allRegistered&&!confirm(`등록된 현장 전체 ${targets.length.toLocaleString()}건이 선택되었습니다.\n\n정말 전체 자료를 삭제하시겠습니까?`))return;
+    const button=document.getElementById('deleteSelectedRecordsButton');if(button){button.disabled=true;button.textContent='삭제 중…'}
+    try{
+      if(typeof verifiedImportAdmin==='function'&&!(await verifiedImportAdmin()))throw new Error('관리자 권한을 확인할 수 없습니다. 다시 로그인해 주세요.');
+      const ids=targets.map(r=>String(r._cloudid||keyOf(r)));
+      let removed=0;
+      for(let i=0;i<ids.length;i+=100){
+        const batch=ids.slice(i,i+100),{data,error}=await sb.from('pjt_records').delete().in('id',batch).select('id');
+        if(error)throw new Error(`${removed.toLocaleString()}건 삭제 후 중단됨: ${error.message}`);
+        removed+=(data||[]).length;
+      }
+      if(removed!==ids.length)throw new Error(`요청 ${ids.length.toLocaleString()}건 중 ${removed.toLocaleString()}건만 삭제되었습니다. 관리자 권한과 삭제 정책을 확인해 주세요.`);
+      clearSearchRecordSelection();await reloadRows();render();originalToast(`${removed.toLocaleString()}건을 삭제했습니다`);
+    }catch(e){await reloadRows().catch(()=>{});render();cloudError(e)}
+    finally{if(button){button.textContent='선택 삭제';updateSearchSelectionControls()}}
   };
   getUsers = () => cloudUsers;
   putUsers = () => {};
