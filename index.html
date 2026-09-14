@@ -327,7 +327,7 @@ async function saveProjectState(){
 }
 let activeFilter='registered', editKey=null;
 let visibleRecordLimit=100;
-let selectedSearchRecords=new Set(),currentSearchResultKeys=[];
+let selectedSearchRecords=new Set(),currentSearchResultKeys=[],searchSelectAllExplicit=false;
 const FIELD_STORE='pjt_webapp_v3_display_fields';
 const RECOMMENDED_FIELDS=['현장명','지역','문서작성 > 담당','문서작성 > 제본 입고','현장점검원','현장점검 종료','영업 담당','관리주체 담당자','관리주체 연락처'];
 let displayFields=JSON.parse(localStorage.getItem(FIELD_STORE)||'null')||RECOMMENDED_FIELDS.slice();
@@ -627,13 +627,14 @@ function card(r){
  </article>`;
 }
 function recordSelectionKey(r){return String(r?._cloudid||keyOf(r))}
-function clearSearchRecordSelection(){selectedSearchRecords.clear();currentSearchResultKeys=[];updateSearchSelectionControls()}
-function toggleSearchRecordSelection(k,checked){checked?selectedSearchRecords.add(String(k)):selectedSearchRecords.delete(String(k));updateSearchSelectionControls()}
-function toggleAllSearchRecords(checked){if(checked)currentSearchResultKeys.forEach(k=>selectedSearchRecords.add(k));else currentSearchResultKeys.forEach(k=>selectedSearchRecords.delete(k));render()}
+function clearSearchRecordSelection(){selectedSearchRecords.clear();currentSearchResultKeys=[];searchSelectAllExplicit=false;updateSearchSelectionControls()}
+function toggleSearchRecordSelection(k,checked){searchSelectAllExplicit=false;checked?selectedSearchRecords.add(String(k)):selectedSearchRecords.delete(String(k));updateSearchSelectionControls()}
+function toggleAllSearchRecords(checked){searchSelectAllExplicit=Boolean(checked);if(checked)currentSearchResultKeys.forEach(k=>selectedSearchRecords.add(k));else currentSearchResultKeys.forEach(k=>selectedSearchRecords.delete(k));render()}
 function updateSearchSelectionControls(){
  const master=document.getElementById('selectAllSearchRecords'),count=document.getElementById('selectedResultCount'),button=document.getElementById('deleteSelectedRecordsButton');
  const selectedHere=currentSearchResultKeys.filter(k=>selectedSearchRecords.has(k)).length,all=currentSearchResultKeys.length>0&&selectedHere===currentSearchResultKeys.length;
- if(master){master.checked=all;master.indeterminate=selectedHere>0&&!all;master.disabled=!isAdmin()||!currentSearchResultKeys.length}
+ if(searchSelectAllExplicit&&!all)searchSelectAllExplicit=false;
+ if(master){master.checked=searchSelectAllExplicit&&all;master.indeterminate=false;master.disabled=!isAdmin()||!currentSearchResultKeys.length}
  if(count)count.textContent=`선택 ${selectedSearchRecords.size.toLocaleString()}건`;
  if(button)button.disabled=!isAdmin()||selectedSearchRecords.size===0;
 }
