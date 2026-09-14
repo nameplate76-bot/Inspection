@@ -27,7 +27,7 @@ main{padding:0 14px}.dashboard{margin-top:-16px}.sectiontitle{display:flex;align
 .analyticsActions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:13px 0}.analyticsActions button{border:1px solid #cdddf3;background:#fff;color:var(--navy);border-radius:13px;padding:13px;font-weight:900;font-size:13px;box-shadow:var(--shadow)}
 .filterbar{display:flex;gap:8px;margin:12px 0;overflow:auto}.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;white-space:nowrap;font-size:12px;font-weight:800;color:#4b5d75}.pill.active{background:var(--navy);border-color:var(--navy);color:#fff}
 .resultHead{display:flex;align-items:center;gap:8px;margin:16px 2px 9px}.resultHead b{flex:1;font-size:14px}.resultHead span{font-size:12px;color:var(--muted)}
-.resultBulkActions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}.resultSelectAll{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:#43546b;white-space:nowrap}.resultSelectAll input,.searchRecordCheck input{width:17px;height:17px;margin:0;accent-color:var(--navy)}.selectedResultCount{min-width:55px;text-align:right}.deleteSelectedBtn{border:1px solid #e6a4a4;background:#fff;color:#b42323;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:900}.deleteSelectedBtn:disabled{opacity:.45;cursor:not-allowed;background:#f7f7f7}
+.resultBulkActions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}.resultSelectAll{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:#43546b;white-space:nowrap}.resultSelectAll input,.searchRecordCheck input{width:17px;height:17px;margin:0;accent-color:var(--navy)}.clearSelectedBtn{border:1px solid #cbd8e8;background:#fff;color:var(--navy);border-radius:9px;padding:7px 10px;font-size:11px;font-weight:900;white-space:nowrap}.clearSelectedBtn:hover{background:#edf3fb}.clearSelectedBtn:disabled{opacity:.45;cursor:not-allowed;background:#f7f7f7}.selectedResultCount{min-width:55px;text-align:right}.deleteSelectedBtn{border:1px solid #e6a4a4;background:#fff;color:#b42323;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:900}.deleteSelectedBtn:disabled{opacity:.45;cursor:not-allowed;background:#f7f7f7}
 @media(max-width:580px){.resultHead{align-items:flex-start;flex-wrap:wrap}.resultHead>b{width:100%;flex-basis:100%}.resultBulkActions{width:100%;justify-content:flex-start}.selectedResultCount{margin-left:auto}.searchRecordCheck span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}}
 .fieldcfg{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:9px;padding:7px 9px;font-size:11px;font-weight:900;margin-right:8px}
 .selectedData{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px;margin-top:11px;padding:10px;border:1px solid #edf1f6;background:#fafbfd;border-radius:11px}
@@ -134,7 +134,7 @@ body:not(.reportMode):not(.workMode) .app{display:none!important}
  <button class="pill" data-filter="reportMissing" onclick="setFilter(this)">보고서 미작성</button>
  <button class="pill" data-filter="reportDone" onclick="setFilter(this)">보고서 완료</button>
 </div>
-<div class="resultHead"><b>현장 검색 결과</b><div class="resultBulkActions adminOnly" id="resultBulkActions"><label class="resultSelectAll"><input id="selectAllSearchRecords" type="checkbox" onchange="toggleAllSearchRecords(this.checked)"><span>검색 결과 전체 선택</span></label><span class="selectedResultCount" id="selectedResultCount">선택 0건</span><button type="button" class="deleteSelectedBtn" id="deleteSelectedRecordsButton" onclick="deleteSelectedSearchRecords()" disabled>선택 삭제</button></div><button class="fieldcfg" onclick="openFieldSettings()">⚙ 표시 항목</button><span id="resultCount">0건</span></div>
+<div class="resultHead"><b>현장 검색 결과</b><div class="resultBulkActions adminOnly" id="resultBulkActions"><label class="resultSelectAll"><input id="selectAllSearchRecords" type="checkbox" onchange="toggleAllSearchRecords(this.checked)"><span>검색 결과 전체 선택</span></label><button type="button" class="clearSelectedBtn" id="clearSelectedRecordsButton" onclick="clearAllSearchRecordSelection()" disabled>전체 선택 해제</button><span class="selectedResultCount" id="selectedResultCount">선택 0건</span><button type="button" class="deleteSelectedBtn" id="deleteSelectedRecordsButton" onclick="deleteSelectedSearchRecords()" disabled>선택 삭제</button></div><button class="fieldcfg" onclick="openFieldSettings()">⚙ 표시 항목</button><span id="resultCount">0건</span></div>
 <section class="cards" id="cards"></section><div id="moreResults" class="moreResults"></div>
 </section>
 </main>
@@ -628,13 +628,15 @@ function card(r){
 }
 function recordSelectionKey(r){return String(r?._cloudid||keyOf(r))}
 function clearSearchRecordSelection(){selectedSearchRecords.clear();currentSearchResultKeys=[];searchSelectAllExplicit=false;updateSearchSelectionControls()}
+function clearAllSearchRecordSelection(){selectedSearchRecords.clear();searchSelectAllExplicit=false;render()}
 function toggleSearchRecordSelection(k,checked){searchSelectAllExplicit=false;checked?selectedSearchRecords.add(String(k)):selectedSearchRecords.delete(String(k));updateSearchSelectionControls()}
 function toggleAllSearchRecords(checked){searchSelectAllExplicit=Boolean(checked);if(checked)currentSearchResultKeys.forEach(k=>selectedSearchRecords.add(k));else currentSearchResultKeys.forEach(k=>selectedSearchRecords.delete(k));render()}
 function updateSearchSelectionControls(){
- const master=document.getElementById('selectAllSearchRecords'),count=document.getElementById('selectedResultCount'),button=document.getElementById('deleteSelectedRecordsButton');
+ const master=document.getElementById('selectAllSearchRecords'),clearButton=document.getElementById('clearSelectedRecordsButton'),count=document.getElementById('selectedResultCount'),button=document.getElementById('deleteSelectedRecordsButton');
  const selectedHere=currentSearchResultKeys.filter(k=>selectedSearchRecords.has(k)).length,all=currentSearchResultKeys.length>0&&selectedHere===currentSearchResultKeys.length;
  if(searchSelectAllExplicit&&!all)searchSelectAllExplicit=false;
  if(master){master.checked=searchSelectAllExplicit&&all;master.indeterminate=false;master.disabled=!isAdmin()||!currentSearchResultKeys.length}
+ if(clearButton)clearButton.disabled=!isAdmin()||selectedSearchRecords.size===0;
  if(count)count.textContent=`선택 ${selectedSearchRecords.size.toLocaleString()}건`;
  if(button)button.disabled=!isAdmin()||selectedSearchRecords.size===0;
 }
