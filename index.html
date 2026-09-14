@@ -969,7 +969,7 @@ boot();
   window.PJT_SHARED_SB=sb;
   const withTimeout = (promise, ms, message) => Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(message)),ms))]);
   const retryServer = async (work, label) => { let last; for(let attempt=1;attempt<=4;attempt++){try{return await withTimeout(work(),30000,`${label} 응답 시간이 초과되었습니다.`)}catch(e){last=e;if(attempt<4)await new Promise(resolve=>setTimeout(resolve,attempt*1200));}}throw last; };
-  const signInWithRetry = async (email,password) => { let last; for(let attempt=1;attempt<=2;attempt++){try{const result=await withTimeout(sb.auth.signInWithPassword({email,password}),45000,'로그인 서버가 45초 안에 응답하지 않았습니다.');if(result.error)return result;return result;}catch(e){last=e;if(attempt===1)await new Promise(resolve=>setTimeout(resolve,2000));}}throw last; };
+  const signInWithRetry = async (email,password,status) => { let last; for(let attempt=1;attempt<=2;attempt++){if(status)status.textContent=attempt===1?'이메일과 비밀번호를 확인하고 있습니다.':'로그인 서버 응답이 지연되어 다시 연결하고 있습니다.';try{const result=await withTimeout(sb.auth.signInWithPassword({email,password}),25000,'로그인 서버가 25초 안에 응답하지 않았습니다.');if(result.error)return result;return result;}catch(e){last=e;if(attempt===1)await new Promise(resolve=>setTimeout(resolve,1500));}}throw new Error('로그인 서버에 연결하지 못했습니다. 인터넷 연결을 확인하고 잠시 후 다시 시도해 주세요.\n'+String(last?.message||last||'')); };
   const localRecords = records, localImportExcel = importExcel, localSaveRecord = saveRecord;
   let cloudRows = [], cloudUsers = [], isBulkUploading = false;
   const originalToast = toast;
@@ -985,6 +985,18 @@ boot();
   const profileOf = async uid => {
     const {data,error} = await retryServer(()=>sb.from('pjt_profiles').select('*').eq('id',uid).single(),'사용자 승인 정보 조회');
     if (error) throw error; return data;
+  };
+  const profileForLogin = async (uid,status) => {
+    let lastError;
+    for(let attempt=1;attempt<=2;attempt++){
+      if(status)status.textContent=attempt===1?'계정 인증 완료 · 사용자 승인 상태를 확인하고 있습니다.':'승인정보 조회가 지연되어 다시 확인하고 있습니다.';
+      try{
+        const result=await withTimeout(sb.from('pjt_profiles').select('*').eq('id',uid).single(),15000,'사용자 승인정보 조회가 15초 안에 완료되지 않았습니다.');
+        if(result.error)throw result.error;
+        return result.data;
+      }catch(e){lastError=e;if(attempt<2)await new Promise(resolve=>setTimeout(resolve,1200));}
+    }
+    throw new Error('사용자 승인정보를 불러오지 못했습니다. 인터넷 연결을 확인하고 잠시 후 다시 로그인해 주세요.\n'+String(lastError?.message||lastError||''));
   };
   const reloadRows = async () => {
     // Supabase는 한 번의 조회에 최대 1,000행만 돌려줍니다.
@@ -1046,6 +1058,7 @@ boot();
     if(!confirm(`선택한 현장 ${targets.length.toLocaleString()}건을 중앙 데이터에서 삭제하시겠습니까?\n\n모든 사용자의 현장 검색과 집계에서 제외되며 복구할 수 없습니다.`))return;
     if(allRegistered&&!confirm(`등록된 현장 전체 ${targets.length.toLocaleString()}건이 선택되었습니다.\n\n정말 전체 자료를 삭제하시겠습니까?`))return;
     const button=document.getElementById('deleteSelectedRecordsButton');if(button){button.disabled=true;button.textContent='삭제 중…'}
+    isBulkUploading=true;
     try{
       if(typeof verifiedImportAdmin==='function'&&!(await verifiedImportAdmin()))throw new Error('관리자 권한을 확인할 수 없습니다. 다시 로그인해 주세요.');
       const ids=targets.map(r=>String(r._cloudid||keyOf(r)));
@@ -1066,7 +1079,7 @@ boot();
       const message=String(e?.message||e||'');
       alert('현장 선택 삭제가 완료되지 않았습니다.\n\n'+message+(remainingSelected?`\n\n삭제되지 않은 선택 항목 ${remainingSelected.toLocaleString()}건은 체크 상태로 유지했습니다. 네트워크 연결을 확인한 뒤 선택 삭제를 다시 누르세요.`:'\n\n화면을 새로고침하여 서버의 최신 자료를 확인해 주세요.'));
     }
-    finally{if(button){button.textContent='선택 삭제';updateSearchSelectionControls()}}
+    finally{isBulkUploading=false;if(button){button.textContent='선택 삭제';updateSearchSelectionControls()}}
   };
   getUsers = () => cloudUsers;
   putUsers = () => {};
@@ -1105,7 +1118,7 @@ boot();
     const button=document.getElementById('loginSubmit'), status=document.getElementById('loginStatus');
     if(!email||!password){status.style.display='block';status.textContent='이메일과 비밀번호를 입력하세요.';return}
     button.disabled=true;button.textContent='로그인 확인 중…';status.style.display='block';status.textContent='계정과 승인 상태를 확인하고 있습니다.';
-    try { const {data,error}=await signInWithRetry(email,password); if(error)throw error; const p=await profileOf(data.user.id); if(!p.approved){await sb.auth.signOut();status.textContent='이 계정은 아직 관리자 승인을 받지 않았습니다.';return;} currentUser=p; window.startSalesQuoteCloud?.(); const destination=pendingWorkRoute; pendingWorkRoute=''; loginDialog.close(); document.body.classList.remove('authPending'); applyRoleUi(); render(); if(destination)openWork(destination); originalToast(destination?`${destination} 업무 화면으로 이동했습니다. 현장 데이터를 불러오는 중입니다.`:'로그인되었습니다. 현장 데이터를 불러오는 중입니다.'); Promise.all([withTimeout(reloadRows(),60000,'현장 데이터 불러오기 시간이 초과되었습니다.'),withTimeout(reloadUsers(),30000,'사용자 목록 불러오기 시간이 초과되었습니다.')]).then(()=>{render();originalToast('중앙 서버 데이터가 반영되었습니다');}).catch(e=>{console.warn(e);originalToast('로그인은 완료되었습니다. 데이터 새로고침이 지연되고 있습니다.');}); }catch(e){status.textContent='로그인 실패: '+(e.message||e);console.error(e);}finally{if(document.getElementById('loginSubmit')){button.disabled=false;button.textContent='로그인';}}
+    try { const {data,error}=await signInWithRetry(email,password,status); if(error)throw error; const p=await profileForLogin(data.user.id,status); if(!p.approved){await sb.auth.signOut();status.textContent='이 계정은 아직 관리자 승인을 받지 않았습니다.';return;} currentUser=p; window.startSalesQuoteCloud?.(); const destination=pendingWorkRoute; pendingWorkRoute=''; loginDialog.close(); document.body.classList.remove('authPending'); applyRoleUi(); render(); if(destination)openWork(destination); originalToast(destination?`${destination} 업무 화면으로 이동했습니다. 현장 데이터를 불러오는 중입니다.`:'로그인되었습니다. 현장 데이터를 불러오는 중입니다.'); Promise.all([withTimeout(reloadRows(),60000,'현장 데이터 불러오기 시간이 초과되었습니다.'),withTimeout(reloadUsers(),30000,'사용자 목록 불러오기 시간이 초과되었습니다.')]).then(()=>{render();originalToast('중앙 서버 데이터가 반영되었습니다');}).catch(e=>{console.warn(e);originalToast('로그인은 완료되었습니다. 데이터 새로고침이 지연되고 있습니다.');}); }catch(e){status.textContent='로그인 실패: '+(e.message||e);console.error(e);}finally{if(document.getElementById('loginSubmit')){button.disabled=false;button.textContent='로그인';}}
   };
   logoutUser = async () => { window.stopSalesQuoteCloud?.(); await sb.auth.signOut(); currentUser=null; cloudRows=[]; cloudUsers=[]; applyRoleUi(); render(); originalToast('로그아웃했습니다'); };
   window.openMyProfile = async () => {
@@ -1137,7 +1150,20 @@ boot();
   saveRecord = async () => { const before=editKey; await localSaveRecord(); const row=edits[before]; if(!row)return; try{const id=String(row._cloudid||keyOf(row)),storedRow={...row,_newid:id};delete storedRow._cloudid;delete storedRow._cloudUpdatedAt;const {error}=await sb.from('pjt_records').upsert({id,data:storedRow,updated_by:(await sb.auth.getUser()).data.user.id,updated_at:new Date().toISOString()},{onConflict:'id'});if(error)throw error; await reloadRows();render();originalToast('모든 직원에게 저장 내용이 반영되었습니다');}catch(e){cloudError(e);} };
   const verifiedImportAdmin=async()=>{const refreshed=await retryServer(()=>sb.auth.refreshSession(),'로그인 정보 갱신');if(refreshed.error||!refreshed.data?.session?.user)throw new Error('로그인 시간이 만료되었습니다. 로그아웃 후 다시 로그인하고 엑셀 가져오기를 실행하세요.');const authUser=refreshed.data.session.user,freshProfile=await profileOf(authUser.id);if(!freshProfile.approved||freshProfile.role!=='admin')throw new Error('엑셀 가져오기는 승인된 관리자만 사용할 수 있습니다. 사용자 승인과 관리자 권한을 확인하세요.');currentUser=freshProfile;applyRoleUi();return authUser;};
   importExcel = async file => { if(!file)return;let uploadStarted=false;try{const authUser=await verifiedImportAdmin();await localImportExcel(file);if(!lastExcelImportCount||!lastExcelImportedRows.length)return;isBulkUploading=true;uploadStarted=true;const rows=lastExcelImportedRows.map(r=>({...r})),batchSize=100,previousCloudIds=new Set(cloudRows.map(r=>String(r._cloudid||keyOf(r)))),groups=new Map();cloudRows.forEach(row=>{const identity=recordNaturalKey(row);if(!identity)return;if(!groups.has(identity))groups.set(identity,[]);groups.get(identity).push(row)});groups.forEach(group=>group.sort((a,b)=>String(b._cloudUpdatedAt||'').localeCompare(String(a._cloudUpdatedAt||''))||String(a._cloudid||'').localeCompare(String(b._cloudid||''))));const assigned=rows.map((row,index)=>{const identity=recordNaturalKey(row)||`fallback:${stableImportedRecordId(row,index)}`,existing=groups.get(identity)?.[0],id=String(existing?._cloudid||stableImportedRecordId(row,index)),data={...row,_newid:id};delete data._cloudid;delete data._cloudUpdatedAt;return{id,identity,data}}),desiredIds=new Set(assigned.map(item=>item.id)),duplicateIds=new Set();assigned.forEach(item=>(groups.get(item.identity)||[]).slice(1).forEach(row=>duplicateIds.add(String(row._cloudid||keyOf(row)))));if(rows.length>50000&&!confirm(`${rows.length.toLocaleString()}건을 저장합니다. 네트워크 상태에 따라 시간이 걸릴 수 있습니다. 계속하시겠습니까?`))return;for(let i=0;i<assigned.length;i+=batchSize){const payload=assigned.slice(i,i+batchSize).map(item=>({id:item.id,data:item.data,updated_by:authUser.id,updated_at:new Date().toISOString()}));const result=await retryServer(()=>sb.from('pjt_records').upsert(payload,{onConflict:'id'}).select('id'),'엑셀 데이터 저장');if(result.error)throw result.error;if((result.data||[]).length!==payload.length)throw new Error(`${i+1}번째 행부터 서버 저장 결과를 모두 확인하지 못했습니다.`);if(i%(batchSize*5)===0)originalToast(`${Math.min(i+batchSize,assigned.length).toLocaleString()} / ${assigned.length.toLocaleString()}건 서버 저장 중…`);}const cleanupIds=lastExcelImportWasReplace?[...previousCloudIds].filter(id=>!desiredIds.has(id)):[...duplicateIds].filter(id=>!desiredIds.has(id));for(let i=0;i<cleanupIds.length;i+=batchSize){const result=await retryServer(()=>sb.from('pjt_records').delete().in('id',cleanupIds.slice(i,i+batchSize)).select('id'),'중복 데이터 정리');if(result.error)throw result.error;}await reloadRows();render();const saved=cloudRows.length;if(lastExcelImportWasReplace&&saved!==assigned.length)throw new Error(`가져온 ${assigned.length.toLocaleString()}건과 서버에서 확인한 ${saved.toLocaleString()}건이 일치하지 않습니다.`);originalToast(`${assigned.length.toLocaleString()}건 반영 완료${cleanupIds.length?` · 중복 ${cleanupIds.length.toLocaleString()}건 정리`:''}${lastExcelFileDuplicateCount?` · 파일 내 중복 ${lastExcelFileDuplicateCount.toLocaleString()}건 병합`:''}`);}catch(e){console.error(e);if(uploadStarted){try{await reloadRows();render()}catch(reloadError){console.warn(reloadError)}}const message=String(e?.message||e||'');alert('엑셀 가져오기 중 중앙 서버 저장에 실패했습니다.\n\n'+message+( /row-level security|RLS/i.test(message)?'\n\n로그인 정보와 관리자 권한을 다시 확인했습니다. 계속 발생하면 로그아웃 후 다시 로그인하여 실행하세요.':''));}finally{isBulkUploading=false;lastExcelImportCount=0;lastExcelImportWasReplace=false;lastExcelImportedRows=[];lastExcelFileDuplicateCount=0;const input=document.getElementById('excelInput');if(input)input.value='';} };
-  const startCloud = async () => { try { const {data:{session}}=await sb.auth.getSession(); if(session){const p=await profileOf(session.user.id); if(p.approved){currentUser=p;await reloadRows();await reloadUsers();window.startSalesQuoteCloud?.();}} applyRoleUi();render(); sb.channel('pjt-records-live').on('postgres_changes',{event:'*',schema:'public',table:'pjt_records'},async()=>{if(currentUser&&!isBulkUploading){await reloadRows();render();originalToast('다른 직원의 변경 내용이 반영되었습니다');}}).subscribe(); }catch(e){console.warn('중앙 서버 연결 대기',e);} };
+  let realtimeRefreshTimer=null,realtimeRefreshRunning=false,realtimeRefreshQueued=false;
+  const scheduleRealtimeRefresh=()=>{
+    if(!currentUser||isBulkUploading)return;
+    clearTimeout(realtimeRefreshTimer);
+    realtimeRefreshTimer=setTimeout(async()=>{
+      if(!currentUser||isBulkUploading)return;
+      if(realtimeRefreshRunning){realtimeRefreshQueued=true;return}
+      realtimeRefreshRunning=true;
+      try{await reloadRows();render();originalToast('다른 직원의 변경 내용이 반영되었습니다')}
+      catch(e){console.warn('실시간 자료 새로고침 지연',e)}
+      finally{realtimeRefreshRunning=false;if(realtimeRefreshQueued){realtimeRefreshQueued=false;scheduleRealtimeRefresh()}}
+    },1200);
+  };
+  const startCloud = async () => { try { const {data:{session}}=await sb.auth.getSession(); if(session){const p=await profileOf(session.user.id); if(p.approved){currentUser=p;await reloadRows();await reloadUsers();window.startSalesQuoteCloud?.();}} applyRoleUi();render(); sb.channel('pjt-records-live').on('postgres_changes',{event:'*',schema:'public',table:'pjt_records'},scheduleRealtimeRefresh).subscribe(); }catch(e){console.warn('중앙 서버 연결 대기',e);} };
   startCloud();
 })();
 </script>
