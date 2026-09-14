@@ -5,7 +5,8 @@ const COLLECTION_KEYS=[
  'pjt_sales_contracts_v1',
  'pjt_inspection_teams_v1','pjt_inspection_assignments_v1',
  'pjt_inspection_plans_v1','pjt_inspection_completions_v1',
- 'pjt_inspection_equipment_v1','pjt_equipment_inspections_v1'
+ 'pjt_inspection_equipment_v1','pjt_equipment_inspections_v1',
+ 'pjt_performance_reason_library_v1'
 ];
 const reportPrefix='mechanical-performance-report-';
 let client=null,channel=null,managementChannel=null,startPromise=null,started=false,applyingRemote=false,warned=false;
@@ -27,6 +28,7 @@ const refreshLater=key=>{clearTimeout(refreshTimers.get(key));refreshTimers.set(
   else if(key==='pjt_inspection_completions_v1'){window.prepareInspectionWorkYears?.();window.renderInspectionCompletions?.();window.renderInspectionDashboard?.()}
   else if(key==='pjt_inspection_equipment_v1'){window.renderEquipmentList?.();window.renderItemInspectionList?.(window.inspectionItemMode||'performance')}
   else if(key==='pjt_equipment_inspections_v1')window.renderItemInspectionList?.(window.inspectionItemMode||'performance');
+  else if(key==='pjt_performance_reason_library_v1')window.PJT_REASON_LIBRARY_UPDATED?.();
   else if(key===COMPOSER_KEY&&document.getElementById('reportComposerPage')?.classList.contains('active'))window.renderComposer?.();
  }catch(error){console.warn('동기화 화면 갱신 대기',error)}
 },120))};
@@ -81,6 +83,7 @@ function stop(){if(channel&&client)client.removeChannel(channel);if(managementCh
 
 window.PJT_SHARED_REPORT_LOAD=async()=>{await ensureStarted();const marker=cache.get(REPORT_KEY)?.data;return marker?downloadReport(marker):null};
 window.PJT_SHARED_REPORT_SAVE=snapshot=>{clearTimeout(saveTimers.get(REPORT_KEY));return new Promise((resolve,reject)=>{const waiters=saveWaiters.get(REPORT_KEY)||[];waiters.push({resolve,reject});saveWaiters.set(REPORT_KEY,waiters);saveTimers.set(REPORT_KEY,setTimeout(async()=>{const queued=saveWaiters.get(REPORT_KEY)||[];saveWaiters.delete(REPORT_KEY);try{await uploadReport(snapshot);queued.forEach(x=>x.resolve())}catch(error){queued.forEach(x=>x.reject(error));notifyError(error)}},1600))})};
+window.PJT_SHARED_COLLECTION_SAVE=(key,data)=>COLLECTION_KEYS.includes(key)?scheduleSave(key,data):Promise.reject(new Error('공유할 수 없는 자료 형식입니다.'));
 
 if(typeof window.salesPut==='function'){
  const original=window.salesPut;window.salesPut=salesPut=function(key,rows){original(key,rows);if(key==='pjt_sales_contracts_v1')scheduleSave(key,rows).catch(()=>{})};
