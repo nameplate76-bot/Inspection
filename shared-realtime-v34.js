@@ -9,11 +9,13 @@ const COLLECTION_KEYS=[
  'pjt_performance_reason_library_v1'
 ];
 const reportPrefix='mechanical-performance-report-';
-let client=null,channel=null,managementChannel=null,startPromise=null,started=false,applyingRemote=false,warned=false;
+let client=null,channel=null,managementChannel=null,startPromise=null,started=false,applyingRemote=false,warned=false,retryTimer=null;
 const cache=new Map(),saveTimers=new Map(),saveWaiters=new Map(),refreshTimers=new Map();
 const connected=()=>Boolean(window.PJT_SUPABASE_URL&&window.PJT_SUPABASE_ANON_KEY&&window.supabase);
 const activeUser=async()=>{const {data}=await client.auth.getSession();return data.session?.user||null};
-const notifyError=error=>{console.error('업무자료 중앙 동기화 오류',error);if(warned)return;warned=true;alert('업무자료의 중앙 서버 동기화에 실패했습니다.\n\nshared_realtime_sync.sql 적용 여부와 로그인 상태를 확인하세요.\n\n'+(error?.message||error));};
+const transientNetworkError=error=>/load failed|failed to fetch|networkerror|network request failed|timeout|timed out|connection.*lost/i.test(String(error?.message||error));
+const retrySync=()=>{if(retryTimer||!navigator.onLine)return;retryTimer=setTimeout(()=>{retryTimer=null;ensureStarted().catch(notifyError)},5000)};
+const notifyError=error=>{console.error('업무자료 중앙 동기화 오류',error);if(transientNetworkError(error)){document.documentElement.dataset.sharedSync='retrying';retrySync();return}if(warned)return;warned=true;alert('업무자료의 중앙 서버 연결을 확인하지 못했습니다.\n\n로그인 상태와 중앙 동기화 설정을 확인해 주세요.\n\n'+(error?.message||error));};
 const safeJson=raw=>{try{return JSON.parse(raw)}catch{return null}};
 const composerSnapshot=()=>{const data={};for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key?.startsWith(reportPrefix))data[key.slice(reportPrefix.length)]=localStorage.getItem(key)}return data};
 const applyComposer=data=>{Object.entries(data||{}).forEach(([key,value])=>localStorage.setItem(reportPrefix+key,String(value??'')))};
@@ -58,7 +60,7 @@ async function applyRemote(row,announce=false){
  if(!row?.data_key)return;const known=cache.get(row.data_key);if(known?.updated_at&&row.updated_at&&known.updated_at>=row.updated_at)return;
  cache.set(row.data_key,{data:row.data,updated_at:row.updated_at||''});applyingRemote=true;
  try{
-  if(row.data_key===REPORT_KEY){const report=await downloadReport(row.data);if(report)await window.PJT_APPLY_SHARED_REPORT?.(report)}
+  if(row.data_key===REPORT_KEY){if(window.PJT_REPORT_IS_OPEN?.()){const report=await downloadReport(row.data);if(report)await window.PJT_APPLY_SHARED_REPORT?.(report)}else window.PJT_MARK_SHARED_REPORT_STALE?.()}
   else{putLocal(row.data_key,row.data);refreshLater(row.data_key)}
  }finally{applyingRemote=false}
  if(announce&&typeof window.toast==='function')window.toast('다른 기기에서 변경한 업무자료가 반영되었습니다');
@@ -74,7 +76,7 @@ async function start(){
  const user=await activeUser();if(!user)return;started=true;
  const {data,error}=await client.from('pjt_shared_state').select('data_key,data,updated_at').eq('scope',SCOPE);if(error)throw error;
  const rows=data||[],keys=new Set(rows.map(row=>row.data_key));for(const row of rows)await applyRemote(row,false);await migrateMissing(keys);
- channel=client.channel('pjt-all-business-live').on('postgres_changes',{event:'*',schema:'public',table:'pjt_shared_state',filter:`scope=eq.${SCOPE}`},payload=>applyRemote(payload.new,true).catch(notifyError)).subscribe();
+ channel=client.channel('pjt-all-business-live').on('postgres_changes',{event:'*',schema:'public',table:'pjt_shared_state',filter:`scope=eq.${SCOPE}`},payload=>applyRemote(payload.new,true).catch(notifyError)).subscribe((status,error)=>{if(error)console.warn('실시간 동기화 채널 재연결 대기',error)});
  managementChannel=client.channel('pjt-management-live').on('postgres_changes',{event:'*',schema:'public',table:'pjt_management_entries'},()=>{if(document.body.classList.contains('managementMode'))window.openManagementLedger?.()}).subscribe();
  document.documentElement.dataset.sharedSync='connected';
 }
@@ -98,4 +100,5 @@ if(typeof window.composerSave==='function')window.composerSave=composerSave=asyn
 if(typeof window.composerFillCommon==='function'){const original=window.composerFillCommon;window.composerFillCommon=composerFillCommon=function(){const result=original();scheduleSave(COMPOSER_KEY,composerSnapshot(),50).catch(()=>{});return result}};
 
 document.addEventListener('DOMContentLoaded',()=>{if(!connected())return;client=window.PJT_SHARED_SB||window.supabase.createClient(window.PJT_SUPABASE_URL,window.PJT_SUPABASE_ANON_KEY);client.auth.onAuthStateChange((event,session)=>{if(session)setTimeout(()=>ensureStarted().catch(notifyError),0);else stop()});ensureStarted().catch(error=>{if(!/로그인 정보/.test(String(error?.message||error)))notifyError(error)})});
+window.addEventListener('online',()=>{warned=false;if(!started)retrySync()});
 })();
