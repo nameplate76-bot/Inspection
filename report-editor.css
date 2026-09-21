@@ -48,6 +48,10 @@
 .reEquipmentCard>[data-equipment-select]{position:absolute;z-index:3;top:8px;right:8px;width:18px;height:18px;margin:0;accent-color:#b4232f;cursor:pointer}
 .reEquipmentButtons .reEquipmentCard .reEquipmentButton{box-sizing:border-box;width:100%;min-width:0;height:68px;padding:9px 34px 8px 13px;justify-content:center;overflow:hidden}
 .reEquipmentButton span{display:-webkit-box;width:100%;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.25;text-align:left;overflow-wrap:anywhere}
+.reEquipmentButtons .reEquipmentButton small{display:flex;width:100%;align-items:center;justify-content:space-between;gap:7px;line-height:1.2}
+.reEquipmentButtons .reEquipmentButton small span{display:block;width:auto;overflow:visible;white-space:nowrap}
+.reEquipmentButtons .reEquipmentButton small strong{flex:0 0 auto;padding:2px 6px;border:1px solid currentColor;border-radius:999px;background:rgba(255,255,255,.45);font-size:11px;line-height:1.15;letter-spacing:.1px}
+.reEquipmentButtons .reEquipmentButton.progress small strong{background:rgba(255,255,255,.16)}
 .reEquipmentCard.deleteSelected .reEquipmentButton{box-shadow:inset 0 0 0 2px #b4232f}
 .reEquipmentSelectionBar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0 7px;padding:9px 10px;border:1px solid #c1d2df;border-radius:9px;background:#fff}
 .reEquipmentSelectionBar label{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:#173f72}
