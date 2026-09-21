@@ -41,3 +41,18 @@
 /* 설비 하단 작업버튼과 진공펌프 사유 입력 */
 .reEquipmentFooterActions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid #c6d7e2}.reEquipmentFooterActions .reDanger{margin-right:auto}.reEquipmentFooterActions .reStartCheck{min-width:210px}.reVacuumPhotoSection{display:flex;flex-direction:column}.reVacuumPhotoSection .reReasonField{margin-top:10px}.reVacuumPhotoSection .reReasonSelect{min-height:118px}.reVacuumPhotoSection .reReasonRemove{margin-top:7px}.reReasonDialog .reReasonPolish{width:100%;margin-top:8px;border-color:#17658a;background:#eef7fc;color:#125779;font-weight:700}.officialVacuum .officialReason{border-top:1px solid #666;background:#fff}.officialVacuum .officialPhotoCell{overflow:hidden}
 @media(max-width:700px){.reEquipmentFooterActions{display:grid;grid-template-columns:1fr 1.5fr}.reEquipmentFooterActions .reDanger,.reEquipmentFooterActions .reStartCheck{width:100%;min-width:0;margin:0}.reEquipmentFooterActions .reStartCheck{font-size:13px;padding-left:7px;padding-right:7px}}
+
+/* 설비번호 카드 규격 통일 및 다중 선택 삭제 */
+.reEquipmentButtons{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));align-items:stretch;gap:9px}
+.reEquipmentCard{position:relative;min-width:0;height:68px}
+.reEquipmentCard>[data-equipment-select]{position:absolute;z-index:3;top:8px;right:8px;width:18px;height:18px;margin:0;accent-color:#b4232f;cursor:pointer}
+.reEquipmentButtons .reEquipmentCard .reEquipmentButton{box-sizing:border-box;width:100%;min-width:0;height:68px;padding:9px 34px 8px 13px;justify-content:center;overflow:hidden}
+.reEquipmentButton span{display:-webkit-box;width:100%;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.25;text-align:left;overflow-wrap:anywhere}
+.reEquipmentCard.deleteSelected .reEquipmentButton{box-shadow:inset 0 0 0 2px #b4232f}
+.reEquipmentSelectionBar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0 7px;padding:9px 10px;border:1px solid #c1d2df;border-radius:9px;background:#fff}
+.reEquipmentSelectionBar label{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:#173f72}
+.reEquipmentSelectionBar input{width:18px;height:18px;accent-color:#17658a}
+.reEquipmentSelectionBar span{margin-left:auto;color:#526b7c}
+.reEquipmentSelectionBar button{min-height:36px;padding:7px 11px}
+.reEquipmentSelectionBar button:disabled{opacity:.45;cursor:default}
+@media(max-width:700px){.reEquipmentButtons{grid-template-columns:repeat(2,minmax(0,1fr))}.reEquipmentCard,.reEquipmentButtons .reEquipmentCard .reEquipmentButton{height:76px}.reEquipmentSelectionBar{display:grid;grid-template-columns:1fr 1fr}.reEquipmentSelectionBar span{margin:0;text-align:center}.reEquipmentSelectionBar .reDanger{width:100%}}
