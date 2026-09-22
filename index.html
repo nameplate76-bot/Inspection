@@ -148,7 +148,7 @@ body:not(.reportMode):not(.workMode):not(.inspectionDashboardMode):not(.salesMan
  <button class="pill" data-filter="reportMissing" onclick="setFilter(this)">보고서 미작성</button>
  <button class="pill" data-filter="reportDone" onclick="setFilter(this)">보고서 완료</button>
 </div>
-<div class="resultHead"><b>현장 검색 결과</b><div class="resultBulkActions adminOnly" id="resultBulkActions"><label class="resultSelectAll"><input id="selectAllSearchRecords" type="checkbox" onchange="toggleAllSearchRecords(this.checked)"><span>검색 결과 전체 선택</span></label><button type="button" class="clearSelectedBtn" id="clearSelectedRecordsButton" onclick="clearAllSearchRecordSelection()" disabled>전체 선택 해제</button><span class="selectedResultCount" id="selectedResultCount">선택 0건</span><button type="button" class="deleteSelectedBtn" id="deleteSelectedRecordsButton" onclick="deleteSelectedSearchRecords()" disabled>선택 삭제</button></div><button class="fieldcfg" onclick="openFieldSettings()">⚙ 표시 항목</button><span id="resultCount">0건</span></div>
+<div class="resultHead"><b>현장 검색 결과</b><div class="resultBulkActions" id="resultBulkActions"><label class="resultSelectAll"><input id="selectAllSearchRecords" type="checkbox" onchange="toggleAllSearchRecords(this.checked)"><span>검색 결과 전체 선택</span></label><button type="button" class="clearSelectedBtn" id="clearSelectedRecordsButton" onclick="clearAllSearchRecordSelection()" disabled>전체 선택 해제</button><span class="selectedResultCount" id="selectedResultCount">선택 0건</span><button type="button" class="deleteSelectedBtn" id="deleteSelectedRecordsButton" onclick="deleteSelectedSearchRecords()" disabled>선택 삭제</button></div><button class="fieldcfg" onclick="openFieldSettings()">⚙ 표시 항목</button><span id="resultCount">0건</span></div>
 <section class="cards searchListHost" id="cards"></section><div id="moreResults" class="moreResults"></div>
 </section>
 </main>
@@ -252,9 +252,11 @@ function goHome(){if(['inspection','sales'].includes(new URLSearchParams(locatio
 function getUsers(){try{return JSON.parse(localStorage.getItem(USER_STORE)||'[]')}catch(e){return []}}
 function putUsers(users){localStorage.setItem(USER_STORE,JSON.stringify(users))}
 function isAdmin(){return Boolean(currentUser&&currentUser.role==='admin'&&currentUser.approved)}
+function canBulkManageRecords(){return isAdmin()}
 function requireAdmin(){if(isAdmin())return true;alert('관리자 권한이 필요한 기능입니다.');return false}
 function applyRoleUi(){
  document.querySelectorAll('.adminOnly').forEach(el=>el.style.display=isAdmin()?'':'none');
+ const bulk=document.getElementById('resultBulkActions');if(bulk)bulk.style.display=canBulkManageRecords()?'flex':'none';
  document.querySelectorAll('.managerEntry').forEach(el=>el.style.display=(!currentUser||isAdmin())?'':'none');
  const line=document.getElementById('userLine');
  if(!line)return;
@@ -657,7 +659,7 @@ function moveSearchColumnPointer(event){const state=searchColumnPointer;if(!stat
 function finishSearchColumnPointer(event){const state=searchColumnPointer;if(!state||state.pointerId!==event.pointerId)return;searchColumnPointer=null;state.header.classList.remove('dragging');document.body.classList.remove('searchColumnDragging');document.querySelectorAll('.searchResultTable th.dragOver').forEach(header=>header.classList.remove('dragOver'));if(!state.dragging)return;searchSuppressSortUntil=Date.now()+500;event.preventDefault();event.stopPropagation();if(reorderSearchColumn(state.key,state.targetKey))render()}
 function cancelSearchColumnPointer(event){const state=searchColumnPointer;if(!state||state.pointerId!==event.pointerId)return;searchColumnPointer=null;state.header.classList.remove('dragging');document.body.classList.remove('searchColumnDragging');document.querySelectorAll('.searchResultTable th.dragOver').forEach(header=>header.classList.remove('dragOver'))}
 function searchListCell(record,key){if(key==='@site')return `<b class="searchSiteName">${esc(record[H.site]||'(현장명 없음)')}</b>`;if(key==='@sn')return esc(record[H.sn]||'-');if(key.startsWith('@'))return `<span class="searchStage ${searchStatusClass(record,key)}">${searchStatusText(record,key)}</span>`;if(key==='관리주체 연락처'){const contact=splitContact(record[key]);return `<div class="searchContact">${contact.phone?`<button type="button" class="searchPhoneLink" onclick="openPhoneCall('${jsq(contact.phone)}')">${esc(contact.phone)}<small>전화 걸기</small></button>`:'<span>-</span>'}${contact.email?`<small>${esc(contact.email)}</small>`:''}</div>`}return esc(formatValue(key,record[key])||'-')}
-function renderSearchList(rows){if(!rows.length)return '<div class="empty">검색 조건에 맞는 현장이 없습니다.</div>';const columns=searchListColumns(),headers=columns.map(column=>{const active=searchSortState.key===column.key,mark=active?(searchSortState.direction==='asc'?'▲':'▼'):'↕';return `<th data-search-column="${esc(column.key)}" onpointerdown="beginSearchColumnPointer(event,'${jsq(column.key)}')" onpointermove="moveSearchColumnPointer(event)" onpointerup="finishSearchColumnPointer(event)" onpointercancel="cancelSearchColumnPointer(event)" aria-sort="${active?(searchSortState.direction==='asc'?'ascending':'descending'):'none'}"><div class="searchHeaderBox"><button type="button" class="searchSortButton" onclick="setSearchSort('${jsq(column.key)}')"><span>${esc(column.label)}</span><i>${mark}</i></button></div></th>`}).join('');const body=rows.map(record=>{const selectionKey=recordSelectionKey(record);return `<tr class="${selectedSearchRecords.has(selectionKey)?'selected':''}">${isAdmin()?`<td class="searchSelectCell"><input type="checkbox" aria-label="${esc(record[H.site]||'현장')} 선택" onchange="toggleSearchRecordSelection('${jsq(selectionKey)}',this.checked)" ${selectedSearchRecords.has(selectionKey)?'checked':''}></td>`:''}${columns.map(column=>`<td data-column="${esc(column.key)}">${searchListCell(record,column.key)}</td>`).join('')}<td class="searchManageCell"><button class="edit" onclick="openEdit('${jsq(keyOf(record))}')">상세 / 수정</button></td></tr>`}).join('');return `<div class="searchResultTableWrap"><table class="searchResultTable" style="--search-columns:${columns.length}"><thead><tr>${isAdmin()?'<th class="searchSelectCell fixedHead">선택</th>':''}${headers}<th class="searchManageCell fixedHead">관리</th></tr></thead><tbody>${body}</tbody></table></div><p class="searchListHelp">열 제목을 짧게 누르면 정렬되고, 누른 채 원하는 위치로 끌어 놓으면 열 순서가 변경됩니다.</p>`}
+function renderSearchList(rows){if(!rows.length)return '<div class="empty">검색 조건에 맞는 현장이 없습니다.</div>';const columns=searchListColumns(),canSelect=canBulkManageRecords(),headers=columns.map(column=>{const active=searchSortState.key===column.key,mark=active?(searchSortState.direction==='asc'?'▲':'▼'):'↕';return `<th data-search-column="${esc(column.key)}" onpointerdown="beginSearchColumnPointer(event,'${jsq(column.key)}')" onpointermove="moveSearchColumnPointer(event)" onpointerup="finishSearchColumnPointer(event)" onpointercancel="cancelSearchColumnPointer(event)" aria-sort="${active?(searchSortState.direction==='asc'?'ascending':'descending'):'none'}"><div class="searchHeaderBox"><button type="button" class="searchSortButton" onclick="setSearchSort('${jsq(column.key)}')"><span>${esc(column.label)}</span><i>${mark}</i></button></div></th>`}).join('');const body=rows.map(record=>{const selectionKey=recordSelectionKey(record);return `<tr class="${selectedSearchRecords.has(selectionKey)?'selected':''}">${canSelect?`<td class="searchSelectCell"><input type="checkbox" aria-label="${esc(record[H.site]||'현장')} 선택" onchange="toggleSearchRecordSelection('${jsq(selectionKey)}',this.checked)" ${selectedSearchRecords.has(selectionKey)?'checked':''}></td>`:''}${columns.map(column=>`<td data-column="${esc(column.key)}">${searchListCell(record,column.key)}</td>`).join('')}<td class="searchManageCell"><button class="edit" onclick="openEdit('${jsq(keyOf(record))}')">상세 / 수정</button></td></tr>`}).join('');return `<div class="searchResultTableWrap"><table class="searchResultTable" style="--search-columns:${columns.length}"><thead><tr>${canSelect?'<th class="searchSelectCell fixedHead">선택</th>':''}${headers}<th class="searchManageCell fixedHead">관리</th></tr></thead><tbody>${body}</tbody></table></div><p class="searchListHelp">열 제목을 짧게 누르면 정렬되고, 누른 채 원하는 위치로 끌어 놓으면 열 순서가 변경됩니다.</p>`}
 function recordSelectionKey(r){return String(r?._cloudid||keyOf(r))}
 function clearSearchRecordSelection(){selectedSearchRecords.clear();currentSearchResultKeys=[];searchSelectAllExplicit=false;updateSearchSelectionControls()}
 function clearAllSearchRecordSelection(){selectedSearchRecords.clear();searchSelectAllExplicit=false;render()}
@@ -667,10 +669,10 @@ function updateSearchSelectionControls(){
  const master=document.getElementById('selectAllSearchRecords'),clearButton=document.getElementById('clearSelectedRecordsButton'),count=document.getElementById('selectedResultCount'),button=document.getElementById('deleteSelectedRecordsButton');
  const selectedHere=currentSearchResultKeys.filter(k=>selectedSearchRecords.has(k)).length,all=currentSearchResultKeys.length>0&&selectedHere===currentSearchResultKeys.length;
  if(searchSelectAllExplicit&&!all)searchSelectAllExplicit=false;
- if(master){master.checked=searchSelectAllExplicit&&all;master.indeterminate=false;master.disabled=!isAdmin()||!currentSearchResultKeys.length}
- if(clearButton)clearButton.disabled=!isAdmin()||selectedSearchRecords.size===0;
+ if(master){master.checked=searchSelectAllExplicit&&all;master.indeterminate=false;master.disabled=!canBulkManageRecords()||!currentSearchResultKeys.length}
+ if(clearButton)clearButton.disabled=!canBulkManageRecords()||selectedSearchRecords.size===0;
  if(count)count.textContent=`선택 ${selectedSearchRecords.size.toLocaleString()}건`;
- if(button)button.disabled=!isAdmin()||selectedSearchRecords.size===0;
+ if(button)button.disabled=!canBulkManageRecords()||selectedSearchRecords.size===0;
 }
 async function deleteSelectedSearchRecords(){
  if(!requireAdmin())return;
@@ -1124,6 +1126,7 @@ boot();
   isAdmin = () => Boolean(currentUser && currentUser.role==='admin' && currentUser.approved);
   applyRoleUi = () => {
     document.querySelectorAll('.adminOnly').forEach(el=>el.style.display=isAdmin()?'':'none');
+    const bulk=document.getElementById('resultBulkActions');if(bulk)bulk.style.display=canBulkManageRecords()?'flex':'none';
     document.querySelectorAll('.managerEntry').forEach(el=>el.style.display='none');
     const loginButton=document.querySelector('#homeScreen .homeLogin'), homeAdmin=document.getElementById('homeUserManager'), homeAccount=document.getElementById('homeAccount');
     if(loginButton)loginButton.style.display=currentUser?'none':'';
@@ -1750,7 +1753,17 @@ document.addEventListener('DOMContentLoaded',function(){
  if(typeof previousOpen==='function')window.openPhoneCall=openPhoneCall=function(number){return previousOpen(formatKoreanPhone(number))};
 })();
 </script>
+<style>
+table:not(.searchResultTable) th.columnResizable{position:relative}
+th.columnResizable>.columnResizeHandle{position:absolute;top:0;right:-5px;z-index:20;width:11px;height:100%;min-height:28px;cursor:col-resize;touch-action:none;background:transparent}
+th.columnResizable>.columnResizeHandle::after{content:"";position:absolute;top:18%;bottom:18%;left:5px;width:2px;border-radius:2px;background:transparent;transition:background .15s}
+th.columnResizable:hover>.columnResizeHandle::after,th.columnResizeActive>.columnResizeHandle::after{background:#1680b8}
+body.tableColumnResizing,body.tableColumnResizing *{cursor:col-resize!important;user-select:none!important}
+table[data-user-resized="true"]{width:max-content!important;min-width:100%}
+@media(max-width:700px){th.columnResizable>.columnResizeHandle{right:-7px;width:15px}}
+</style>
 <script src="shared-realtime-v34.js?v=20260916-4"></script>
 <script src="enter-navigation.js?v=20260921-1"></script>
+<script src="table-column-resize.js?v=20260922-1"></script>
 </body>
 </html>
