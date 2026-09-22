@@ -919,6 +919,25 @@ function groupName(h){
  if(['PM','영업 담당','관리주체 담당자','관리주체 연락처'].includes(h))return '담당자';
  return '기본 정보';
 }
+function openProjectAddressSearch(inputId){
+ const input=document.getElementById(inputId);
+ if(!input||input.disabled)return;
+ const Postcode=window.daum?.Postcode||window.kakao?.Postcode;
+ if(!Postcode){
+  alert('주소 검색 서비스를 불러오지 못했습니다. 인터넷 연결을 확인한 후 다시 시도하세요.');
+  return;
+ }
+ new Postcode({
+  oncomplete:data=>{
+   input.value=data.userSelectedType==='R'
+    ?(data.roadAddress||data.address||data.jibunAddress)
+    :(data.jibunAddress||data.address||data.roadAddress);
+   input.dispatchEvent(new Event('input',{bubbles:true}));
+   input.dispatchEvent(new Event('change',{bubbles:true}));
+   input.focus();
+  }
+ }).open();
+}
 function buildForm(r){
  const groups={};
  HEADERS.forEach(h=>(groups[groupName(h)]??=[]).push(h));
@@ -935,6 +954,8 @@ function buildForm(r){
         ?`<div id="${phoneId}_box"><button type="button" class="phonecall" onclick="openPhoneCall('${jsq(c.phone)}')"><span>${esc(c.phone)}</span><small>전화 걸기</small></button><button type="button" class="phoneedit" onclick="editPhoneField('${phoneId}','${jsq(c.phone)}')">전화번호 수정</button><input id="${phoneId}" type="hidden" value="${esc(c.phone)}"></div>`
         :`<div id="${phoneId}_box"><input id="${phoneId}" type="tel" value="" inputmode="tel" autocomplete="tel"></div>`;
        out+=`<div class="field"><label>관리주체 전화번호</label>${phoneControl}</div><div class="field"><label>관리주체 e-mail</label><input id="${id}_email" type="email" value="${esc(c.email)}"></div>`;
+     }else if(h==='주소'){
+       out+=`<div class="field"><label>주소</label><div class="projectAddressRow"><input id="${id}" type="text" value="${esc(val)}" autocomplete="street-address" placeholder="주소 검색 버튼을 눌러 선택하세요"><button type="button" onclick="openProjectAddressSearch('${id}')">주소 검색</button></div><small class="projectAddressGuide">도로명·건물명·지번으로 검색할 수 있으며, 검색되지 않는 주소는 직접 입력할 수 있습니다.</small></div>`;
      }else{
        const formatted=(isMoneyHeader(h)||h==='연면적(m2)'||h==='세대수'||isRateHeader(h));
        const displayVal=formatted&&has(val)?formatValue(h,val):h==='문서 제출 > PDF e-mail'?excelDateText(val):val;
@@ -1251,7 +1272,7 @@ html.inspectionRoute body.inspectionDashboardMode #inspectionDashboardPage{displ
 .smPhoneList{display:grid;gap:6px;margin-top:5px}#contractContactPhone{width:100%;resize:vertical;min-height:66px;border:1px solid #d5dde8;border-radius:9px;padding:10px;background:#fff;font:inherit}.contractPhoneActions{display:grid;gap:6px;margin-top:7px}.contractPhoneActions:empty{display:none}.contractPhoneActions .smPhoneList{margin-top:0}.contractPhoneActions .phonecall{min-height:42px;border-color:#d9c395;background:#fffaf0;color:#173f72;padding:10px 12px}.contractPhoneActions .phonecall span{font-size:16px;font-weight:900;color:#173f72}.contractPhoneActions .phonecall small{color:#9a6a16;font-size:11px;font-weight:800}.contractPhoneActions .phoneedit{justify-self:start;color:#8b570c;font-size:11px}
 .quoteNumberGuide{display:block;margin-top:5px;color:#7b8796;font-size:10px;line-height:1.45}#quoteNo[readonly]{background:#f4f6f8;color:#4b5d70;font-weight:900}#quoteContactPhone{width:100%;resize:vertical;min-height:66px;border:1px solid #d5dde8;border-radius:9px;padding:10px;background:#fff;font:inherit}.smTable th .smSortButton{display:inline-flex;align-items:center;gap:4px;width:auto;border:0;border-radius:0;background:transparent;color:inherit;padding:0;font:inherit;font-weight:900}.smTable th .smSortButton::after{content:'↕';color:#a68a5d;font-size:10px}.smTable th .smSortButton.sortAsc::after{content:'▲';color:#8b570c}.smTable th .smSortButton.sortDesc::after{content:'▼';color:#8b570c}
 .quoteSyncState{display:inline-flex;align-items:center;gap:6px;margin:-8px 0 11px;color:#607481;font-size:11px;font-weight:800}.quoteSyncState::before{content:'';width:8px;height:8px;border-radius:50%;background:#d49a35}.quoteSyncState.synced{color:#28715b}.quoteSyncState.synced::before{background:#20a36a}.quoteSyncState.error{color:#a44c42}.quoteSyncState.error::before{background:#d85b63}
-.contractAddressRow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px}.contractAddressRow input{min-width:0}.contractAddressRow button{border:1px solid #d9c395;border-radius:9px;background:#fffaf0;color:#86540b;padding:9px 11px;font-weight:900;white-space:nowrap}.contractAddressRow button:last-child{background:#a56308;border-color:#a56308;color:#fff}.contractAddressRow button:disabled{opacity:.45;cursor:not-allowed}.contractRouteDialog{width:min(520px,calc(100vw - 18px))}.contractRouteAddress{margin:0 0 7px;padding:11px 12px;border:1px solid #d9c395;border-radius:10px;background:#fffaf0;color:#604414;font-weight:800;line-height:1.5}.contractRouteGuide{margin:0 0 12px;color:#6a778b;font-size:12px;line-height:1.55}.contractRouteApps{display:grid;grid-template-columns:1fr 1fr;gap:8px}.contractRouteApps button{display:grid;gap:3px;text-align:left;border:1px solid #d9c395;border-radius:11px;background:#fff;padding:12px;color:#76500f}.contractRouteApps button:hover{background:#fff8e9}.contractRouteApps b{font-size:14px}.contractRouteApps small{font-size:10px;color:#7b8796}@media(max-width:580px){.contractAddressRow{grid-template-columns:minmax(0,1fr) auto}.contractAddressRow button:last-child{grid-column:1/-1}.contractRouteApps{grid-template-columns:1fr}}
+.projectAddressRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.projectAddressRow input{min-width:0}.projectAddressRow button{border:1px solid #b9c9dc;border-radius:9px;background:#edf5ff;color:#164f84;padding:9px 13px;font-weight:900;white-space:nowrap}.projectAddressRow button:hover{background:#dcecff}.projectAddressRow button:focus-visible{outline:3px solid rgba(40,127,192,.25);outline-offset:2px}.projectAddressGuide{display:block;margin-top:6px;color:#6a778b;font-size:11px;line-height:1.45}.contractAddressRow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px}.contractAddressRow input{min-width:0}.contractAddressRow button{border:1px solid #d9c395;border-radius:9px;background:#fffaf0;color:#86540b;padding:9px 11px;font-weight:900;white-space:nowrap}.contractAddressRow button:last-child{background:#a56308;border-color:#a56308;color:#fff}.contractAddressRow button:disabled{opacity:.45;cursor:not-allowed}.contractRouteDialog{width:min(520px,calc(100vw - 18px))}.contractRouteAddress{margin:0 0 7px;padding:11px 12px;border:1px solid #d9c395;border-radius:10px;background:#fffaf0;color:#604414;font-weight:800;line-height:1.5}.contractRouteGuide{margin:0 0 12px;color:#6a778b;font-size:12px;line-height:1.55}.contractRouteApps{display:grid;grid-template-columns:1fr 1fr;gap:8px}.contractRouteApps button{display:grid;gap:3px;text-align:left;border:1px solid #d9c395;border-radius:11px;background:#fff;padding:12px;color:#76500f}.contractRouteApps button:hover{background:#fff8e9}.contractRouteApps b{font-size:14px}.contractRouteApps small{font-size:10px;color:#7b8796}@media(max-width:580px){.projectAddressRow{grid-template-columns:minmax(0,1fr) auto}.projectAddressRow button{padding-inline:10px}.contractAddressRow{grid-template-columns:minmax(0,1fr) auto}.contractAddressRow button:last-child{grid-column:1/-1}.contractRouteApps{grid-template-columns:1fr}}
 .smManageButtonMobile{display:none}.smManageButton{white-space:nowrap}@media(max-width:580px){.smManageButton{width:52px;min-width:52px;padding:5px!important}.smManageButtonDesktop{display:none}.smManageButtonMobile{display:grid;grid-template-rows:1fr 1fr;width:100%;line-height:1.25;text-align:center}.smManageButtonMobile span{display:block;width:100%;padding:1px 0}}
 @media(max-width:800px){.smHeader{padding:13px}.smHeaderInner{align-items:flex-start}.smHeader h1{font-size:20px}.smHeader p{font-size:11px}.smLayout{display:block}.smNav{display:flex;overflow-x:auto;gap:5px;padding:9px;border-right:0;border-bottom:1px solid #dce4e8}.smNav button{width:auto;white-space:nowrap;margin:0;padding:9px 11px}.smContent{padding:16px 11px}.smDashboardGrid{grid-template-columns:1fr}.smTitle{align-items:center}.smTitle h2{font-size:21px}.smPrimary{padding:9px 10px;font-size:12px}.smFilters{grid-template-columns:1fr}.smPanel{padding:12px}.smPanelHead{display:block}.smControls{margin-top:9px}.smChart{min-width:720px}.smPanel{overflow:auto}}
 </style>
