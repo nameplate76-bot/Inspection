@@ -46,6 +46,7 @@ main{padding:0 14px}.dashboard{margin-top:-16px}.sectiontitle{display:flex;align
 dialog{border:0;border-radius:20px;padding:0;width:min(860px,calc(100vw - 18px));max-height:92vh;box-shadow:0 26px 70px rgba(15,49,92,.3)}dialog::backdrop{background:rgba(15,31,52,.5)}
 .mhead{position:sticky;top:0;background:#fff;z-index:3;display:flex;align-items:center;padding:15px 16px;border-bottom:1px solid var(--line)}.mhead h3{margin:0;font-size:17px;flex:1}.close{border:0;background:#f2f4f7;border-radius:9px;padding:8px 10px}
 .mbody{padding:15px;overflow:auto}.group{border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}.gtitle{font-weight:900;font-size:13px;background:#f6f8fb;padding:10px 12px;border-bottom:1px solid var(--line)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:12px}.field label{display:block;font-size:11px;color:#5f6e82;font-weight:800;margin-bottom:5px}.field input,.field textarea{width:100%;border:1px solid #d5dde8;border-radius:9px;padding:10px;outline:none;background:#fff}.field textarea{min-height:76px;resize:vertical}.field input:focus,.field textarea:focus{border-color:#6da3ed;box-shadow:0 0 0 3px #eaf2fe}
+.reportDetailTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:0 0 12px;padding:5px;border:1px solid #cbd9e8;border-radius:12px;background:#edf3f9}.reportDetailTab{min-height:43px;border:1px solid transparent;border-radius:9px;background:transparent;color:#52677e;font-weight:900}.reportDetailTab:hover{background:#fff;color:#1f4b86}.reportDetailTab.active{border-color:#1f4b86;background:#1f4b86;color:#fff;box-shadow:0 4px 10px rgba(31,75,134,.18)}.reportDetailPanel{display:none}.reportDetailPanel.active{display:block}.reportDetailPanel .group{margin-bottom:0}.reportDetailPanel .gtitle{display:flex;align-items:center;justify-content:space-between;color:#1f4b86;background:#f5f9fd}.reportDetailPanel .gtitle small{color:#7b8da2;font-size:10px}.reportDetailEmpty{padding:24px;text-align:center;color:#75879b;font-size:12px}.reportDetailHiddenFields{display:none!important}@media(max-width:580px){.reportDetailTabs{grid-template-columns:repeat(4,minmax(94px,1fr));overflow-x:auto;scrollbar-width:thin}.reportDetailTab{min-height:46px;font-size:12px;white-space:nowrap}.reportDetailPanel .grid{padding:10px}}
 .mfoot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:11px 15px;display:flex;gap:8px;justify-content:flex-end}.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 13px;font-weight:800}.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
 .phonecall{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:42px;border:1px solid #d5dde8;border-radius:9px;padding:10px;background:#fff;color:#173f72;text-align:left;font-weight:800}.phonecall small{color:#64748b;font-size:11px}.phoneedit{margin-top:6px;border:0;background:transparent;color:#496b9d;font-size:11px;font-weight:800;padding:2px 0;text-decoration:underline}.phoneConfirm{text-align:center;padding:10px 0 5px}.phoneConfirm .number{font-size:22px;font-weight:900;color:var(--navy);letter-spacing:.2px;margin:8px 0}.phoneConfirm p{font-size:13px;color:var(--muted);margin:0}.phoneActions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.phoneActions .btn{width:100%}
 .notice{font-size:11px;color:#77869a;padding:0 2px 10px}.toast{position:fixed;left:50%;bottom:25px;transform:translateX(-50%);background:#152238;color:#fff;padding:10px 14px;border-radius:10px;font-size:12px;opacity:0;transition:.2s;z-index:10}.toast.show{opacity:1}.authbox{max-width:390px;margin:auto;padding:8px 0}.authbox h3{margin:0 0 7px}.authbox p{font-size:12px;color:var(--muted);margin:0 0 16px;line-height:1.55}.authbox .field{margin-bottom:11px}.userline{font-size:13px;color:#dce8f8;text-align:right;margin-top:8px}.userline button{border:0;background:transparent;color:#fff;text-decoration:underline;font-size:13px;font-weight:800;padding:0}.roleBadge{font-size:10px;border:1px solid #d6e2f4;background:#f2f7ff;color:#315b98;padding:3px 6px;border-radius:999px;white-space:nowrap}.userlist{display:grid;gap:7px}.userrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:9px;font-size:12px}.userrow small{display:block;color:var(--muted);margin-top:2px}.userrow button{padding:6px 8px;font-size:10px}
@@ -180,7 +181,7 @@ body:not(.reportMode):not(.workMode):not(.inspectionDashboardMode):not(.salesMan
 
 <dialog id="editDialog">
  <div class="mhead"><h3 id="formTitle">신규 프로젝트 입력</h3><button class="close" onclick="editDialog.close()">닫기</button></div>
- <div class="mbody"><div class="notice">첨부 엑셀의 62개 열을 모두 입력할 수 있습니다. 저장한 내용은 현재 브라우저에 보관됩니다.</div><div id="formGroups"></div></div>
+ <div class="mbody"><div class="notice">현장 정보를 기본정보·계약정보·점검·문서작성 탭으로 구분했습니다. 탭을 눌러 필요한 정보를 조회하거나 수정하세요.</div><div id="formGroups"></div></div>
  <div class="mfoot"><button class="btn" onclick="editDialog.close()">취소</button><button class="btn primary" onclick="saveRecord()">저장</button></div>
 </dialog>
 <dialog id="phoneDialog">
@@ -938,34 +939,58 @@ function openProjectAddressSearch(inputId){
   }
  }).open();
 }
+const REPORT_DETAIL_TABS=[
+ {id:'basic',title:'기본정보',fields:[['S/N','S/N'],['보고서 등급','보고서 등급'],['점검표 매수','점검표 매수'],['현장명','현장명'],['계약명 (명칭 변경 전)','계약명(명칭 변경 전)'],['주소','주소'],['관리주체 담당자','관리주체 담당자'],['관리주체 연락처','관리주체 연락처']]},
+ {id:'contract',title:'계약정보',fields:[['영업 담당','영업 담당'],['계약 > 시작','계약 시작'],['계약 > 종료','계약 종료'],['①성능점검 (VAT 별도)','성능점검 (VAT 별도)'],['②유지점검 (VAT 별도)','유지점검 (VAT 별도)'],['③유지관리자 선임 (VAT 별도)','유지관리자 선임 (VAT 별도)'],['④계약금액 (VAT 별도, ①+②+③)','계약금액 (VAT 별도)'],['1년차(or 전반기) > 금액(VAT 미포함)','1년차(or 전반기) > 금액(VAT 미포함)']]},
+ {id:'inspection',title:'점검',fields:[['현장점검 계획 > 시작','점검 시작'],['현장점검 종료','점검 종료'],['현장점검원','점검원']]},
+ {id:'document',title:'문서작성',fields:[['접수일자 > 황화일','황화일 접수일자'],['접수일자 > 파일','전자파일 접수일자'],['문서작성 진행 현황 > 보고서 작성 완료','보고서 작성 완료'],['문서 제출 > PDF e-mail','보고서 제출일자'],['문서작성 > 제본 요청','제본 신청일자'],['문서작성 > 제본 입고','제본 입고일자'],['문서작성 > 담당','담당자'],['제본비','제본비'],['매출액 대비 제본비 비율','매출액 대비 제본 비율']]}];
+function reportDetailControl(r,h,label){
+ const id='f_'+HEADERS.indexOf(h),val=r?.[h]??'',type=fieldType(h);
+ if(h==='관리주체 연락처'){
+  const c=splitContact(val),phoneId=id+'_phone';
+  const phoneControl=c.phone
+   ?`<div id="${phoneId}_box"><button type="button" class="phonecall" onclick="openPhoneCall('${jsq(c.phone)}')"><span>${esc(c.phone)}</span><small>전화 걸기</small></button><button type="button" class="phoneedit" onclick="editPhoneField('${phoneId}','${jsq(c.phone)}')">전화번호 수정</button><input id="${phoneId}" type="hidden" value="${esc(c.phone)}"></div>`
+   :`<div id="${phoneId}_box"><input id="${phoneId}" type="tel" value="" inputmode="tel" autocomplete="tel"></div>`;
+  return `<div class="field"><label>관리주체 전화번호</label>${phoneControl}</div><div class="field"><label>관리주체 e-mail</label><input id="${id}_email" type="email" value="${esc(c.email)}"></div>`;
+ }
+ if(h==='주소')return `<div class="field"><label>${esc(label)}</label><div class="projectAddressRow"><input id="${id}" type="text" value="${esc(val)}" autocomplete="street-address" placeholder="주소 검색 버튼을 눌러 선택하세요"><button type="button" onclick="openProjectAddressSearch('${id}')">주소 검색</button></div><small class="projectAddressGuide">도로명·건물명·지번으로 검색할 수 있으며, 검색되지 않는 주소는 직접 입력할 수 있습니다.</small></div>`;
+ const formatted=isMoneyHeader(h)||h==='연면적(m2)'||h==='세대수'||isRateHeader(h);
+ const displayVal=formatted&&has(val)?formatValue(h,val):h==='문서 제출 > PDF e-mail'?excelDateText(val):val;
+ const inputType=formatted?'text':type;
+ return `<div class="field"><label>${esc(label)}</label><input id="${id}" type="${inputType}" value="${esc(displayVal)}"></div>`;
+}
+function selectReportDetailTab(id,button){
+ document.querySelectorAll('#formGroups .reportDetailTab').forEach(x=>{const on=x.dataset.tab===id;x.classList.toggle('active',on);x.setAttribute('aria-selected',on?'true':'false')});
+ document.querySelectorAll('#formGroups .reportDetailPanel').forEach(x=>x.classList.toggle('active',x.dataset.panel===id));
+ if(button)button.focus({preventScroll:true});
+}
 function buildForm(r){
- const groups={};
- HEADERS.forEach(h=>(groups[groupName(h)]??=[]).push(h));
- let out='';
- Object.entries(groups).forEach(([g,hs])=>{
-   out+=`<section class="group"><div class="gtitle">${g}</div><div class="grid">`;
-   hs.forEach(h=>{
-     if(isRestrictedFinancialHeader(h)&&!canViewMoney())return;
-     const id='f_'+HEADERS.indexOf(h), val=r?.[h]??'', type=fieldType(h);
-     const long=/중요 사항|현황|e-mail|담당자/.test(h)&&type==='text';
-     if(h==='관리주체 연락처'){
-       const c=splitContact(val), phoneId=id+'_phone';
-       const phoneControl=c.phone
-        ?`<div id="${phoneId}_box"><button type="button" class="phonecall" onclick="openPhoneCall('${jsq(c.phone)}')"><span>${esc(c.phone)}</span><small>전화 걸기</small></button><button type="button" class="phoneedit" onclick="editPhoneField('${phoneId}','${jsq(c.phone)}')">전화번호 수정</button><input id="${phoneId}" type="hidden" value="${esc(c.phone)}"></div>`
-        :`<div id="${phoneId}_box"><input id="${phoneId}" type="tel" value="" inputmode="tel" autocomplete="tel"></div>`;
-       out+=`<div class="field"><label>관리주체 전화번호</label>${phoneControl}</div><div class="field"><label>관리주체 e-mail</label><input id="${id}_email" type="email" value="${esc(c.email)}"></div>`;
-     }else if(h==='주소'){
-       out+=`<div class="field"><label>주소</label><div class="projectAddressRow"><input id="${id}" type="text" value="${esc(val)}" autocomplete="street-address" placeholder="주소 검색 버튼을 눌러 선택하세요"><button type="button" onclick="openProjectAddressSearch('${id}')">주소 검색</button></div><small class="projectAddressGuide">도로명·건물명·지번으로 검색할 수 있으며, 검색되지 않는 주소는 직접 입력할 수 있습니다.</small></div>`;
-     }else{
-       const formatted=(isMoneyHeader(h)||h==='연면적(m2)'||h==='세대수'||isRateHeader(h));
-       const displayVal=formatted&&has(val)?formatValue(h,val):h==='문서 제출 > PDF e-mail'?excelDateText(val):val;
-       const inputType=formatted?'text':type;
-       out+=`<div class="field"><label>${esc(h)}</label>${long?`<textarea id="${id}">${esc(displayVal)}</textarea>`:`<input id="${id}" type="${inputType}" value="${esc(displayVal)}">`}</div>`;
-     }
-   }); out+='</div></section>';
+ const rendered=new Set();
+ let out='<div class="reportDetailTabs" role="tablist" aria-label="현장 상세 정보 구분">';
+ REPORT_DETAIL_TABS.forEach((tab,i)=>out+=`<button type="button" class="reportDetailTab${i?'':' active'}" data-tab="${tab.id}" role="tab" aria-selected="${i?'false':'true'}" onclick="selectReportDetailTab('${tab.id}',this)">${tab.title}</button>`);
+ out+='</div>';
+ REPORT_DETAIL_TABS.forEach((tab,i)=>{
+  let fields='';
+  tab.fields.forEach(([h,label])=>{
+   if(!HEADERS.includes(h))return;
+   rendered.add(h);
+   if(isRestrictedFinancialHeader(h)&&!canViewMoney())return;
+   fields+=reportDetailControl(r,h,label);
+  });
+  const permissionNotice=tab.id==='contract'&&!canViewMoney()?'<div class="reportDetailEmpty">금액 조회 권한이 없는 계정입니다.</div>':'';
+  out+=`<section class="reportDetailPanel${i?'':' active'}" data-panel="${tab.id}" role="tabpanel"><div class="group"><div class="gtitle"><span>${tab.title}</span><small>${tab.fields.length}개 항목</small></div>${fields?`<div class="grid">${fields}</div>`:permissionNotice}</div></section>`;
  });
+ let hidden='';
+ HEADERS.forEach((h,i)=>{
+  if(rendered.has(h)&&!(isRestrictedFinancialHeader(h)&&!canViewMoney()))return;
+  const val=r?.[h]??'',id='f_'+i;
+  if(h==='관리주체 연락처'){
+   const c=splitContact(val);hidden+=`<input id="${id}_phone" type="hidden" value="${esc(c.phone)}"><input id="${id}_email" type="hidden" value="${esc(c.email)}">`;
+  }else hidden+=`<input id="${id}" type="hidden" value="${esc(val)}">`;
+ });
+ out+=`<div class="reportDetailHiddenFields" aria-hidden="true">${hidden}</div>`;
  document.getElementById('formGroups').innerHTML=out;
- const controls=[...document.querySelectorAll('#formGroups input, #formGroups textarea')];
+ const controls=[...document.querySelectorAll('#formGroups input:not([type="hidden"]), #formGroups textarea')];
  controls.forEach((el,i)=>el.addEventListener('keydown',e=>{
    if(e.key==='Enter'&&!e.shiftKey&&el.tagName!=='TEXTAREA'){
     e.preventDefault();
@@ -975,7 +1000,7 @@ function buildForm(r){
  }));
 }
 function openNew(){if(!requireAdmin())return;editKey='new_'+Date.now();document.getElementById('formTitle').textContent='신규 프로젝트 입력';buildForm({});document.querySelector('#editDialog .btn.primary').style.display='';editDialog.showModal()}
-function openEdit(k){editKey=k;const r=records().find(x=>keyOf(x)===k);document.getElementById('formTitle').textContent=isAdmin()?'프로젝트 상세 / 수정':'프로젝트 상세 조회';buildForm(r);const saveBtn=document.querySelector('#editDialog .btn.primary');saveBtn.style.display=isAdmin()?'':'none';if(!isAdmin())document.querySelectorAll('#formGroups input, #formGroups textarea, #formGroups select, #formGroups button').forEach(x=>{if(!x.classList.contains('phonecall'))x.disabled=true});editDialog.showModal()}
+function openEdit(k){editKey=k;const r=records().find(x=>keyOf(x)===k);document.getElementById('formTitle').textContent=isAdmin()?'프로젝트 상세 / 수정':'프로젝트 상세 조회';buildForm(r);const saveBtn=document.querySelector('#editDialog .btn.primary');saveBtn.style.display=isAdmin()?'':'none';if(!isAdmin())document.querySelectorAll('#formGroups input, #formGroups textarea, #formGroups select, #formGroups button').forEach(x=>{if(!x.classList.contains('phonecall')&&!x.classList.contains('reportDetailTab'))x.disabled=true});editDialog.showModal()}
 async function saveRecord(){
  if(!requireAdmin())return;
  let old=records().find(x=>keyOf(x)===editKey)||{_newid:editKey};
