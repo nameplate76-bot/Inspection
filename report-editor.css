@@ -126,3 +126,9 @@
 .reEquipmentSelectionBar button{min-height:36px;padding:7px 11px}
 .reEquipmentSelectionBar button:disabled{opacity:.45;cursor:default}
 @media(max-width:700px){.reEquipmentButtons{grid-template-columns:repeat(2,minmax(0,1fr))}.reEquipmentCard,.reEquipmentButtons .reEquipmentCard .reEquipmentButton{height:76px}.reEquipmentSelectionBar{display:grid;grid-template-columns:1fr 1fr}.reEquipmentSelectionBar span{margin:0;text-align:center}.reEquipmentSelectionBar .reDanger{width:100%}}
+
+/* AI 자동판정 진행 상태 */
+.reAIWorking{margin:0 20px;padding:13px 15px;display:flex;align-items:center;gap:12px;border:1px solid #93c5fd;border-radius:12px;background:#eff6ff;color:#123d6a;box-shadow:0 5px 16px rgba(30,64,175,.08)}
+.reAIWorking>div{display:grid;gap:3px;flex:1;min-width:0}.reAIWorking b{font-size:14px}.reAIWorking small{color:#41617f}.reAISpinner{width:23px;height:23px;flex:0 0 23px;border:3px solid #bfdbfe;border-top-color:#176e96;border-radius:50%;animation:reAISpin .75s linear infinite}.reAIProgressTrack{display:block;height:5px;margin-top:5px;overflow:hidden;border-radius:999px;background:#dbeafe}.reAIProgressTrack i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#176e96,#16a34a);transition:width .18s ease}.reAIWorking.error{border-color:#fca5a5;background:#fff1f2;color:#991b1b}.reAIWorking.error .reAISpinner{animation:none;border-color:#ef4444}.reAIRun:disabled{cursor:wait;opacity:.78}@keyframes reAISpin{to{transform:rotate(360deg)}}
+@media(max-width:640px){.reAIWorking{margin:0 10px;padding:11px 12px}.reAIWorking small{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.reAISpinner{animation:none}.reAIProgressTrack i{transition:none}}
