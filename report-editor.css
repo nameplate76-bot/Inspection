@@ -42,6 +42,38 @@
 @media(max-width:700px){.reBasicSummary{align-items:stretch;flex-direction:column}.reBasicSummary button{width:100%}.reProgressToggle{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;min-height:0;padding:12px!important}.reProgressHeading{grid-column:1/-1}.reProgressToggle .reProgressStat{box-sizing:border-box;min-width:0;width:100%;padding:9px 7px;font-size:13px}.reProgressToggle .reProgressStat.complete{grid-column:1/-1}.reProgressChevron{position:absolute;right:20px;top:22px}.reMeasurementDialog .reToolDialogHead{top:-14px;margin:-14px -14px 0;padding:14px;flex-direction:column}.reMeasurementDialogTools{width:100%;display:grid;grid-template-columns:1fr 1fr auto}.reMeasurementDialogTools button{width:100%}.reMeasurementSummary .reMeasurementActions{display:block!important}.reMeasurementSummary .reMeasureEdit{width:100%}}
 .reProgressToggle{position:relative}
 
+/* 설비 기본정보 팝업: 라벨·입력칸 규격과 행간을 통일해 빠르게 읽을 수 있도록 정렬 */
+.reBasicDialog{width:min(840px,calc(100vw - 24px))}
+.reBasicDialog .reToolDialogBody{padding:24px}
+.reBasicDialog .reToolDialogHead{align-items:center;padding-bottom:16px}
+.reBasicDialog .reToolDialogHead h3{font-size:21px;line-height:1.3}
+.reBasicDialog .reToolDialogHead p{font-size:14px}
+.reBasicDialog .reGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 22px;margin:20px 0 24px}
+.reBasicDialog .reGrid>label{display:flex;min-width:0;flex-direction:column;gap:7px;margin:0;color:#294a65;font-size:14px;font-weight:800;line-height:1.35}
+.reBasicDialog .reGrid>label>input,
+.reBasicDialog .reGrid>label>select{box-sizing:border-box;width:100%;height:46px;margin:0;padding:0 13px;border:1px solid #9fb4c5;border-radius:8px;background:#fff;color:#16344d;font-size:16px;line-height:46px}
+.reBasicDialog .reGrid>label>input:hover,
+.reBasicDialog .reGrid>label>select:hover{border-color:#6e94ae}
+.reBasicDialog .reGrid>label>input:focus,
+.reBasicDialog .reGrid>label>select:focus{border-color:#17658a;outline:3px solid rgba(23,101,138,.14)}
+.reBasicDialog .reDateControl{display:grid;grid-template-columns:minmax(0,1fr) 104px;gap:8px;position:relative}
+.reBasicDialog .reDateControl>[data-basic-field="점검일"]{height:46px;margin:0}
+.reBasicDialog .reDateControl>[data-basic-date-pick]{height:46px;padding:0 12px;border-color:#7f9eb3;background:#edf5fa;font-weight:800;white-space:nowrap}
+.reBasicDialog .reDateControl>[data-basic-date-picker]{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;border:0!important;opacity:0!important;pointer-events:none!important}
+.reBasicDialog .reDialogFooter{margin-top:0;padding-top:16px}
+.reBasicDialog .reDialogFooter button{min-width:140px;min-height:48px;font-size:16px}
+@media(max-width:700px){
+ .reBasicDialog{width:calc(100vw - 16px);max-height:94dvh}
+ .reBasicDialog .reToolDialogBody{max-height:94dvh;padding:16px}
+ .reBasicDialog .reToolDialogHead{align-items:flex-start}
+ .reBasicDialog .reToolDialogHead h3{font-size:19px}
+ .reBasicDialog .reGrid{grid-template-columns:1fr;gap:14px;margin:18px 0 22px}
+ .reBasicDialog .reGrid>label>input,.reBasicDialog .reGrid>label>select{height:48px;font-size:16px}
+ .reBasicDialog .reDateControl{grid-template-columns:minmax(0,1fr) 96px}
+ .reBasicDialog .reDateControl>[data-basic-date-pick]{height:48px;padding:0 8px}
+ .reBasicDialog .reDialogFooter button{width:100%}
+}
+
 /* 설비 하단 작업버튼과 진공펌프 사유 입력 */
 .reEquipmentFooterActions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid #c6d7e2}.reEquipmentFooterActions .reDanger{margin-right:auto}.reEquipmentFooterActions .reStartCheck{min-width:210px}.reVacuumPhotoSection{display:flex;flex-direction:column}.reVacuumPhotoSection .reReasonField{margin-top:10px}.reVacuumPhotoSection .reReasonSelect{min-height:118px}.reVacuumPhotoSection .reReasonRemove{margin-top:7px}.reReasonDialog .reReasonPolish{width:100%;margin-top:8px;border-color:#17658a;background:#eef7fc;color:#125779;font-weight:700}.officialVacuum .officialReason{border-top:1px solid #666;background:#fff}.officialVacuum .officialPhotoCell{overflow:hidden}
 @media(max-width:700px){.reEquipmentFooterActions{display:grid;grid-template-columns:1fr 1.5fr}.reEquipmentFooterActions .reDanger,.reEquipmentFooterActions .reStartCheck{width:100%;min-width:0;margin:0}.reEquipmentFooterActions .reStartCheck{font-size:13px;padding-left:7px;padding-right:7px}}
