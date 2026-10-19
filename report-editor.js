@@ -323,5 +323,32 @@ const measurementOfficialPageBeforeThousands=measurementOfficialPage;
 measurementOfficialPage=function(e){let html=measurementOfficialPageBeforeThousands(e);for(const row of measurementRows(e)){for(const key of ['design','measured']){const raw=String(row[key]??''),formatted=measurementDisplayValue(row,raw);if(raw&&formatted!==raw)html=html.replace(`>${E(raw)}<`,`>${E(formatted)}<`)}}return html};
 const buildExcelMeasurementBeforeThousands=buildExcelMeasurement;
 buildExcelMeasurement=async function(wb,e,equipmentIndex){await buildExcelMeasurementBeforeThousands(wb,e,equipmentIndex);const ws=wb.worksheets[wb.worksheets.length-1],rows=measurementRows(e);rows.forEach((row,index)=>{if(!MEASUREMENT_THOUSANDS_ITEMS.has(String(row.item||'')))return;for(const col of [4,6]){const cell=ws.getCell(7+index,col),number=aiMeasureNumber(col===4?row.design:row.measured);if(number!==null){cell.value=number;cell.numFmt='#,##0.######'}}})};
+
+/* 흡수식냉동기(직화) 측정값표 입력/자동계산 가독성 */
+function installDirectFiredReadability(container,e){
+ if(e.type!=='냉동기'||e.equipmentFormat!=='흡수식냉동기(직화)')return;
+ const scroll=container.querySelector('.reMeasurementScroll');
+ if(scroll&&!container.querySelector('.reMeasurementLegend'))scroll.insertAdjacentHTML('beforebegin','<div class="reMeasurementLegend" role="note" aria-label="입력칸 구분 안내"><b>입력칸 안내</b><span class="manual">직접 입력</span><span class="automatic">자동 계산 · 수정 불가</span><span class="result">자동 표시 결과</span><small>노란색 설계값·측정값 칸만 입력하면 열량과 COP가 자동 계산됩니다.</small></div>');
+ const rows=measurementRows(e);
+ let previousGroup='';
+ container.querySelectorAll('.reMeasurementScroll tbody tr').forEach((tr,index)=>{
+  const row=rows[index];if(!row)return;
+  const automatic=DIRECT_FIRED_AUTO_ITEMS.has(String(row.item||''));
+  tr.classList.add(automatic?'reMeasureRowAutomatic':'reMeasureRowManual');
+  if(index&&row.group!==previousGroup)tr.classList.add('reMeasureGroupStart');
+  previousGroup=row.group;
+  ['design','measured'].forEach(key=>{
+   const input=tr.querySelector(`[data-measure-key="${key}"]`);if(!input)return;
+   const cell=input.closest('td');
+   cell?.classList.add(automatic?'reMeasureAutoCell':'reMeasureInputCell');
+   if(automatic){input.readOnly=true;input.setAttribute('aria-label',`${row.item} ${key==='design'?'설계':'측정'} 자동 계산값`);if(cell&&!cell.querySelector('.reMeasureCellBadge'))cell.insertAdjacentHTML('beforeend','<small class="reMeasureCellBadge">자동 계산</small>')}
+   else{input.placeholder='입력';input.setAttribute('aria-label',`${row.item} ${key==='design'?'설계값':'측정값'} 직접 입력`)}
+  });
+  const percent=tr.querySelector('[data-measure-key="percent"]');
+  if(percent){percent.readOnly=true;percent.closest('td')?.classList.add('reMeasureResultCell');percent.setAttribute('aria-label',`${row.item} 자동 계산 비율`)}
+ });
+}
+const bindMeasurementDialogBeforeReadability=bindMeasurementDialog;
+bindMeasurementDialog=function(container,e){bindMeasurementDialogBeforeReadability(container,e);installDirectFiredReadability(container,e)};
 let request=indexedDB.open('mechanical-report-v2',1);request.onupgradeneeded=()=>request.result.createObjectStore('reports');request.onerror=()=>alert('보고서 저장공간을 열지 못했습니다. 브라우저 저장 설정을 확인하세요.');request.onsuccess=()=>{db=request.result;let get=db.transaction('reports').objectStore('reports').get('current');get.onsuccess=()=>{if(get.result){d=get.result;localReportAvailable=true}selected=d.equipment[0]?.uid||'';window.renderComposer=render;window.openLandManualReport=(page,key)=>{tab=['cover','plan','result','sheet','system','improve','energy'].indexOf(key);if(tab<0)tab=0;showReportPage('composer');render();loadSharedReport()};if(root()?.classList.contains('active')){render();loadSharedReport()}}};
 })();
