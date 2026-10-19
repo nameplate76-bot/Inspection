@@ -84,30 +84,30 @@
 /* 모바일 측정값표 카드형: PC 표 레이아웃은 변경하지 않습니다. */
 @media(max-width:700px){
  .reMeasurementPage .reMeasurementScroll,.reMeasurementDialog .reMeasurementScroll{overflow:visible;max-height:none}
- .reMeasurementDialog .reMeasurementScroll table{display:block;min-width:0;width:100%;border:0;background:transparent}
- .reMeasurementDialog .reMeasurementScroll thead{display:none}
- .reMeasurementDialog .reMeasurementScroll tbody{display:grid;gap:12px}
- .reMeasurementDialog .reMeasurementScroll tbody tr{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:12px;border:1px solid #b9cbd9!important;border-radius:12px;background:#fff;box-shadow:0 2px 7px rgba(22,52,77,.07)}
- .reMeasurementDialog .reMeasurementScroll tbody tr.reMeasureGroupStart{margin-top:5px;border-top:3px solid #5485a5!important}
- .reMeasurementDialog .reMeasurementScroll tbody td{display:block;min-width:0;padding:0!important;border:0!important;background:transparent!important}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(1){grid-column:1/3}.reMeasurementDialog .reMeasurementScroll tbody td:nth-child(2){grid-column:3/6}.reMeasurementDialog .reMeasurementScroll tbody td:nth-child(5){grid-column:6/7}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(3){grid-column:1/4}.reMeasurementDialog .reMeasurementScroll tbody td:nth-child(4){grid-column:4/7}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(6),.reMeasurementDialog .reMeasurementScroll tbody td:nth-child(7){grid-column:1/7}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(1) input{border:0!important;border-radius:8px!important;background:#17658a!important;color:#fff!important;font-size:13px!important;font-weight:900!important}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(2) input{padding-right:4px!important;border:0!important;background:#fff!important;color:#173f72!important;text-align:left!important;font-size:17px!important;font-weight:900!important}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(5) input{height:38px!important;padding:5px!important;border:1px solid #b8ccda!important;border-radius:8px!important;background:#f4f8fb!important;color:#294a65!important;font-size:12px!important;font-weight:900!important}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(3):before,.reMeasurementDialog .reMeasurementScroll tbody td:nth-child(4):before{display:block;margin:0 0 5px 2px;color:#294a65;font-size:12px;font-weight:900}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(3):before{content:'설계값'}.reMeasurementDialog .reMeasurementScroll tbody td:nth-child(4):before{content:'측정값'}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(3) input,.reMeasurementDialog .reMeasurementScroll tbody td:nth-child(4) input{height:56px!important;padding:8px 6px!important;border-radius:9px!important;font-size:20px!important;line-height:1!important;text-align:center!important;font-variant-numeric:tabular-nums}
- .reMeasurementDialog .reMeasurementScroll td.reMeasureInputCell input{border:2px solid #d69b18!important;background:#fffaf0!important;color:#102f49!important}
- .reMeasurementDialog .reMeasurementScroll td.reMeasureAutoCell{padding:0!important}.reMeasurementDialog .reMeasurementScroll td.reMeasureAutoCell input{border:2px solid #63a883!important;background:#edf9f2!important;color:#176443!important}
- .reMeasurementDialog .reMeasurementScroll .reMeasureCellBadge{position:static;display:block;margin-top:4px;text-align:center;font-size:10px;line-height:1.2}
- .reMeasurementDialog .reMeasurementScroll td.reMeasureResultCell{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;padding:9px 12px!important;border:1px solid #9bc5df!important;border-radius:9px!important;background:#eaf4fb!important}
- .reMeasurementDialog .reMeasurementScroll td.reMeasureResultCell:before{content:'비율';color:#294a65;font-size:12px;font-weight:900}
- .reMeasurementDialog .reMeasurementScroll td.reMeasureResultCell input{height:32px!important;padding:0!important;border:0!important;background:transparent!important;color:#145d86!important;text-align:right!important;font-size:18px!important;font-weight:900!important}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(7):before{display:block;margin:2px 0 5px;color:#526b7c;font-size:12px;font-weight:800;content:'비고'}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(7) input{height:44px!important;border:1px solid #bfd0dc!important;border-radius:8px!important;background:#fff!important;text-align:left!important}
- .reMeasurementDialog .reMeasurementScroll tbody td:nth-child(7):has(input[value='']){display:none}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll table{display:block;min-width:0;width:100%;border:0;background:transparent}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll thead{display:none}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody{display:grid;gap:12px}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody tr{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:12px;border:1px solid #b9cbd9!important;border-radius:12px;background:#fff;box-shadow:0 2px 7px rgba(22,52,77,.07)}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody tr.reMeasureGroupStart{margin-top:5px;border-top:3px solid #5485a5!important}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td{display:block;min-width:0;padding:0!important;border:0!important;background:transparent!important}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(1){grid-column:1/3}:is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(2){grid-column:3/6}:is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(5){grid-column:6/7}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(3){grid-column:1/4}:is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(4){grid-column:4/7}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(6),:is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(7){grid-column:1/7}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(1) input{border:0!important;border-radius:8px!important;background:#17658a!important;color:#fff!important;font-size:13px!important;font-weight:900!important}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(2) input{padding-right:4px!important;border:0!important;background:#fff!important;color:#173f72!important;text-align:left!important;font-size:17px!important;font-weight:900!important}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(5) input{height:38px!important;padding:5px!important;border:1px solid #b8ccda!important;border-radius:8px!important;background:#f4f8fb!important;color:#294a65!important;font-size:12px!important;font-weight:900!important}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(3):before,:is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(4):before{display:block;margin:0 0 5px 2px;color:#294a65;font-size:12px;font-weight:900}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(3):before{content:'설계값'}:is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(4):before{content:'측정값'}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(3) input,:is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(4) input{height:56px!important;padding:8px 6px!important;border-radius:9px!important;font-size:20px!important;line-height:1!important;text-align:center!important;font-variant-numeric:tabular-nums}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll td.reMeasureInputCell input{border:2px solid #d69b18!important;background:#fffaf0!important;color:#102f49!important}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll td.reMeasureAutoCell{padding:0!important}:is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll td.reMeasureAutoCell input{border:2px solid #63a883!important;background:#edf9f2!important;color:#176443!important}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll .reMeasureCellBadge{position:static;display:block;margin-top:4px;text-align:center;font-size:10px;line-height:1.2}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll td.reMeasureResultCell{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;padding:9px 12px!important;border:1px solid #9bc5df!important;border-radius:9px!important;background:#eaf4fb!important}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll td.reMeasureResultCell:before{content:'비율';color:#294a65;font-size:12px;font-weight:900}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll td.reMeasureResultCell input{height:32px!important;padding:0!important;border:0!important;background:transparent!important;color:#145d86!important;text-align:right!important;font-size:18px!important;font-weight:900!important}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(7):before{display:block;margin:2px 0 5px;color:#526b7c;font-size:12px;font-weight:800;content:'비고'}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(7) input{height:44px!important;border:1px solid #bfd0dc!important;border-radius:8px!important;background:#fff!important;text-align:left!important}
+ :is(.reMeasurementDialog,.reMeasurementPage) .reMeasurementScroll tbody td:nth-child(7):has(input[value='']){display:none}
 }
 
 /* 기본정보 팝업과 클릭형 진행현황 */
