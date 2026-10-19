@@ -350,5 +350,17 @@ function installDirectFiredReadability(container,e){
 }
 const bindMeasurementDialogBeforeReadability=bindMeasurementDialog;
 bindMeasurementDialog=function(container,e){bindMeasurementDialogBeforeReadability(container,e);installDirectFiredReadability(container,e)};
+
+/* 측정값표 틀 고정 제거 및 모바일 카드형 표시 */
+const measurementDialogBodyBeforeMobileCards=measurementDialogBody;
+measurementDialogBody=function(e){
+ const html=measurementDialogBodyBeforeMobileCards(e);
+ return html.replace(/<div class="reMeasurementFreezeBar">[\s\S]*?<\/div>(?=<div class="reMeasurementScroll">)/,'');
+};
+bindMeasurementFreeze=function(dialog,e){
+ delete e.measurementFreeze;
+ measurementFreezeSelections.delete(e.uid);
+ clearMeasurementFreezeStyles(dialog.querySelector('.reMeasurementScroll table'));
+};
 let request=indexedDB.open('mechanical-report-v2',1);request.onupgradeneeded=()=>request.result.createObjectStore('reports');request.onerror=()=>alert('보고서 저장공간을 열지 못했습니다. 브라우저 저장 설정을 확인하세요.');request.onsuccess=()=>{db=request.result;let get=db.transaction('reports').objectStore('reports').get('current');get.onsuccess=()=>{if(get.result){d=get.result;localReportAvailable=true}selected=d.equipment[0]?.uid||'';window.renderComposer=render;window.openLandManualReport=(page,key)=>{tab=['cover','plan','result','sheet','system','improve','energy'].indexOf(key);if(tab<0)tab=0;showReportPage('composer');render();loadSharedReport()};if(root()?.classList.contains('active')){render();loadSharedReport()}}};
 })();
