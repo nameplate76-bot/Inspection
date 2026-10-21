@@ -96,7 +96,7 @@ const renderReasonDialogBeforeHistory=renderReasonDialog;renderReasonDialog=func
 const renderReasonDialogBeforeVacuumTitle=renderReasonDialog;renderReasonDialog=function(){renderReasonDialogBeforeVacuumTitle();if(!reasonPickerContext)return;const key=reasonPickerContext.key,suitable=key==='reason1'||key==='vacuumReason1';ensureReasonDialog().querySelector('#reReasonDialogTitle').textContent=`${key.startsWith('vacuum')?'진공펌프 ':''}${suitable?'적합 사유':'미흡사항 사유'} 선택`};
 
 function currentItem(e){return e?.items.length?Math.min(Math.max(itemPositions.get(e.uid)||0,0),e.items.length-1):0}
-function pager(e,i){return `<div class="rePager"><button type="button" data-step="-1" ${i===0?'disabled':''} aria-label="이전 점검항목">‹ 이전</button><span role="status" aria-live="polite">${E(e.number)} · ${i+1} / ${e.items.length}<small>왼쪽으로 밀면 다음 항목</small></span><button type="button" data-step="1" ${i>=e.items.length-1?'disabled':''} aria-label="다음 점검항목">다음 ›</button></div>`}
+function pager(e,i){return `<div class="rePager"><button type="button" data-step="-1" ${i===0?'disabled':''} aria-label="이전 점검항목">‹ 이전</button><span role="status" aria-live="polite">${E(e.number)} · ${i+1} / ${e.items.length}</span><button type="button" data-step="1" ${i>=e.items.length-1?'disabled':''} aria-label="다음 점검항목">다음 ›</button></div>`}
 function moveItem(step){const e=equip();if(!e)return;const next=currentItem(e)+step;if(next<0||next>=e.items.length)return;itemPositions.set(e.uid,next);render();const panel=document.getElementById('reSwipePage');panel?.scrollIntoView({block:'start',behavior:'auto'});panel?.focus({preventScroll:true})}
 function swipeStep(dx,dy){return Math.abs(dx)>=70&&Math.abs(dx)>Math.abs(dy)*1.6?(dx<0?1:-1):0}
 function bindPager(){
@@ -297,7 +297,7 @@ async function runChillerAIFromDialog(dialog,e,button){const progress=aiJudgingP
 const bindMeasurementDialogBeforeReliableAI=bindMeasurementDialog;
 bindMeasurementDialog=function(dialog,e){bindMeasurementDialogBeforeReliableAI(dialog,e);installMeasurementThousands(dialog,e);if(e.type!=='냉동기')return;const oldButton=dialog.querySelector('[data-ai-chiller-analyze]');if(!oldButton)return;const button=oldButton.cloneNode(true);oldButton.replaceWith(button);button.addEventListener('click',()=>runChillerAIFromDialog(dialog,e,button))};
 
-/* 설계·측정값 독립 페이지 및 점검항목 바로가기 */
+/* 설계·측정값 독립 페이지 및 점검항목 선택 이동 */
 const measurementReturnViews=new Map();
 const measurementEditSnapshots=new Map();
 function measurementPageUI(e){let body=measurementDialogBody(e);body=body.replace('<div class="reDialogFooter"><button type="button" data-dialog-close>닫기</button></div>','<div class="reDialogFooter reMeasurementPageFooter"><button type="button" data-measurement-cancel>취소</button><button type="button" class="reMeasureSaveClose" data-dialog-close>저장하고 닫기</button></div>');return `<section class="reMeasurementPage" data-measurement-page><div class="reMeasurementPageBack"><button type="button" data-dialog-close>← 이전 화면</button><div><small>성능점검표 · 설계·측정값</small><strong>${E(e.type)} · ${E(e.number)}</strong></div></div>${body}</section>`}
@@ -311,7 +311,7 @@ function bindMeasurementPage(e){const page=root()?.querySelector('[data-measurem
 const equipmentCheckUIBeforeQuickNavigation=equipmentCheckUI;
 equipmentCheckUI=function(e){return equipmentCheckUIBeforeQuickNavigation(e).replace('<button type="button" data-show-info>← 기본정보·현장사진</button>','<div class="reCheckHeadActions"><button type="button" class="reCheckMeasurement" data-measure-edit>설계·측정값 입력·수정</button><button type="button" data-show-info>← 기본정보·현장사진</button></div>')};
 const pagerBeforeItemJump=pager;
-pager=function(e,i){const original=pagerBeforeItemJump(e,i),options=e.items.map((item,index)=>`<option value="${index}" ${index===i?'selected':''}>${index+1}. ${E(item.title)}</option>`).join('');return original.replace('<span role="status"',`<label class="reItemJump"><span>점검항목 바로가기</span><select data-item-jump aria-label="이동할 점검항목 선택">${options}</select></label><span role="status"`)};
+pager=function(e,i){const original=pagerBeforeItemJump(e,i),options=e.items.map((item,index)=>`<option value="${index}" ${index===i?'selected':''}>${index+1}. ${E(item.title)}</option>`).join('');return original.replace('<span role="status"',`<label class="reItemJump"><select data-item-jump aria-label="이동할 점검항목 선택">${options}</select></label><span role="status"`)};
 const bindPagerBeforeItemJump=bindPager;
 bindPager=function(){bindPagerBeforeItemJump();root().querySelectorAll('[data-item-jump]').forEach(select=>select.addEventListener('change',()=>{const e=equip(),next=Number(select.value);if(!e||!Number.isInteger(next)||next<0||next>=e.items.length)return;itemPositions.set(e.uid,next);render();document.getElementById('reSwipePage')?.scrollIntoView({block:'start',behavior:'auto'})}))};
 const equipmentUIBeforeMeasurementPage=equipmentUI;
