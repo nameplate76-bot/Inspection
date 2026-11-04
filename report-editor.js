@@ -517,5 +517,106 @@ exportInspectionExcel=async function(){
  }catch(error){console.error(error);status('Excel 점검표 출력 실패');alert('Excel 점검표를 만들지 못했습니다.\n\n'+(error?.message||error))}
 };
 
+
+/* V82: 냉동기 원본 1~12페이지와 동일한 그룹형 PDF 출력. 입력/사진/저장 로직 무변경 */
+const CHILLER_V82_STYLE=`<style id="chiller-source-v82">
+.ch82{font-family:'Malgun Gothic','맑은 고딕',sans-serif!important;color:#111!important;line-height:1.22!important}
+.ch82 .paperhead{font-size:9px!important;margin:0 0 9mm!important}
+.ch82 .paperhead:after{content:'Ⅲ. 기계설비 성능점검 대상 점검표'!important}
+.ch82 .ch82item{margin:0 0 6mm;break-inside:avoid;page-break-inside:avoid}
+.ch82 .ch82item h3{font-size:13px!important;font-weight:700;margin:0 0 4mm!important;line-height:1.35!important}
+.ch82 .ch82criteria,.ch82 .ch82photos,.ch82 .ch82results{border-collapse:collapse;width:100%!important;table-layout:fixed;margin:0!important}
+.ch82 .ch82criteria th,.ch82 .ch82criteria td,.ch82 .ch82results th,.ch82 .ch82results td{border:1px solid #888!important;padding:3px 5px!important;font-size:9px!important;line-height:1.25!important;white-space:normal!important;overflow-wrap:anywhere!important;vertical-align:middle!important;background:#fff!important}
+.ch82 .ch82criteria thead th,.ch82 .ch82photos thead th{background:#dcebf5!important;text-align:center!important;font-weight:700!important}
+.ch82 .ch82criteria .ch82side{width:10%;text-align:center!important;font-weight:500!important}
+.ch82 .ch82criteria .ch82detail{text-align:left!important;white-space:pre-wrap!important}
+.ch82 .ch82photos{margin:3mm 0 0!important}
+.ch82 .ch82photos th,.ch82 .ch82photos td{border:1px solid #888!important;background:#fff!important;padding:0!important;width:33.33%!important;text-align:center!important;vertical-align:top!important}
+.ch82 .ch82photos thead th{font-size:10px!important;padding:3px!important;background:#dcebf5!important}
+.ch82 .ch82photobox{height:33mm;box-sizing:border-box;padding:2px;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:11px;color:#aaa}
+.ch82 .ch82photobox img{display:block;width:100%;height:100%;object-fit:fill}
+.ch82 .ch82reasons td{height:15mm;text-align:left!important;vertical-align:middle!important;font-size:8.5px!important;padding:3px 4px!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important}
+.ch82 .ch82meta td{font-size:8.5px!important;text-align:left!important;padding:3px!important}
+.ch82 .ch82meta .ch82key{width:18%!important;text-align:center!important;background:#fff!important}
+.ch82 .ch82-summary-title{font-size:21px!important;text-align:center!important;margin:2mm 0 5mm!important;font-weight:700!important}
+.ch82 .ch82summary,.ch82 .ch82summary th,.ch82 .ch82summary td{border:1px solid #777;border-collapse:collapse;background:#fff}
+.ch82 .ch82summary{width:100%;margin:0;table-layout:fixed}
+.ch82 .ch82summary th,.ch82 .ch82summary td{font-size:10px;padding:3px 5px;line-height:1.2}
+.ch82 .ch82summary th{background:#dcebf5;text-align:center;font-weight:600}
+.ch82 .ch82summary .ch82group{text-align:center;background:#dcebf5}
+.ch82 .ch82summary .ch82status{text-align:center}
+.ch82 .ch82summary .ch82label{width:14%;text-align:center;background:#dcebf5}
+.ch82 .ch82summary .ch82action{height:16mm;vertical-align:top}
+.ch82 .ch82summary .ch82hero{height:36mm;padding:2px}
+.ch82 .ch82summary .ch82hero img{width:100%;height:100%;object-fit:fill}
+.ch82 .ch82summary .ch82instructions{font-size:8px;padding:6px;white-space:pre-wrap}
+.ch82 .ch82rich{font-size:8.5px;line-height:1.25!important}
+.ch82 .ch82rich p{margin:2px 0;white-space:normal}
+.ch82 .ch82rich table{margin:3px 0!important;table-layout:fixed;width:100%;border-collapse:collapse}
+.ch82 .ch82rich th,.ch82 .ch82rich td{border:1px solid #888;padding:2px!important;font-size:8px!important;text-align:center!important;background:#fff!important;width:auto!important}
+.ch82 .ch82rich th{background:#dcebf5!important}
+.ch82 .ch82copformula{font-size:12px;font-weight:700;text-align:center;margin:9px 0;padding:6px;border:1px solid #aaa}
+.ch82 .ch82split{display:flex;gap:12px;align-items:center}
+.ch82 .ch82split>div{flex:1}
+.ch82 .ch82compact .ch82photobox{height:27mm}
+.ch82 .ch82compact .ch82reasons td{height:12mm}
+.ch82 .ch82long .ch82photobox{height:34mm}
+.ch82 .ch82page-title{font-size:14px;margin:0 0 5mm!important}
+@media print{.ch82{padding:12mm 16mm 12mm!important;height:297mm!important;min-height:297mm!important;overflow:hidden!important;break-after:page!important}.ch82 .ch82item{break-inside:avoid!important}.ch82 .ch82rich{font-size:8px!important}.ch82 .ch82compact .ch82photobox{height:25mm!important}}
+</style>`;
+function ch82page(body,extra=''){return `<section class="paper officialPage ch82 ${extra}">${officialHeader()}${body}${officialFooter()}</section>`}
+function ch82mark(item){return resultMark(item.result)}
+function ch82summary(e){
+ const site=e.sitePhoto||e.items.flatMap(x=>x.photos||[]).find(Boolean)||'';
+ const rows=e.items.map((item,i)=>`<tr><td>${E(item.title)}</td><td class="ch82status">${ch82mark(item)}</td></tr>`).join('');
+ const defects=e.items.filter(x=>x.result==='미흡'||x.result==='조치필요').map(x=>`${x.title}: ${x.reason2||x.action||''}`).join('\n');
+ const actions=e.items.filter(x=>String(x.action||'').trim()).map(x=>`${x.title}: ${x.action}`).join('\n');
+ return ch82page(`<h2 class="ch82-summary-title">냉동기 성능점검표</h2><table class="ch82summary"><tr><th style="width:12%">점검자</th><td style="width:30%">${E(e['점검자']||d.info['점검자']||'')}</td><th style="width:14%">점검일자</th><td>${E(e['점검일']||d.info['점검시작일']||'')}</td><th style="width:12%">설비번호</th><td>${E(e.number)}</td></tr><tr><th>설치위치<br>(No.)</th><td colspan="3">${E(e['설치위치']||'')}</td><th>용도</th><td>${E(e['용도']||'')}</td></tr></table><table class="ch82summary"><thead><tr><th style="width:12%">구분</th><th>점검내용</th><th style="width:12%">점검결과</th></tr></thead><tbody><tr><td class="ch82group" rowspan="${e.items.length}">점검<br>항목</td>${rows.replace(/^<tr>/,'')}</tbody></table><table class="ch82summary"><tr><td class="ch82label" rowspan="2">조치<br>사항</td><td class="ch82action">&lt; 미흡사항 &gt;\n${E(defects)}</td></tr><tr><td class="ch82action">&lt; 조치필요사항 &gt;\n${E(actions)}</td></tr><tr><td class="ch82label">현장<br>사진</td><td class="ch82hero">${site?`<img src="${site}" alt="대표 현장사진">`:''}</td></tr><tr><td class="ch82label">비고</td><td>${E(e['비고']||'')}</td></tr></table><table class="ch82summary"><tr><th>작성방법</th></tr><tr><td class="ch82instructions">1. 유지관리지침서 및 기계설비 유지관리 및 성능점검 대상 현황표와의 적합여부를 참고하여 점검결과를 작성한다.\n2. 점검결과에는 [적합 ○, 조치필요 ×, 해당없음 /]을 표기한다.\n3. 현황사진에는 측정사진 및 측정데이터를 포함하여 첨부한다.\n4. 전체 수량의 50% 이상 범위 내에서 점검을 실시한다.\n5. 압축식 냉동기, 흡수식 냉동기, 냉온수기, 공랭식 냉동기 등을 포함하여 작성한다.</td></tr></table>`,'ch82summarypage')
+}
+function ch82criteria(item,index){
+ const raw=String(item.criteria||'').replace(/\r/g,'').trim();
+ if(index===5)return `<div class="ch82rich"><p>• 가스 공급압력, 버너의 착화·연소·소화, 송풍기 소음·진동 및 연도 댐퍼의 개폐 상태 확인</p><p>• 측정항목: O₂, CO₂, CO, NO₂</p><p><b>가. O₂, CO₂, CO 배출기준</b></p><p>산업통상자원부 고시 제2021-133호 제25장 계속사용검사 중 운전성능 검사기준</p><p>가스용 보일러의 배기가스 중 CO/CO₂ 비율은 0.002 이하</p><table><tr><th rowspan="2">연료</th><th colspan="2">O₂(%)</th><th colspan="2">CO₂(%)</th></tr><tr><th>90±10</th><th>45±10</th><th>90±10</th><th>45±10</th></tr><tr><td>중유</td><td>3.7 이하</td><td>5 이하</td><td>12.7 이상</td><td>12 이상</td></tr><tr><td>경유</td><td>4 이하</td><td>5 이하</td><td>11 이상</td><td>10 이상</td></tr><tr><td>가스</td><td>3.7 이하</td><td>4 이하</td><td>10 이상</td><td>9 이상</td></tr></table><p><b>나. NO₂ 배출기준</b></p><p>대기환경보전법 시행규칙 [별표 8] 대기오염물질 배출허용기준 및 비고 참고</p></div>`;
+ if(index===7){const lines=raw.split('\n').filter(Boolean);return `<div class="ch82rich"><p>아래 각 항목의 안전장치 보유 및 냉동기 판넬 작동상태 확인</p><table><tr><th>구분</th><th>해당 냉동기</th></tr>${['냉수 동결 방지용 온도 스위치 또는 냉수 저온이상 스위치','냉매 저온 스위치','냉수 플로우 스위치 또는 냉수 차압 스위치','흡수액 펌프 전동기 과전류 스위치','보조 흡수액 펌프 전동기 과전류 스위치','냉매 펌프 전동기 과전류 스위치','냉(온)수 펌프 인터록','냉각수 펌프 인터록','접지용 단자','재생기용액 오버플로우','제2재생기용액 오버플로우'].map((x,k)=>`<tr><td>${k+1}. ${x}</td><td>${[3,5,9].includes(k)?'흡수식 냉동기': [4,10].includes(k)?'온수식 냉동기':'공통'}</td></tr>`).join('')}</table></div>`}
+ if(index===14)return `<div class="ch82rich"><p>• 냉동기 정격 운전 기준, 입출구 냉수 유량(LPM)과 온도(℃) 측정</p><p>• 이전 성능점검 COP 대비 금년 COP 90% 이상 여부 평가</p><div class="ch82copformula">COP = 출력에너지(RT) × 3024 ÷ [입력에너지(kW) × 860]</div><p>출력에너지(RT) = 냉수유량(LPM) × 냉수 입출구 온도차(Δt, ℃) × 60 ÷ 3024</p><p><b>가스 직화식 흡수식 냉동기의 경우</b></p><div class="ch82copformula">COP = qₒ ÷ qᵢ　 / 　qₒ = Qw × ρ × Cp × Δt</div><p>qᵢ = Lg × qgl　　qgl = 도시가스 저위발열량 9,420 kcal/N㎥</p><p><b>점검자 입력 측정내용</b></p><p>${E(item.measurement||'미입력').replace(/\n/g,'<br>')}</p></div>`;
+ return E(raw).replace(/\n/g,'<br>')||' ';
+}
+function ch82item(e,item,index,{compact=false,criteriaOnly=false,photosOnly=false}={}){
+ const isVacuum=index===4;
+ let head=`<div class="ch82item ${compact?'ch82compact':''}"><h3>${E(item.title)}${photosOnly?' - 사진·판정':''}</h3>`;
+ if(!photosOnly){head+=`<table class="ch82criteria"><thead><tr><th style="width:12%">구분</th><th>점검내용</th></tr></thead><tbody><tr><td class="ch82side">점검<br>방법<br>·<br>기준</td><td class="ch82detail">${ch82criteria(item,index)}</td></tr></tbody></table>`;}
+ if(criteriaOnly)return head+'</div>';
+ function photos(offset=0,titles=['현황 사진','적합','미흡사항']){return `<table class="ch82photos"><thead><tr>${titles.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody><tr>${titles.map((title,i)=>`<td><div class="ch82photobox">${item.photos?.[i+offset]?`<img src="${item.photos[i+offset]}" alt="${E(title)}">`:'사진 미첨부'}</div></td>`).join('')}</tr><tr class="ch82reasons"><td></td><td>사유 : ${E(reasonValue(item,offset?'vacuumReason1':'reason1')||'')}</td><td>사유 : ${E(reasonValue(item,offset?'vacuumReason2':'reason2')||'')}</td></tr></tbody></table>`}
+ head+=photos();
+ if(isVacuum){head+=`<div style="font-size:9px;font-weight:700;margin:3mm 0 1mm">진공펌프 현황·적합·미흡 사진</div>`+photos(3,['진공펌프 현황사진','진공펌프 적합사진','진공펌프 미흡사진'])}
+ head+=`<table class="ch82results"><tr><td class="ch82key" style="width:18%">판정</td><td>${E(item.result||'미작성')} ${ch82mark(item)}　　측정값: ${E(item.measurement||'')}</td></tr><tr><td class="ch82key">조치사항</td><td>${E(item.action||'')}</td></tr></table></div>`;
+ return head;
+}
+function ch82pages(e){
+ let html=ch82summary(e);const items=e.items||[];
+ // 원본 2~10페이지: 항목 2개씩, ⑤(진공펌프)·⑥(연소장치)는 한 페이지
+ const blocks=[[0,1],[2,3],[4],[5],[6],[7],[8,9],[10,11],[12,13]];
+ for(const group of blocks){const present=group.filter(i=>items[i]);if(!present.length)continue;html+=ch82page(present.map(i=>ch82item(e,items[i],i,{compact:present.length>1})).join(''),present.length>1?'ch82duo':'ch82single')}
+ // COP 원본 11페이지의 산식/비교표, 12페이지의 사진을 나누어 유지
+ if(items[14]){html+=ch82page(ch82item(e,items[14],14,{criteriaOnly:true}),'ch82copcriteria');html+=ch82page(ch82item(e,items[14],14,{photosOnly:true}),'ch82copphotos')}
+ return html;
+}
+/* V80 측정값표는 냉동기 마지막 페이지로 유지. 냉동기 외 설비에는 변경 없음. */
+report=function(){
+ let html=page('기계설비 성능점검 보고서',table(fields[0].filter(k=>k!=='제출문').map(k=>[k,d.info[k]||'미입력'])));
+ html+=page('점검완료 제출문','<p>'+E(d.info['제출문']||'미입력').replace(/\n/g,'<br>')+'</p>');
+ html+=page('목차','<ol>'+titles.map(t=>'<li>'+E(t)+'</li>').join('')+'</ol>');
+ html+=page('Ⅰ. 성능점검 계획서',textSections(1));
+ html+=page('Ⅱ. 성능점검 결과보고서',textSections(2));
+ for(const e of d.equipment){
+  if(e.type==='냉동기'){html+=ch82pages(e);html+=measurementOfficialPage(e)}
+  else html+=equipmentOfficialPagesBeforeMeasurement(e);
+ }
+ html+=page('Ⅳ. 기계설비 시스템 검토',textSections(4));
+ html+=page('Ⅴ. 성능개선 계획 수립',textSections(5));
+ html+=page('Ⅵ. 에너지사용량 분석',textSections(6));
+ for(const e of d.equipment.filter(e=>e.type!=='냉동기'))html+=measurementOfficialPage(e);
+ return CHILLER_V82_STYLE+html;
+};
+
 let request=indexedDB.open('mechanical-report-v2',1);request.onupgradeneeded=()=>request.result.createObjectStore('reports');request.onerror=()=>alert('보고서 저장공간을 열지 못했습니다. 브라우저 저장 설정을 확인하세요.');request.onsuccess=()=>{db=request.result;let get=db.transaction('reports').objectStore('reports').get('current');get.onsuccess=()=>{if(get.result){d=get.result;localReportAvailable=true}selected=d.equipment[0]?.uid||'';window.renderComposer=render;window.openLandManualReport=(page,key)=>{tab=['cover','plan','result','sheet','system','improve','energy'].indexOf(key);if(tab<0)tab=0;showReportPage('composer');render();loadSharedReport()};if(root()?.classList.contains('active')){render();loadSharedReport()}}};
 })();
