@@ -303,7 +303,49 @@ const measurementReturnViews=new Map();
 const measurementEditSnapshots=new Map();
 function measurementPageUI(e){let body=measurementDialogBody(e);body=body.replace('<div class="reDialogFooter"><button type="button" data-dialog-close>닫기</button></div>','<div class="reDialogFooter reMeasurementPageFooter"><button type="button" data-measurement-cancel>취소</button><button type="button" class="reMeasureSaveClose" data-dialog-close>저장하고 닫기</button></div>');return `<section class="reMeasurementPage" data-measurement-page><div class="reMeasurementPageBack"><button type="button" data-dialog-close>← 이전 화면</button><div><small>성능점검표 · 설계·측정값</small><strong>${E(e.type)} · ${E(e.number)}</strong></div></div>${body}</section>`}
 function openMeasurementPage(){const e=equip();if(!e)return;const currentView=equipmentViews.get(e.uid)==='check'?'check':'info';measurementReturnViews.set(e.uid,currentView);measurementEditSnapshots.set(e.uid,{installYear:e['설치년도']||'',rows:structuredClone(measurementRows(e)),aiResults:structuredClone(e.measurementAIResults||[]),aiAnalyzedAt:e.measurementAIAnalyzedAt||''});equipmentViews.set(e.uid,'measurement');render();window.scrollTo({top:root()?.offsetTop||0,behavior:'auto'})}
-async function closeMeasurementPage(e,cancel=false){if(cancel){const snapshot=measurementEditSnapshots.get(e.uid);if(snapshot){e['설치년도']=snapshot.installYear;e.measurementRows=structuredClone(snapshot.rows);e.measurementAIResults=structuredClone(snapshot.aiResults);if(snapshot.aiAnalyzedAt)e.measurementAIAnalyzedAt=snapshot.aiAnalyzedAt;else delete e.measurementAIAnalyzedAt}}measurementEditSnapshots.delete(e.uid);equipmentViews.set(e.uid,measurementReturnViews.get(e.uid)||'info');measurementReturnViews.delete(e.uid);await save();render();const target=equipmentViews.get(e.uid)==='check'?document.getElementById('reSwipePage'):root()?.querySelector('.reEquipmentInfo');target?.scrollIntoView({block:'start',behavior:'auto'})}
+/* V81: 입력값 반영 후 화면을 먼저 전환합니다. 원격 동기화 지연으로 버튼이 멈춘 것처럼 보이지 않도록 합니다. */
+let measurementPageClosing=false;
+function closeMeasurementPage(e,cancel=false){
+ if(measurementPageClosing)return;
+ measurementPageClosing=true;
+ try{
+  const page=root()?.querySelector('[data-measurement-page]');
+  if(!cancel&&page){
+   // blur 전 마지막 입력값까지 저장 모델에 동기화
+   const year=page.querySelector('[data-dialog-install-year]');
+   if(year)e['설치년도']=year.value;
+   syncMeasurementDialogValues(page,e);
+  }
+  if(cancel){
+   const snapshot=measurementEditSnapshots.get(e.uid);
+   if(snapshot){
+    e['설치년도']=snapshot.installYear;
+    e.measurementRows=structuredClone(snapshot.rows);
+    e.measurementAIResults=structuredClone(snapshot.aiResults);
+    if(snapshot.aiAnalyzedAt)e.measurementAIAnalyzedAt=snapshot.aiAnalyzedAt;
+    else delete e.measurementAIAnalyzedAt;
+   }
+  }
+  measurementEditSnapshots.delete(e.uid);
+  const destination=measurementReturnViews.get(e.uid)||'info';
+  equipmentViews.set(e.uid,destination);
+  measurementReturnViews.delete(e.uid);
+  const pendingSave=save(); // 현재 입력값을 즉시 스냅샷으로 확보
+  render();
+  const target=destination==='check'?document.getElementById('reSwipePage'):root()?.querySelector('.reEquipmentInfo');
+  target?.scrollIntoView({block:'start',behavior:'auto'});
+  // 저장은 큐에 넣되, 네트워크 완료 때문에 UI 전환이 차단되지 않도록 처리
+  pendingSave.then(()=>{
+   if(!cancel&&typeof toast==='function')toast('설계·측정값을 저장했습니다.');
+  }).catch(error=>{
+   console.error('V81 측정값 저장 실패',error);
+   alert('측정값 저장에 실패했습니다. 데이터 연결을 확인하고 다시 저장해 주세요.');
+  });
+ }catch(error){
+  console.error('V81 측정값 화면 전환 실패',error);
+  alert('화면을 닫는 중 문제가 발생했습니다: '+(error?.message||error));
+ }finally{measurementPageClosing=false;}
+}
 const measurementDialogBodyBeforePageControls=measurementDialogBody;
 measurementDialogBody=function(e){const html=measurementDialogBodyBeforePageControls(e);if(equipmentViews.get(e.uid)!=='measurement')return html;return html.replace('<div class="reDialogFooter"><button type="button" data-dialog-close>닫기</button></div>','<div class="reDialogFooter reMeasurementPageFooter"><button type="button" data-measurement-cancel>취소</button><button type="button" class="reMeasureSaveClose" data-dialog-close>저장하고 닫기</button></div>')};
 const bindMeasurementDialogBeforePageControls=bindMeasurementDialog;

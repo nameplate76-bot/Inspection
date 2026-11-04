@@ -191,3 +191,8 @@
 .chillerSourceMeasurementPage .chillerSourceTable .chillerGroupCell{font-weight:500}
 .chillerSourceMeasurementPage .chillerSourceTable .chillerNote{text-align:left;font-size:9px}
 @media print{.chillerSourceMeasurementPage .chillerSourceTable tr{break-inside:avoid}.chillerSourceMeasurementPage{break-after:page}}
+
+/* V81: 설계·측정값 저장/취소 버튼 간격 및 모바일 균등 배치 */
+.reMeasurementPage .reMeasurementPageFooter{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:14px 0 4px;}
+.reMeasurementPage .reMeasurementPageFooter button{flex:0 0 auto;min-width:120px;min-height:44px;margin:0;}
+@media(max-width:700px){.reMeasurementPage .reMeasurementPageFooter{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:12px;}.reMeasurementPage .reMeasurementPageFooter button{min-width:0;width:100%;}}
