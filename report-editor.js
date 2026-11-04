@@ -183,7 +183,7 @@ function table(rows){return '<table>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+E(v).re
 function textSections(n){return fields[n].map(k=>'<h3>'+E(k)+'</h3><p>'+E(d.info[k]||'미입력').replace(/\n/g,'<br>')+'</p>').join('')}
 function page(title,content){return `<section class="paper"><div class="paperhead">${E(d.info['현장명']||'현장명 미입력')} · 기계설비 성능점검 보고서</div><h2>${title}</h2>${content}</section>`}
 function report(){let html=page('기계설비 성능점검 보고서',table(fields[0].filter(k=>k!=='제출문').map(k=>[k,d.info[k]||'미입력'])));html+=page('점검완료 제출문','<p>'+E(d.info['제출문']||'미입력').replace(/\n/g,'<br>')+'</p>');html+=page('목차','<ol>'+titles.map(t=>'<li>'+E(t)+'</li>').join('')+'</ol>');html+=page('Ⅰ. 성능점검 계획서',textSections(1)+ '<h3>점검대상 기계설비 수량</h3>'+table([['설비종류','등록대수'],...Object.keys(CHECK_TEMPLATES).filter(t=>d.equipment.some(e=>e.type===t)).map(t=>[t,d.equipment.filter(e=>e.type===t).length])])+'<h3>설비 현황</h3>'+table([['종류','번호','용도','설치위치'],...d.equipment.map(e=>[e.type,e.number,e['용도'],e['설치위치']]) ]));html+=page('Ⅱ. 성능점검 결과보고서',textSections(2)+table([['종류','번호','전체항목','작성항목','미흡·조치필요'],...d.equipment.map(e=>[e.type,e.number,e.items.length,e.items.filter(i=>i.result!=='미작성').length,e.items.filter(i=>['미흡','조치필요'].includes(i.result)).length]) ]));for(const e of d.equipment){html+=page(`Ⅲ. ${E(e.type)} 성능점검표 · ${E(e.number)}`,table([['설비번호',e.number],...['용도','설치위치','제조사','설치년도','사양','점검일','점검자','측정값'].map(k=>[k,e[k]||'미입력'])])+table([['점검항목','판정'],...e.items.map(i=>[i.title,i.result])]));for(const i of e.items){html+=page(`${E(e.type)} · ${E(e.number)} / ${E(i.title)}`,table([['점검방법·기준',i.criteria],['판정',i.result],['측정값·확인내용',i.measurement||'미입력']])+`<div class="photos">${['현황','적합','미흡사항'].map((name,j)=>`<section><h4>${name} 사진</h4>${i.photos[j]?`<div class="reportPhotoFrame"><img src="${i.photos[j]}" alt="${name}"></div>`:'<div class="noPhoto">사진 미첨부</div>'}<p>사유: ${E(i['reason'+j]||'미입력').replace(/\n/g,'<br>')}</p></section>`).join('')}</div>`+table([['조치사항',i.action||'미입력']]))}}html+=page('Ⅳ. 기계설비 시스템 검토',textSections(4));html+=page('Ⅴ. 성능개선 계획 수립',textSections(5)+table([['설비번호','점검항목','판정','조치사항'],...d.equipment.flatMap(e=>e.items.filter(i=>['미흡','조치필요'].includes(i.result)).map(i=>[e.number,i.title,i.result,i.action]))]));html+=page('Ⅵ. 에너지사용량 분석',textSections(6).split('<h3>에너지 절감 방안</h3>')[0]+table([['월','사용량'],...Array.from({length:12},(_,i)=>[i+1,d.energy[i]??'미입력']),['입력월 합계',d.energy.reduce((s,x)=>s+(Number(x)||0),0)]]));html+=page('Ⅶ. 에너지 절감 방안','<p>'+E(d.info['에너지 절감 방안']||'미입력').replace(/\n/g,'<br>')+'</p>');return html}
-function preview(){const w=window.open('','_blank');if(!w)return alert('팝업을 허용한 뒤 다시 시도하세요.');w.document.write(`<!doctype html><html lang="ko"><meta charset="utf-8"><title>${E(fileName())}</title><style>body{font-family:Arial,'Malgun Gothic',sans-serif;background:#e9edf2;color:#111;line-height:1.45}.paper{box-sizing:border-box;background:white;width:210mm;min-height:297mm;margin:20px auto;padding:14mm 16mm 12mm;break-after:page;position:relative}.paperhead{font-size:10px;border:0;display:flex;justify-content:space-between}.paperhead:after{content:'II. 기계설비 성능점검 결과보고서'}h2{font-size:22px;margin:22px 0}h3{font-size:16px}table{border-collapse:collapse;width:100%;margin:13px 0;table-layout:fixed}td{border:1px solid #777;padding:6px;white-space:pre-wrap;overflow-wrap:anywhere;vertical-align:top}td:first-child{background:#e4eedc;width:28%}tr{break-inside:avoid}.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:0;break-inside:avoid}.photos section{border:1px solid #777;min-width:0}.photos h4{margin:0;text-align:center;background:#e4eedc}.reportPhotoFrame{box-sizing:border-box;width:100%;height:190px;padding:2px;background:#fff;overflow:hidden}.photos .reportPhotoFrame img{display:block;box-sizing:border-box;width:100%;height:100%;margin:0;padding:0;object-fit:fill;border:0;border-radius:0}.noPhoto{width:100%;height:190px;display:grid;place-items:center;color:#aaa}.photos p{padding:8px;overflow-wrap:anywhere}.tools{position:sticky;top:0;z-index:5;background:#183e63;color:#fff;padding:12px}button{padding:10px}p{white-space:pre-wrap;overflow-wrap:anywhere}.officialTitle{text-align:center;font-size:23px;margin:14px 0 8px}.officialMeta,.officialGrid,.officialSummary{border-collapse:collapse;width:100%;table-layout:fixed;margin:0}.officialMeta th,.officialMeta td,.officialGrid th,.officialGrid td,.officialSummary th,.officialSummary td{border:1px solid #666;padding:5px;background:#fff;font-size:10.5px;vertical-align:middle}.officialMeta th,.officialGrid th,.officialSummary th{background:#e4eedc;text-align:center;font-weight:500}.officialSummary td:first-child,.officialGrid td:first-child,.officialMeta td:first-child{width:auto;background:#fff}.officialSummary .group{background:#e4eedc;text-align:center;font-weight:600}.officialSummary .mark{text-align:center;font-size:15px}.officialAction{border:1px solid #666;border-top:0;min-height:38px;padding:6px;font-size:10px}.officialRepresentative{border:1px solid #666;border-top:0;height:150px;padding:2px}.officialRepresentative img,.officialPhoto img{display:block;width:100%;height:100%;object-fit:fill}.officialNotes{border:1px solid #666;margin-top:6px;font-size:9px;padding:5px}.officialItemTitle{font-size:16px;margin:12px 0 8px}.officialCriteria{height:126px;white-space:pre-wrap;font-size:9.5px;line-height:1.35}.officialCriteria.long{font-size:7.5px;line-height:1.17}.officialPhotoGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:14px}.officialPhotoCell{border:1px solid #666;border-right:0;display:grid;grid-template-rows:24px 180px minmax(58px,auto);min-width:0}.officialPhotoCell:last-child{border-right:1px solid #666}.officialPhotoCell h4{margin:0;background:#e4eedc;border-bottom:1px solid #666;text-align:center;font-size:10px;padding:4px}.officialPhoto{padding:2px;overflow:hidden}.officialReason{border-top:1px solid #666;padding:5px;font-size:9.5px;white-space:pre-wrap;overflow-wrap:anywhere}.officialMeasure{margin-top:8px}.officialVacuum{margin-top:8px}.officialVacuum .officialPhotoCell{grid-template-rows:22px 92px}.officialFooter{position:absolute;left:16mm;right:16mm;bottom:7mm;display:flex;justify-content:space-between;font-size:9px;color:#555}.genericPage{display:block}@page{size:A4;margin:0}@media print{body{background:white}.tools{display:none}.paper{width:210mm;height:297mm;min-height:297mm;margin:0;padding:12mm 15mm 11mm;overflow:hidden}.paper:last-child{break-after:auto}.officialPhotoCell{grid-template-rows:22px 174px minmax(54px,auto)}.officialCriteria.long{font-size:7.2px}}</style><div class="tools"><button id="printReport">PDF로 저장 / 인쇄</button> A4, 배율 100%, 머리글과 바닥글 해제를 권장합니다.</div>${report()}<script>document.getElementById('printReport').onclick=async()=>{await Promise.all(Array.from(document.images).map(i=>i.decode().catch(()=>{})));window.print()};<\/script></html>`);w.document.close()}
+function preview(){const w=window.open('','_blank');if(!w)return alert('팝업을 허용한 뒤 다시 시도하세요.');w.document.write(`<!doctype html><html lang="ko"><meta charset="utf-8"><title>${E(fileName())}</title><style>body{font-family:Arial,'Malgun Gothic',sans-serif;background:#e9edf2;color:#111;line-height:1.45}.paper{box-sizing:border-box;background:white;width:210mm;min-height:297mm;margin:20px auto;padding:14mm 16mm 12mm;break-after:page;position:relative}.paperhead{font-size:10px;border:0;display:flex;justify-content:space-between}.paperhead:after{content:'II. 기계설비 성능점검 결과보고서'}h2{font-size:22px;margin:22px 0}h3{font-size:16px}table{border-collapse:collapse;width:100%;margin:13px 0;table-layout:fixed}td{border:1px solid #777;padding:6px;white-space:pre-wrap;overflow-wrap:anywhere;vertical-align:top}td:first-child{background:#e4eedc;width:28%}tr{break-inside:avoid}.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:0;break-inside:avoid}.photos section{border:1px solid #777;min-width:0}.photos h4{margin:0;text-align:center;background:#e4eedc}.reportPhotoFrame{box-sizing:border-box;width:100%;height:190px;padding:2px;background:#fff;overflow:hidden}.photos .reportPhotoFrame img{display:block;box-sizing:border-box;width:100%;height:100%;margin:0;padding:0;object-fit:fill;border:0;border-radius:0}.noPhoto{width:100%;height:190px;display:grid;place-items:center;color:#aaa}.photos p{padding:8px;overflow-wrap:anywhere}.tools{position:sticky;top:0;z-index:5;background:#183e63;color:#fff;padding:12px}button{padding:10px}p{white-space:pre-wrap;overflow-wrap:anywhere}.officialTitle{text-align:center;font-size:23px;margin:14px 0 8px}.officialMeta,.officialGrid,.officialSummary{border-collapse:collapse;width:100%;table-layout:fixed;margin:0}.officialMeta th,.officialMeta td,.officialGrid th,.officialGrid td,.officialSummary th,.officialSummary td{border:1px solid #666;padding:5px;background:#fff;font-size:10.5px;vertical-align:middle}.officialMeta th,.officialGrid th,.officialSummary th{background:#e4eedc;text-align:center;font-weight:500}.officialSummary td:first-child,.officialGrid td:first-child,.officialMeta td:first-child{width:auto;background:#fff}.officialSummary .group{background:#e4eedc;text-align:center;font-weight:600}.officialSummary .mark{text-align:center;font-size:15px}.officialAction{border:1px solid #666;border-top:0;min-height:38px;padding:6px;font-size:10px}.officialRepresentative{border:1px solid #666;border-top:0;height:150px;padding:2px}.officialRepresentative img,.officialPhoto img{display:block;width:100%;height:100%;object-fit:fill}.officialNotes{border:1px solid #666;margin-top:6px;font-size:9px;padding:5px}.officialItemTitle{font-size:16px;margin:12px 0 8px}.officialCriteria{height:126px;white-space:pre-wrap;font-size:9.5px;line-height:1.35}.officialCriteria.long{font-size:7.5px;line-height:1.17}.officialPhotoGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:14px}.officialPhotoCell{border:1px solid #666;border-right:0;display:grid;grid-template-rows:24px 180px minmax(58px,auto);min-width:0}.officialPhotoCell:last-child{border-right:1px solid #666}.officialPhotoCell h4{margin:0;background:#e4eedc;border-bottom:1px solid #666;text-align:center;font-size:10px;padding:4px}.officialPhoto{padding:2px;overflow:hidden}.officialReason{border-top:1px solid #666;padding:5px;font-size:9.5px;white-space:pre-wrap;overflow-wrap:anywhere}.officialMeasure{margin-top:8px}.officialVacuum{margin-top:8px}.officialVacuum .officialPhotoCell{grid-template-rows:22px 92px}.officialFooter{position:absolute;left:16mm;right:16mm;bottom:7mm;display:flex;justify-content:space-between;font-size:9px;color:#555}.genericPage{display:block}@page{size:A4;margin:0}@media print{body{background:white}.tools{display:none}.paper{width:210mm;height:297mm;min-height:297mm;margin:0;padding:12mm 15mm 11mm;overflow:hidden}.paper:last-child{break-after:auto}.officialPhotoCell{grid-template-rows:22px 174px minmax(54px,auto)}.officialCriteria.long{font-size:7.2px}}.chillerSourceMeasurementPage .chillerSourceTitle{margin:19px 0 16px;font-size:15px;font-weight:700;text-align:left}.chillerSourceMeasurementPage .chillerSourceTable{margin:0 0 8px;width:100%;table-layout:fixed;border-collapse:collapse}.chillerSourceMeasurementPage .chillerSourceTable th,.chillerSourceMeasurementPage .chillerSourceTable td{border:1px solid #777;padding:3px 5px;font-family:'Malgun Gothic',sans-serif;font-size:10px;line-height:1.2;vertical-align:middle;text-align:center;background:#fff;overflow-wrap:anywhere}.chillerSourceMeasurementPage .chillerSourceTable th{background:#dcebf5;font-weight:600}.chillerSourceMeasurementPage .chillerSourceTable .chillerNumber,.chillerSourceMeasurementPage .chillerSourceTable .chillerMeasured{color:#d34553}.chillerSourceMeasurementPage .chillerSourceTable .chillerNote{text-align:left;font-size:9px}.chillerSourceMeasurementPage .chillerSourceTable .chillerGroupCell{font-weight:500}</style><div class="tools"><button id="printReport">PDF로 저장 / 인쇄</button> A4, 배율 100%, 머리글과 바닥글 해제를 권장합니다.</div>${report()}<script>document.getElementById('printReport').onclick=async()=>{await Promise.all(Array.from(document.images).map(i=>i.decode().catch(()=>{})));window.print()};<\/script></html>`);w.document.close()}
 function enhanceVacuumPumpReport(html){const doc=new DOMParser().parseFromString(`<main id="vacuumReportRoot">${html}</main>`,'text/html'),rootNode=doc.getElementById('vacuumReportRoot');for(const e of d.equipment.filter(x=>x.type==='냉동기'))for(const item of e.items.filter(x=>isVacuumPumpItem(e,x))){const expected=`${e.type} · ${e.number} / ${item.title}`,paper=[...rootNode.querySelectorAll('.paper')].find(node=>node.querySelector('h2')?.textContent===expected);if(!paper)continue;paper.style.breakInside='avoid';paper.style.pageBreakInside='avoid';paper.querySelectorAll('.photos .reportPhotoFrame,.photos .noPhoto').forEach(node=>node.style.height='105px');paper.querySelectorAll('.photos p').forEach(node=>{node.style.fontSize='10px';node.style.margin='0';node.style.padding='4px'});const block=doc.createElement('section');block.className='vacuumPumpPrint';block.style.cssText='margin:8px 0;break-inside:avoid;page-break-inside:avoid';const labels=['진공펌프 현황사진','진공펌프 적합 사진','진공펌프 미흡사항 사진'];block.innerHTML=`<h3 style="font-size:13px;margin:4px 0;background:#e4eef5;padding:5px;text-align:center">진공펌프 추가 사진</h3><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0">${labels.map((label,index)=>{const src=item.photos?.[index+3]||'';return `<section style="border:1px solid #777;min-width:0"><h4 style="font-size:11px;margin:0;text-align:center;background:#e4eef5;padding:4px">${label}</h4>${src?`<div class="reportPhotoFrame" style="height:105px"><img src="${src}" alt="${label}"></div>`:`<div class="noPhoto" style="height:105px">사진 미첨부</div>`}</section>`}).join('')}</div>`;const tables=paper.querySelectorAll('table');tables.length?paper.insertBefore(block,tables[tables.length-1]):paper.appendChild(block)}return rootNode.innerHTML}
 const reportWithoutVacuumPhotos=report;report=function(){return enhanceVacuumPumpReport(reportWithoutVacuumPhotos())};
 function enhanceReasonReport(html){const doc=new DOMParser().parseFromString(`<main id="reasonReportRoot">${html}</main>`,'text/html'),rootNode=doc.getElementById('reasonReportRoot');for(const e of d.equipment)for(const item of e.items){const expected=`${e.type} · ${e.number} / ${item.title}`,paper=[...rootNode.querySelectorAll('.paper')].find(node=>node.querySelector('h2')?.textContent===expected);if(!paper)continue;const sections=paper.querySelectorAll('.photos>section');sections.forEach(section=>{section.style.display='flex';section.style.flexDirection='column';section.querySelector('h4')?.style.setProperty('border-bottom','1px solid #777')});sections[0]?.querySelector('p')?.remove();const statusPhoto=sections[0]?.querySelector('.reportPhotoFrame,.noPhoto');if(statusPhoto){statusPhoto.style.flex='1 1 auto';statusPhoto.style.height='auto';statusPhoto.style.minHeight='190px'}[1,2].forEach(index=>{const paragraph=sections[index]?.querySelector('p'),key='reason'+index,value=reasonValue(item,key);if(paragraph&&!value)paragraph.remove();else if(paragraph){paragraph.style.borderTop='1px solid #777';paragraph.innerHTML=`사유: ${E(value).replace(/\n/g,'<br>')}`}})}return rootNode.innerHTML}
@@ -363,5 +363,117 @@ bindMeasurementFreeze=function(dialog,e){
  measurementFreezeSelections.delete(e.uid);
  clearMeasurementFreezeStyles(dialog.querySelector('.reMeasurementScroll table'));
 };
+
+/* V80: 원본 냉동기 점검표 13~16쪽과 같은 5열 측정표, 설비별 마지막 페이지에 추가.
+ * 기존 사진·사유·조치사항/데이터 모델은 변경하지 않습니다. */
+const CHILLER_PRINT_NAMES={
+ '일반냉동기':'일반냉동기',
+ '흡수식냉동기(중온수)':'흡수식냉동기',
+ '흡수식냉동기(증기)':'흡수식냉동기',
+ '흡수식냉동기(직화)':'흡수식냉온수기'
+};
+const chillerMeasurementBeforeV80=measurementOfficialPage;
+const excelMeasurementBeforeV80=buildExcelMeasurement;
+function chillerPrintValue(v){return E(v===undefined||v===null?'':String(v))}
+function chillerPrintRows(e){
+ const format=e.equipmentFormat, template=CHILLER_MEASUREMENTS[format];
+ if(!template)return null;
+ const saved=measurementRows(e);
+ const lookup=new Map(saved.map(r=>[`${r.group}|||${r.item}`,r]));
+ return template.map(([group,item,unit])=>{
+  if(item==='설치년도')return {group:'',item,unit,design:'',measured:e['설치년도']||'',percent:'',note:''};
+  const row=lookup.get(`${group}|||${item}`)||{};
+  return {group,item,unit,design:row.design||'',measured:row.measured||'',percent:row.percent||'',note:row.note||''};
+ });
+}
+function chillerPrintGroup(group){return group==='기본'?'':group==='성능'?'':group.replace(/\(/g,'<br>(')}
+function chillerPrintItem(row){return `${chillerPrintValue(row.item)}${row.unit?`(${chillerPrintValue(row.unit)})`:''}`}
+measurementOfficialPage=function(e){
+ if(e.type!=='냉동기'||!CHILLER_PRINT_NAMES[e.equipmentFormat])return chillerMeasurementBeforeV80(e);
+ const rows=chillerPrintRows(e),type=CHILLER_PRINT_NAMES[e.equipmentFormat];
+ let groupHtml='';
+ for(let i=0;i<rows.length;){
+  const group=rows[i].group;let end=i+1;
+  while(end<rows.length&&rows[end].group===group)end++;
+  rows.slice(i,end).forEach((r,j)=>{
+   const groupCell=j===0?`<td class="chillerGroupCell" rowspan="${end-i}">${chillerPrintGroup(group)}</td>`:'';
+   groupHtml+=`<tr>${groupCell}<td class="chillerItemCell">${chillerPrintItem(r)}</td><td>${chillerPrintValue(r.design)}</td><td class="chillerMeasured">${chillerPrintValue(r.measured)}</td><td>${chillerPrintValue(r.percent)}</td><td class="chillerNote">${chillerPrintValue(r.note)}</td></tr>`;
+  });i=end;
+ }
+ return `<section class="paper officialPage officialMeasurementPage chillerSourceMeasurementPage">${officialHeader()}<h2 class="chillerSourceTitle">&lt;${E(type)}&gt;</h2><table class="officialGrid chillerSourceTable"><colgroup><col style="width:15%"><col style="width:24%"><col style="width:19%"><col style="width:19%"><col style="width:10%"><col style="width:13%"></colgroup><thead><tr><th colspan="6" class="chillerNumber">${E(e.number)}</th></tr><tr><th colspan="2">구분</th><th>설계</th><th>측정</th><th>%</th><th>비고</th></tr></thead><tbody>${groupHtml}</tbody></table>${officialFooter()}</section>`;
+};
+/* 표의 첫 두 열을 원본과 같이 묶어 표시하되 데이터는 행별로 유지 */
+function styleChillerExcelCell(cell,head=false){
+ cell.font={name:'Malgun Gothic',size:head?10:9,bold:head,color:{argb:'FF111111'}};
+ cell.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+ const edge={style:'thin',color:{argb:'FF7A7A7A'}};
+ cell.border={top:edge,bottom:edge,left:edge,right:edge};
+ if(head)cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFDCEBF5'}};
+}
+buildExcelMeasurement=async function(wb,e,equipmentIndex){
+ if(e.type!=='냉동기'||!CHILLER_PRINT_NAMES[e.equipmentFormat])return excelMeasurementBeforeV80(wb,e,equipmentIndex);
+ const rows=chillerPrintRows(e),type=CHILLER_PRINT_NAMES[e.equipmentFormat];
+ const ws=wb.addWorksheet(safeSheetName(`${e.number}_측정값`,`설비${equipmentIndex+1}_측정값`));
+ setupExcelSheet(ws);
+ ws.columns=[{width:13},{width:23},{width:18},{width:18},{width:11},{width:23}];
+ ws.pageSetup={...ws.pageSetup,fitToPage:true,fitToWidth:1,fitToHeight:1,orientation:'portrait',paperSize:9};
+ ws.mergeCells('A2:F2');ws.getCell('A2').value=`<${type}>`;
+ ws.getCell('A2').font={name:'Malgun Gothic',size:13,bold:true};ws.getCell('A2').alignment={horizontal:'left',vertical:'middle'};
+ ws.getRow(2).height=28;
+ ws.mergeCells('A4:F4');ws.getCell('A4').value=e.number;
+ ws.getCell('A4').font={name:'Malgun Gothic',size:12,bold:true,color:{argb:'FFDA4B58'}};
+ ws.getCell('A4').alignment={horizontal:'center',vertical:'middle'};
+ ws.getRow(4).height=23;
+ ws.mergeCells('A5:B5');
+ [['A5','구분'],['C5','설계'],['D5','측정'],['E5','%'],['F5','비고']].forEach(([pos,label])=>{const c=ws.getCell(pos);c.value=label;styleChillerExcelCell(c,true)});
+ ws.getRow(5).height=24;
+ let index=0,rownum=6;
+ while(index<rows.length){const group=rows[index].group;let end=index+1;while(end<rows.length&&rows[end].group===group)end++;
+  if(group!=='기본'&&group!=='성능'&&end-index>1)ws.mergeCells(rownum,1,rownum+(end-index)-1,1);
+  for(let j=index;j<end;j++){
+   const r=rows[j],n=rownum+j-index;
+   if(j===index)ws.getCell(n,1).value=group==='기본'||group==='성능'?'':group;
+   ws.getCell(n,2).value=`${r.item}${r.unit?'('+r.unit+')':''}`;
+   ws.getCell(n,3).value=r.design;ws.getCell(n,4).value=r.measured;
+   ws.getCell(n,5).value=r.percent;ws.getCell(n,6).value=r.note;
+   for(let k=1;k<=6;k++)styleChillerExcelCell(ws.getCell(n,k));
+   ws.getCell(n,4).font={name:'Malgun Gothic',size:9,color:{argb:'FFD34553'}};
+   ws.getRow(n).height=24;
+  }rownum+=end-index;index=end;
+ }
+ ws.pageSetup.printArea=`A2:F${rownum-1}`;
+};
+/* 각 냉동기의 요약/항목이 끝나는 즉시 해당 기종 측정표 삽입 */
+report=function(){
+ let html=page('기계설비 성능점검 보고서',table(fields[0].filter(k=>k!=='제출문').map(k=>[k,d.info[k]||'미입력'])));
+ html+=page('점검완료 제출문','<p>'+E(d.info['제출문']||'미입력').replace(/\n/g,'<br>')+'</p>');
+ html+=page('목차','<ol>'+titles.map(t=>'<li>'+E(t)+'</li>').join('')+'</ol>');
+ html+=page('Ⅰ. 성능점검 계획서',textSections(1));
+ html+=page('Ⅱ. 성능점검 결과보고서',textSections(2));
+ for(const e of d.equipment){html+=equipmentOfficialPagesBeforeMeasurement(e);if(e.type==='냉동기')html+=measurementOfficialPage(e)}
+ html+=page('Ⅳ. 기계설비 시스템 검토',textSections(4));
+ html+=page('Ⅴ. 성능개선 계획 수립',textSections(5));
+ html+=page('Ⅵ. 에너지사용량 분석',textSections(6));
+ for(const e of d.equipment.filter(e=>e.type!=='냉동기'))html+=measurementOfficialPage(e);
+ return html;
+};
+exportInspectionExcel=async function(){
+ if(!d.equipment.length)return alert('먼저 성능점검표에서 설비와 점검내용을 등록하세요.');
+ if(!window.ExcelJS)return alert('Excel 출력 구성요소를 불러오지 못했습니다. 인터넷 연결 후 다시 시도하세요.');
+ try{
+  status('냉동기 원본 양식 기반 Excel 점검표 생성 중…');
+  const wb=new ExcelJS.Workbook();wb.creator='기계설비 성능점검';wb.created=new Date();
+  for(let idx=0;idx<d.equipment.length;idx++){
+   const e=d.equipment[idx];await buildExcelSummary(wb,e,idx);
+   for(let k=0;k<e.items.length;k++)await buildExcelItem(wb,e,e.items[k],k,idx);
+   if(e.type==='냉동기')await buildExcelMeasurement(wb,e,idx);
+  }
+  for(let idx=0;idx<d.equipment.length;idx++)if(d.equipment[idx].type!=='냉동기')await buildExcelMeasurement(wb,d.equipment[idx],idx);
+  const buffer=await wb.xlsx.writeBuffer();
+  download(buffer,`${fileName()}_성능점검표.xlsx`,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  status('Excel 점검표 출력 완료');
+ }catch(error){console.error(error);status('Excel 점검표 출력 실패');alert('Excel 점검표를 만들지 못했습니다.\n\n'+(error?.message||error))}
+};
+
 let request=indexedDB.open('mechanical-report-v2',1);request.onupgradeneeded=()=>request.result.createObjectStore('reports');request.onerror=()=>alert('보고서 저장공간을 열지 못했습니다. 브라우저 저장 설정을 확인하세요.');request.onsuccess=()=>{db=request.result;let get=db.transaction('reports').objectStore('reports').get('current');get.onsuccess=()=>{if(get.result){d=get.result;localReportAvailable=true}selected=d.equipment[0]?.uid||'';window.renderComposer=render;window.openLandManualReport=(page,key)=>{tab=['cover','plan','result','sheet','system','improve','energy'].indexOf(key);if(tab<0)tab=0;showReportPage('composer');render();loadSharedReport()};if(root()?.classList.contains('active')){render();loadSharedReport()}}};
 })();
