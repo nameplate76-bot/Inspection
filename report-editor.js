@@ -740,6 +740,61 @@ const CHILLER_V84_PRINT_STYLE=`<style id="chiller-print-v84">
 const ch84ReportBefore=report;
 report=function(){return ch84ReportBefore()+CHILLER_V84_PRINT_STYLE;};
 
+/* V85 냉동기 PDF 1페이지 기준표 정렬·비율 통일 + 원본 주요 기준표 정비 */
+const CHILLER_V85_STYLE=`<style id="chiller-v85-print">
+/* A4 출력의 표 3열은 반드시 동일한 열 기준을 공유한다. */
+.ch82.ch85summaryPage .ch85meta,.ch82.ch85summaryPage .ch85main{table-layout:fixed!important;width:100%!important;border-collapse:collapse!important;margin:0!important}
+.ch82.ch85summaryPage .ch85meta td,.ch82.ch85summaryPage .ch85meta th{vertical-align:middle!important;text-align:center!important;line-height:1.23!important}
+.ch82.ch85summaryPage .ch85meta td{font-weight:400!important}
+.ch82.ch85summaryPage .ch85meta .ch85value{overflow-wrap:anywhere!important;word-break:keep-all!important}
+.ch82.ch85summaryPage .ch85main td,.ch82.ch85summaryPage .ch85main th{vertical-align:middle!important;box-sizing:border-box!important}
+.ch82.ch85summaryPage .ch85main .ch85group,.ch82.ch85summaryPage .ch85main .ch85label{width:16%!important;text-align:center!important;background:#dcebf5!important;font-weight:700!important;vertical-align:middle!important}
+.ch82.ch85summaryPage .ch85main .ch85content{text-align:left!important}
+.ch82.ch85summaryPage .ch85main .ch85status{text-align:center!important}
+.ch82.ch85summaryPage .ch85main .ch85photo{height:44mm!important;padding:1px!important;overflow:hidden!important}
+.ch82.ch85summaryPage .ch85main .ch85photo img{display:block!important;width:100%!important;height:100%!important;object-fit:fill!important;object-position:center!important;margin:0!important;border:0!important}
+.ch82.ch85summaryPage .ch85main .ch85action{height:15mm!important;vertical-align:top!important;white-space:pre-wrap!important}
+.ch82.ch85summaryPage .ch85main .ch85notes{height:6mm!important}
+.ch82.ch85summaryPage .ch85instruction table{width:100%!important}
+.ch82.ch85summaryPage .ch85meta th{background:#dcebf5!important}
+/* 점검방법과 기준을 분리한 표: 텍스트 축소가 아닌 문단과 표 병합 */
+.ch82 .ch85criteriaSection{margin:0 0 1mm!important}
+.ch82 .ch85criteriaSection b{display:block;margin:0 0 1mm;font-weight:700}
+.ch82 .ch85criteriaSection p{margin:0 0 1mm;white-space:pre-wrap}
+.ch82 .ch85criteriaSource{white-space:pre-wrap;overflow-wrap:break-word;word-break:keep-all}
+@media print{.ch82.ch85summaryPage .ch85main .ch85photo{height:44mm!important;padding:1px!important}.ch82.ch85summaryPage .ch85main .ch85photo img{object-fit:fill!important}}
+</style>`;
+function ch85summary(e){
+ const site=e.sitePhoto||e.items.flatMap(x=>x.photos||[]).find(Boolean)||'';
+ const defects=e.items.filter(x=>x.result==='미흡'||x.result==='조치필요').map(x=>`${x.title}: ${x.reason2||x.action||''}`).join('\n');
+ const actions=e.items.filter(x=>String(x.action||'').trim()).map(x=>`${x.title}: ${x.action}`).join('\n');
+ const rows=e.items.map((item,index)=>`<tr><td class="ch85content">${E(item.title)}</td><td class="ch85status">${resultMark(item.result)}</td></tr>`).join('');
+ return ch82page(`<h2 class="ch82-summary-title">냉동기 성능점검표</h2>
+ <table class="ch82summary ch85meta"><colgroup><col style="width:13%"><col style="width:27%"><col style="width:14%"><col style="width:20%"><col style="width:13%"><col style="width:13%"></colgroup>
+ <tr><th>점검자</th><td class="ch85value">${E(e['점검자']||d.info['점검자']||'')}</td><th>점검일자</th><td class="ch85value">${E(e['점검일']||d.info['점검시작일']||'')}</td><th>설비번호</th><td class="ch85value">${E(e.number)}</td></tr>
+ <tr><th>설치위치<br>(No.)</th><td class="ch85value">${E(e['설치위치']||'')}</td><th>용도</th><td class="ch85value">${E(e['용도']||'')}</td><td colspan="2"></td></tr></table>
+ <table class="ch82summary ch85main"><colgroup><col style="width:16%"><col style="width:71%"><col style="width:13%"></colgroup>
+ <thead><tr><th>구분</th><th>점검내용</th><th>점검결과</th></tr></thead>
+ <tbody><tr><td class="ch85group" rowspan="${e.items.length}">점검<br>항목</td>${rows.replace(/^<tr>/,'')}</tbody>
+ <tbody><tr><td class="ch85label" rowspan="2">조치<br>사항</td><td colspan="2" class="ch85action">&lt; 미흡사항 &gt;\n${E(defects)}</td></tr>
+ <tr><td colspan="2" class="ch85action">&lt; 조치필요사항 &gt;\n${E(actions)}</td></tr>
+ <tr><td class="ch85label">현장<br>사진</td><td colspan="2" class="ch85photo">${site?`<img src="${site}" alt="현장 대표 사진">`:''}</td></tr>
+ <tr><td class="ch85label">비고</td><td colspan="2" class="ch85notes">${E(e['비고']||'')}</td></tr></tbody></table>
+ <table class="ch82summary ch85instruction"><tr><th>작성방법</th></tr><tr><td class="ch82instructions">1. 유지관리지침서 및 기계설비 유지관리 및 성능점검 대상 현황표와의 적합여부를 참고하여 점검결과를 작성한다.\n2. 점검결과에는 [적합 ○, 조치필요 ×, 해당없음 /]을 표기한다.\n3. 현황사진에는 영 별표 7 제3호의 장비를 사용한 측정사진 및 측정데이터를 포함하여 첨부한다.\n4. 전체 수량의 50% 이상 범위 내에서 점검을 실시한다.\n5. 압축식 냉동기, 흡수식 냉동기, 냉온수기, 공랭식 냉동기 등을 포함하여 작성한다.</td></tr></table>`,'ch85summaryPage');
+}
+/* 원본의 ⑥ 배출기준, ⑧ 안전장치, ⑮ COP를 중복 없이 세부표로 구성. */
+const ch85oldCriteria=ch82criteria;
+ch82criteria=function(item,index){
+ if(index===5)return `<div class="ch82rich ch85criteriaSource"><div class="ch85criteriaSection"><b>점검방법</b><p>- 가스의 공급압력은 정상인가\n- 버너의 착화 및 연소, 소화 등의 작동상태는 양호한가\n- 송풍기 가동 시 소음이나 진동은 발생하지 않는가\n- 연도와 연결된 부분의 댐퍼 개폐 상태는 양호한가\n- 배기가스 기준은 관련 법령 기준에 만족하는가\n- 측정항목 : O₂, CO₂, CO, NO₂</p></div><div class="ch85criteriaSection"><b>점검기준 — 가. O₂, CO₂, CO 배출기준</b><p>「산업통상자원부 고시 제2021-133호」 제25장 계속사용검사 중 운전성능 검사기준\n25.2.2 유류 보일러로서 증기보일러 이외의 보일러\n배기가스 중 CO₂ 용적: 중유 11.3% 이상, 경유 및 보일러 등유 9.5% 이상\n25.2.3 가스용 보일러: 일산화탄소(CO)의 이산화탄소(CO₂)에 대한 비는 0.002 이하</p><b>〈표 23.1〉 배기가스 성분</b><table><thead><tr><th rowspan="2">성분 / 부하율</th><th colspan="2">O₂(%)</th><th colspan="2">CO₂(%)</th></tr><tr><th>90 ± 10</th><th>45 ± 10</th><th>90 ± 10</th><th>45 ± 10</th></tr></thead><tbody><tr><td>중유</td><td>3.7 이하</td><td>5 이하</td><td>12.7 이상</td><td>12 이상</td></tr><tr><td>경유</td><td>4 이하</td><td>5 이하</td><td>11 이상</td><td>10 이상</td></tr><tr><td>가스</td><td>3.7 이하</td><td>4 이하</td><td>10 이상</td><td>9 이상</td></tr></tbody></table></div><div class="ch85criteriaSection"><b>나. NO₂ 배출기준</b><p>「대기환경보전법 시행규칙」 [별표 8] 대기오염물질의 배출허용기준\n2. 2020년 1월 1일부터 적용되는 배출허용기준\n가. 가스형태의 물질 — 1) 일반적인 배출허용기준</p><table><tr><th>대기오염물질</th><th>배출시설</th><th>배출허용기준</th></tr><tr><td>질소산화물(NO₂로서)(ppm)</td><td>일반 보일러실(흡수식 냉온수기를 포함한다.)</td><td>※ 원본 비고 참조</td></tr></table></div></div>`;
+ if(index===7){const equipment=['공통','공통','공통','흡수식 냉동기','온수식 냉동기','흡수식 냉동기','공통','공통','공통','흡수식 냉동기','온수식 냉동기'];const names=['냉수 동결 방지용 온도 스위치 또는 냉수 저온이상 스위치','냉매 저온 스위치','냉수 플로우 스위치 또는 냉수 차압 스위치','흡수액 펌프 전동기 과전류 스위치','보조 흡수액 펌프 전동기 과전류 스위치','냉매 펌프 전동기 과전류 스위치','냉(온)수 펌프 인터록','냉각수 펌프 인터록','접지용 단자 - 탈거된 경우 연결할 것','재생기용액 오버플로우(Overflow)','제2재생기용액 오버플로우(Overflow)'];return `<div class="ch82rich"><div class="ch85criteriaSection"><b>점검방법 — 아래 각 항목의 장치 보유 여부 점검</b><table><tr><th>구분</th><th>해당 냉동기</th></tr>${names.map((n,i)=>`<tr><td>${i+1}. ${E(n)}</td><td>${E(equipment[i])}</td></tr>`).join('')}</table></div><div class="ch85criteriaSection"><b>점검기준</b><p>- 냉동기 판넬에서 작동상태가 확인이 되거나 설치되어 있는지 확인</p></div></div>`}
+ if(index===14)return `<div class="ch82rich"><div class="ch85criteriaSection"><b>점검방법</b><p>- 냉동기 정격 운전 기준(부하율=운전동력/정격동력)\n- 입출구 냉수 유량(LPM) 및 온도(℃) 측정\n- 출력에너지: 압축식 냉동기-전력 소비량, 직화 흡수식 냉온수기-연료 발열량, 온수 흡수식 냉동기-온수 열량, 증기 흡수식 냉온수기-증기 열량</p></div><div class="ch85criteriaSection"><b>점검기준</b><p>- 정격 운전 기준 이전 성능점검 COP 대비 금년 성능점검 COP가 90% 이상인가\n※ 최초 점검 시 제조사 기준 대비 확인함</p></div><div class="ch82copformula">COP = 출력에너지(RT) × 3024 ÷ [입력에너지(kW) × 860]</div><p>출력에너지(RT) = 냉수유량(LPM) × 냉수 입출구온도차(Δt, ℃) × 60 / 3024</p><b>가스 직화식 흡수식 냉동기의 경우</b><div class="ch82copformula">COP = qₒ / qᵢ　　qₒ = Qw × ρ × Cp × Δt　　qᵢ = Lg × qgl</div><p>qₒ: 출력에너지(kcal/h) / qᵢ: 입력에너지(kcal/h) / Qw: 냉온수 유량(m³/h) / Lg: 가스 유량(N㎥/h) / ρ: 물의 밀도 1,000kg/m³ / Cp: 물의 정압비열 1kcal/kg·℃ / Δt: 냉온수 입출구 온도차 / qgl: 도시가스 저위발열량 9,420kcal/N㎥</p></div>`;
+ return ch85oldCriteria(item,index);
+};
+const ch85oldSummary=ch82summary;
+ch82summary=function(e){return ch85summary(e)};
+const ch85oldReport=report;
+report=function(){return CHILLER_V85_STYLE+ch85oldReport()};
+
 /* 모든 Excel 시트는 현장/설비별 순서로 정렬.
    긴 사유를 일률적으로 7pt로 축소하던 처리를 제거. */
 const ch83BuildExcelItem=buildExcelItem;
