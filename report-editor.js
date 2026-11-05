@@ -702,6 +702,44 @@ report=function(){
  return CHILLER_V82_STYLE+PRINT_V83_STYLE+html;
 };
 
+/* V84: 원본 냉동기 점검표 대비 PDF 본문·사진·표 레이아웃 개선.
+   V83 결과물은 본문 글자 중앙값 5.9~7.4pt로 원본 약 11pt보다 작았음.
+   입력, 저장, 사진/사유 필드 및 계산 로직은 변경하지 않음. */
+const CHILLER_V84_PRINT_STYLE=`<style id="chiller-print-v84">
+/* 크기를 mm/pt로 고정해 장치별 화면 글꼴 영향 최소화 */
+.ch82{font-family:'Malgun Gothic','맑은 고딕',sans-serif!important;line-height:1.30!important}
+.ch82 .ch82item{margin:0 0 8mm!important}
+.ch82 .ch82item h3{font-size:12pt!important;line-height:1.28!important;font-weight:800!important;margin:0 0 3mm!important}
+.ch82 .ch82criteria th,.ch82 .ch82criteria td{font-size:10.5pt!important;line-height:1.35!important;padding:1.6mm 2mm!important;overflow-wrap:break-word!important}
+.ch82 .ch82criteria .ch82side{width:13%!important;line-height:1.3!important}
+.ch82 .ch82photos{margin-top:3mm!important}
+.ch82 .ch82photos thead th{font-size:10pt!important;height:6.5mm!important;padding:1mm!important}
+.ch82 .ch82photos .ch82photobox{height:43mm!important;padding:2px!important;box-sizing:border-box!important}
+.ch82 .ch82photos .ch82photobox img{object-fit:contain!important;width:100%!important;height:100%!important}
+.ch82 .ch82photos .ch82reasons td{font-size:10pt!important;line-height:1.3!important;height:15mm!important;padding:2mm!important}
+.ch82 .ch82results td{font-size:9.5pt!important;line-height:1.25!important;padding:1.2mm 2mm!important}
+.ch82 .ch82summary th,.ch82 .ch82summary td{font-size:10.5pt!important;line-height:1.26!important;padding:1.1mm 1.6mm!important}
+.ch82 .ch82summary .ch82instructions{font-size:9.5pt!important;line-height:1.28!important;padding:2mm!important}
+.ch82 .ch82summary .ch82hero img{object-fit:contain!important}
+.ch82 .ch82rich,.ch82 .ch82rich p{font-size:10pt!important;line-height:1.28!important}
+.ch82 .ch82rich table th,.ch82 .ch82rich table td{font-size:9pt!important;line-height:1.18!important;padding:1mm 1.4mm!important}
+.ch82 .ch82copformula{font-size:11pt!important;padding:2mm!important;margin:2.5mm 0!important}
+.ch82.ch82duo .ch82item{margin-bottom:8mm!important}
+.ch82.ch82single .ch82photobox{height:62mm!important}
+.ch82.ch83photoPage .ch82photobox,.ch82.ch82copphotos .ch82photobox{height:82mm!important}
+.ch82.ch83criteriaPage .ch82rich,.ch82.ch82copcriteria .ch82rich{font-size:10.5pt!important}
+.ch82 .ch82page-title{font-size:12pt!important}
+@media print{
+ .paper.officialPage.ch82{width:210mm!important;height:297mm!important;min-height:297mm!important;box-sizing:border-box!important;padding:12mm 16mm 12mm!important;margin:0!important;overflow:hidden!important;break-after:page!important}
+ .ch82 .ch82compact .ch82photobox{height:43mm!important}
+ .ch82 .ch82rich{font-size:10pt!important}
+ .ch82 .ch82rich p{font-size:10pt!important}
+ .ch82 .ch82photos .ch82photobox img{object-fit:contain!important}
+}
+</style>`;
+const ch84ReportBefore=report;
+report=function(){return ch84ReportBefore()+CHILLER_V84_PRINT_STYLE;};
+
 /* 모든 Excel 시트는 현장/설비별 순서로 정렬.
    긴 사유를 일률적으로 7pt로 축소하던 처리를 제거. */
 const ch83BuildExcelItem=buildExcelItem;
