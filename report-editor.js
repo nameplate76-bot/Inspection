@@ -618,5 +618,126 @@ report=function(){
  return CHILLER_V82_STYLE+html;
 };
 
+
+/* V83: 출력 전용 품질 보정 - 입력/저장/DB 구조는 수정하지 않음. */
+const PRINT_V83_STYLE=`<style id="print-quality-v83">
+/* 원본 A4 비율을 유지하고 내용의 자동 축소/사진 왜곡을 금지한다. */
+.officialPage,.ch82{font-family:'Malgun Gothic','맑은 고딕',sans-serif!important}
+.officialPage .officialItemTitle,.ch82 .ch82item h3{font-size:13pt!important;line-height:1.35!important}
+.officialPage .officialGrid th,.officialPage .officialGrid td{font-family:inherit!important;line-height:1.33!important}
+.officialPage .officialCriteria{font-size:10pt!important;line-height:1.34!important;white-space:pre-wrap!important;overflow-wrap:break-word!important}
+.officialPage .officialCriteria.long{font-size:9.5pt!important;line-height:1.32!important}
+.officialPage .officialReason{font-size:10pt!important;line-height:1.35!important;overflow-wrap:break-word!important;white-space:pre-wrap!important}
+.officialPage .officialPhoto img,.officialPage .officialRepresentative img,
+.ch82 .ch82photobox img,.ch82 .ch82summary .ch82hero img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important}
+.ch82 .ch82criteria th,.ch82 .ch82criteria td,.ch82 .ch82photos th,.ch82 .ch82reasons td{font-size:10pt!important;line-height:1.3!important}
+.ch82 .ch82rich,.ch82 .ch82rich p{font-size:10pt!important;line-height:1.31!important}
+.ch82 .ch82rich th,.ch82 .ch82rich td{font-size:9pt!important;line-height:1.25!important}
+.ch82 .ch82reasons td{height:17mm!important;overflow-wrap:break-word!important}
+.ch82 .ch82photobox{padding:2px!important}
+.ch82 .ch82summary th,.ch82 .ch82summary td{font-size:10pt!important}
+.ch82 .ch82summary .ch82instructions{font-size:9pt!important}
+@media print{
+  .ch82 .ch82rich{font-size:10pt!important}
+  .ch82 .ch82rich p{font-size:10pt!important}
+  .ch82 .ch82compact .ch82photobox{height:30mm!important}
+  .paper.officialPage .officialCriteria.long{font-size:9.5pt!important}
+}
+</style>`;
+
+/* 앞선 V82에서는 특별 점검기준을 요약문으로 대체하였음.
+   원본의 모든 입력된 점검기준 문장을 출력에 남기고, 필요하면 구조표를 추가한다. */
+const ch83PreviousCriteria=ch82criteria;
+ch82criteria=function(item,index){
+ const original=String(item.criteria||'').replace(/\r/g,'').trim();
+ if(index!==5&&index!==7&&index!==14)return ch83PreviousCriteria(item,index);
+ const escaped=E(original).replace(/\n/g,'<br>');
+ if(index===5||index===7){
+   // 세부 측정기준과 판정조건을 요약하지 않고 전부 출력한다.
+   // 표는 별도 구조로 보존하되 원문을 생략하지 않는다.
+   const structured=ch83PreviousCriteria(item,index);
+   return `<div class="ch82rich"><div class="ch83original">${escaped}</div><div class="ch83structure">${structured}</div></div>`;
+ }
+ return `<div class="ch82rich">${ch83PreviousCriteria(item,index)}<div class="ch83original">${escaped}</div></div>`;
+};
+
+/* 냉동기 특수표(연소장치/인터록)는 기준과 사진을 별도 페이지에 배치:
+   작은 글자로 강제 축소하지 않고 A4에 인쇄하기 위함. */
+const ch83PreviousPages=ch82pages;
+ch82pages=function(e){
+ let html=ch82summary(e), items=e.items||[];
+ const pairs=[[0,1],[2,3],[4],[6],[8,9],[10,11],[12,13]];
+ // 원본 항목 순서를 보존하면서 긴 기준은 2페이지로 분리.
+ const plan=[[0,1],[2,3],[4],[5],[6],[7],[8,9],[10,11],[12,13]];
+ for(const group of plan){
+  const present=group.filter(i=>items[i]);if(!present.length)continue;
+  if(present.length===1&&(present[0]===5||present[0]===7)){
+    const i=present[0];
+    html+=ch82page(ch82item(e,items[i],i,{criteriaOnly:true}),'ch83criteriaPage');
+    html+=ch82page(ch82item(e,items[i],i,{photosOnly:true}),'ch83photoPage');
+  }else html+=ch82page(present.map(i=>ch82item(e,items[i],i,{compact:present.length>1})).join(''),present.length>1?'ch82duo':'ch82single');
+ }
+ if(items[14]){
+  html+=ch82page(ch82item(e,items[14],14,{criteriaOnly:true}),'ch82copcriteria');
+  html+=ch82page(ch82item(e,items[14],14,{photosOnly:true}),'ch82copphotos');
+ }
+ for(let i=15;i<items.length;i++)html+=ch82page(ch82item(e,items[i],i),'ch82single');
+ return html;
+};
+
+/* 모든 설비의 측정표를 해당 점검표 바로 뒤에 놓는다. */
+report=function(){
+ let html=page('기계설비 성능점검 보고서',table(fields[0].filter(k=>k!=='제출문').map(k=>[k,d.info[k]||'미입력'])));
+ html+=page('점검완료 제출문','<p>'+E(d.info['제출문']||'미입력').replace(/\n/g,'<br>')+'</p>');
+ html+=page('목차','<ol>'+titles.map(t=>'<li>'+E(t)+'</li>').join('')+'</ol>');
+ html+=page('Ⅰ. 성능점검 계획서',textSections(1));
+ html+=page('Ⅱ. 성능점검 결과보고서',textSections(2));
+ for(const e of d.equipment){
+  html+=e.type==='냉동기'?ch82pages(e):equipmentOfficialPagesBeforeMeasurement(e);
+  html+=measurementOfficialPage(e);
+ }
+ html+=page('Ⅳ. 기계설비 시스템 검토',textSections(4));
+ html+=page('Ⅴ. 성능개선 계획 수립',textSections(5));
+ html+=page('Ⅵ. 에너지사용량 분석',textSections(6));
+ return CHILLER_V82_STYLE+PRINT_V83_STYLE+html;
+};
+
+/* 모든 Excel 시트는 현장/설비별 순서로 정렬.
+   긴 사유를 일률적으로 7pt로 축소하던 처리를 제거. */
+const ch83BuildExcelItem=buildExcelItem;
+buildExcelItem=async function(wb,e,item,itemIndex,equipmentIndex){
+ await ch83BuildExcelItem(wb,e,item,itemIndex,equipmentIndex);
+ const ws=wb.worksheets[wb.worksheets.length-1];
+ const hasLongText=String(item.criteria||'').length>650;
+ for(const pos of ['C5','D30','G30','C36','C40']){
+  const cell=ws.getCell(pos);
+  cell.font={name:'Malgun Gothic',size:10,color:{argb:'FF111111'}};
+  cell.alignment={vertical:'middle',horizontal:'left',wrapText:true};
+ }
+ // 긴 문장이 들어간 점검 기준의 행 높이를 늘려 가독성을 확보한다.
+ for(let row=5;row<=12;row++)ws.getRow(row).height=hasLongText?30:23;
+ for(let row=30;row<=35;row++)ws.getRow(row).height=22;
+ ws.pageSetup.fitToPage=true;
+ ws.pageSetup.fitToWidth=1;
+ ws.pageSetup.fitToHeight=0;
+ ws.pageSetup.paperSize=9;
+};
+exportInspectionExcel=async function(){
+ if(!d.equipment.length)return alert('먼저 성능점검표에서 설비와 점검내용을 등록하세요.');
+ if(!window.ExcelJS)return alert('Excel 출력 구성요소를 불러오지 못했습니다. 인터넷 연결 후 다시 시도하세요.');
+ try{
+  status('설비별 원본 양식 기반 Excel 점검표 생성 중…');
+  const wb=new ExcelJS.Workbook();wb.creator='기계설비 성능점검';wb.created=new Date();
+  for(let idx=0;idx<d.equipment.length;idx++){
+   const e=d.equipment[idx];await buildExcelSummary(wb,e,idx);
+   for(let k=0;k<e.items.length;k++)await buildExcelItem(wb,e,e.items[k],k,idx);
+   await buildExcelMeasurement(wb,e,idx);
+  }
+  const buffer=await wb.xlsx.writeBuffer();
+  download(buffer,`${fileName()}_성능점검표.xlsx`,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  status('Excel 점검표 출력 완료');
+ }catch(error){console.error(error);status('Excel 점검표 출력 실패');alert('Excel 점검표를 만들지 못했습니다.\n\n'+(error?.message||error))}
+};
+
 let request=indexedDB.open('mechanical-report-v2',1);request.onupgradeneeded=()=>request.result.createObjectStore('reports');request.onerror=()=>alert('보고서 저장공간을 열지 못했습니다. 브라우저 저장 설정을 확인하세요.');request.onsuccess=()=>{db=request.result;let get=db.transaction('reports').objectStore('reports').get('current');get.onsuccess=()=>{if(get.result){d=get.result;localReportAvailable=true}selected=d.equipment[0]?.uid||'';window.renderComposer=render;window.openLandManualReport=(page,key)=>{tab=['cover','plan','result','sheet','system','improve','energy'].indexOf(key);if(tab<0)tab=0;showReportPage('composer');render();loadSharedReport()};if(root()?.classList.contains('active')){render();loadSharedReport()}}};
 })();
