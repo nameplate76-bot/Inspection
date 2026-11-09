@@ -20,3 +20,19 @@ html{background:var(--m1-bg)}body{margin:0;font-family:'Malgun Gothic','Apple SD
 .re .reEquipmentCard{max-width:100%}
 @media(max-width:700px){.m1-layout{padding:10px 8px 38px}.m1-topbar strong{font-size:16px}.m1-badge{font-size:11px;padding:6px 9px}.m1-editor>header h2{font-size:17px}.m1-editor .reTools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.m1-editor .reTools button,.m1-editor .reTools .reBtn{padding:10px 6px;font-size:12px;text-align:center}.m1-site{padding:10px}}
 @media print{.m1-topbar,.m1-safe,.m1-footer,.m1-bottom-notice{display:none!important}}
+
+/* M1.0.1: date input with native calendar, phone-compatible numeric entry */
+.m1-date-row{display:grid;grid-template-columns:minmax(0,1fr) 46px;gap:8px;align-items:stretch;min-width:0}
+.m1-date-row input[data-m1-date-text]{min-width:0;width:100%;font-variant-numeric:tabular-nums}
+.m1-date-row input[type=date]{width:46px;min-width:46px;min-height:45px;border:1px solid #a9c1d6;border-radius:7px;background:#fff;cursor:pointer;padding:4px;color:transparent;font-size:0}
+.m1-date-row input[type=date]::-webkit-calendar-picker-indicator{display:block;width:25px;height:25px;opacity:1;cursor:pointer;margin:auto}
+.m1-date-row .m1-date-invalid{border:2px solid #c92b39!important;background:#fff7f7!important}
+.m1-date-feedback{display:block;color:#b4232f;font-size:12px;line-height:1.55;margin-top:5px}
+.m1-date-feedback[hidden]{display:none}
+/* M1.0.1: correct the reason editor width inside its independent dialog */
+.reReasonDialog .reReasonNew{width:100%;min-width:0;box-sizing:border-box}
+.reReasonDialog .reReasonNew label{display:block;width:100%;font-weight:700;margin:0 0 9px;line-height:1.5}
+.reReasonDialog .reReasonNew textarea{display:block;box-sizing:border-box;width:100%!important;max-width:100%;min-width:0;min-height:132px;max-height:32vh;resize:vertical;margin:0 0 10px;padding:12px;font:inherit;font-size:15px;line-height:1.5;border:1px solid #9cb6cb;border-radius:7px;color:#17344d;background:#fff}
+.reReasonDialog .reReasonNew button{display:block;width:100%;min-height:45px;font-size:15px;margin:0}
+.reReasonDialog .reReasonNew[hidden]{display:none!important}
+@media(max-width:650px){.reReasonDialog .reReasonNew textarea{min-height:114px}.reReasonDialog .reReasonDialogBody{padding:14px}.m1-date-row{grid-template-columns:minmax(0,1fr) 44px;gap:5px}}

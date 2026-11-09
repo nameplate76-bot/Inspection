@@ -13,10 +13,16 @@ let reasonRecognition=null,reasonVoiceText='';
 const root=()=>document.getElementById('reportComposerPage');
 function save(){const snapshot=structuredClone(d);queue=queue.catch(()=>{}).then(()=>new Promise((ok,no)=>{let tx=db.transaction('reports','readwrite');tx.objectStore('reports').put(snapshot,'demo/current');tx.oncomplete=async()=>{try{if(window.PERFORMANCE_M1_DISABLED_REMOTE_SAVE){status('중앙 서버에 저장 중…');await window.PERFORMANCE_M1_DISABLED_REMOTE_SAVE(snapshot);status('저장됨 · PC와 휴대폰 공유')}else status('저장됨 · 이 기기')}catch(error){console.error(error);status('이 기기 저장됨 · 중앙 동기화 실패')}ok()};tx.onerror=()=>{status('저장 실패: 백업을 다운로드하세요');no(tx.error)}}));return queue}
 function status(s){let el=document.getElementById('reStatus');if(el)el.textContent=s}
-function input(key,value,large=false){return large?`<textarea data-info="${E(key)}">${E(value)}</textarea>`:`<input data-info="${E(key)}" value="${E(value)}">`}
+function input(key,value,large=false){
+ if(key==='점검시작일'||key==='점검종료일'){
+  const date=String(value||''),isIso=/^\d{4}-\d{2}-\d{2}$/.test(date);
+  return `<div class="m1-date-row"><input type="text" data-info="${E(key)}" data-m1-date-text="${E(key)}" inputmode="numeric" autocomplete="off" placeholder="YYYYMMDD 또는 YYYY-MM-DD" value="${E(date)}" maxlength="10" aria-label="${E(key)} 직접 입력"><input type="date" data-m1-date-picker="${E(key)}" aria-label="${E(key)} 달력에서 선택" value="${isIso?E(date):''}" title="달력에서 날짜 선택"></div><small class="m1-date-feedback" data-m1-date-feedback="${E(key)}" role="status" hidden></small>`;
+ }
+ return large?`<textarea data-info="${E(key)}">${E(value)}</textarea>`:`<input data-info="${E(key)}" value="${E(value)}">`;
+}
 function itemField(i,k,v,large=false){return large?`<textarea data-item="${i}" data-key="${k}">${E(v)}</textarea>`:`<input data-item="${i}" data-key="${k}" value="${E(v)}">`}
 function equip(){return d.equipment.find(e=>e.uid===selected)}
-function render(){if(!root())return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">M1.0.0</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 운영 DB와 완전 분리된 이 브라우저 테스트 저장소</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저에만 저장 · 운영 Supabase 연결 안 함</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}<div class="m1-bottom-notice">이 페이지는 독립 개발 및 시험용입니다. 기존 업무포털·운영 Supabase 데이터는 수정하지 않습니다.</div></div>`;bind()}
+function render(){if(!root())return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">M1.0.1</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 운영 DB와 완전 분리된 이 브라우저 테스트 저장소</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저에만 저장 · 운영 Supabase 연결 안 함</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}<div class="m1-bottom-notice">이 페이지는 독립 개발 및 시험용입니다. 기존 업무포털·운영 Supabase 데이터는 수정하지 않습니다.</div></div>`;bind()}
 function energyUI(){return `<h4>월별 사용량 (동일 단위로 입력)</h4><div class="reGrid">${Array.from({length:12},(_,i)=>`<label>${i+1}월<input type="number" min="0" step="any" data-month="${i}" value="${E(d.energy[i]??'')}"></label>`).join('')}</div>`}
 function isVacuumPumpItem(e,item){return e?.type==='냉동기'&&String(item?.title||'').includes('⑤ 펌프(용액, 냉매, 진공) 상태(흡수식 냉동기)')}
 function vacuumPumpEditorHTML(item,itemIndex){const labels=['진공펌프 현황사진','진공펌프 적합 사진','진공펌프 미흡사항 사진'];return `<section class="reVacuumBlock"><h5>진공펌프 추가 사진</h5><p>⑤번 점검항목의 기존 사진칸 아래에 현황·적합·미흡사항 사진이 각각 저장되며 같은 페이지에 표시됩니다.</p><div class="reVacuumPhotos">${labels.map((label,index)=>{const photoIndex=index+3,src=item.photos?.[photoIndex]||'';return `<section><b>${label}</b><button type="button" class="rePhotoSlot ${src?'rePhotoFilled':''}" data-photo-slot="${itemIndex}:${photoIndex}" aria-label="${label} ${src?'교체':'첨부'}">${src?`<img src="${src}" alt="${label}">`:`<span class="rePhotoEmpty">＋<strong>사진 칸을 눌러 첨부</strong><small>사진 선택 또는 카메라 촬영</small></span>`}</button>${src?`<button type="button" data-photo-remove="${itemIndex}:${photoIndex}">사진 삭제</button>`:''}</section>`}).join('')}</div></section>`}
@@ -748,7 +754,7 @@ const CHILLER_V85_STYLE=`<style id="chiller-v85-print">
 .ch82.ch85summaryPage .ch85meta td{font-weight:400!important}
 .ch82.ch85summaryPage .ch85meta .ch85value{overflow-wrap:anywhere!important;word-break:keep-all!important}
 .ch82.ch85summaryPage .ch85main td,.ch82.ch85summaryPage .ch85main th{vertical-align:middle!important;box-sizing:border-box!important}
-.ch82.ch85summaryPage .ch85main .ch85group,.ch82.ch85summaryPage .ch85main .ch85label{width:16%!important;text-align:center!important;background:#dcebf5!important;font-weight:700!important;vertical-align:middle!important}
+.ch82.ch85summaryPage .ch85main .ch85group,.ch82.ch85summaryPage .ch85main .ch85label{width:13%!important;text-align:center!important;background:#dcebf5!important;font-weight:700!important;vertical-align:middle!important}
 .ch82.ch85summaryPage .ch85main .ch85content{text-align:left!important}
 .ch82.ch85summaryPage .ch85main .ch85status{text-align:center!important}
 .ch82.ch85summaryPage .ch85main .ch85photo{height:44mm!important;padding:1px!important;overflow:hidden!important}
@@ -757,6 +763,8 @@ const CHILLER_V85_STYLE=`<style id="chiller-v85-print">
 .ch82.ch85summaryPage .ch85main .ch85notes{height:6mm!important}
 .ch82.ch85summaryPage .ch85instruction table{width:100%!important}
 .ch82.ch85summaryPage .ch85meta th{background:#dcebf5!important}
+/* M1.0.1: 용도 값칸의 오른쪽 두 칸을 병합하고 한 글자 내어쓰기. */
+.ch82.ch85summaryPage .ch85meta .ch85purpose{width:auto!important;text-align:left!important;padding-left:2ch!important;padding-right:1ch!important;text-indent:-1ch!important;white-space:pre-wrap!important;word-break:keep-all!important;overflow-wrap:anywhere!important}
 /* 점검방법과 기준을 분리한 표: 텍스트 축소가 아닌 문단과 표 병합 */
 .ch82 .ch85criteriaSection{margin:0 0 1mm!important}
 .ch82 .ch85criteriaSection b{display:block;margin:0 0 1mm;font-weight:700}
@@ -772,8 +780,8 @@ function ch85summary(e){
  return ch82page(`<h2 class="ch82-summary-title">냉동기 성능점검표</h2>
  <table class="ch82summary ch85meta"><colgroup><col style="width:13%"><col style="width:27%"><col style="width:14%"><col style="width:20%"><col style="width:13%"><col style="width:13%"></colgroup>
  <tr><th>점검자</th><td class="ch85value">${E(e['점검자']||d.info['점검자']||'')}</td><th>점검일자</th><td class="ch85value">${E(e['점검일']||d.info['점검시작일']||'')}</td><th>설비번호</th><td class="ch85value">${E(e.number)}</td></tr>
- <tr><th>설치위치<br>(No.)</th><td class="ch85value">${E(e['설치위치']||'')}</td><th>용도</th><td class="ch85value">${E(e['용도']||'')}</td><td colspan="2"></td></tr></table>
- <table class="ch82summary ch85main"><colgroup><col style="width:16%"><col style="width:71%"><col style="width:13%"></colgroup>
+ <tr><th>설치위치<br>(No.)</th><td class="ch85value">${E(e['설치위치']||'')}</td><th>용도</th><td colspan="3" class="ch85purpose">${E(e['용도']||'')}</td></tr></table>
+ <table class="ch82summary ch85main"><colgroup><col style="width:13%"><col style="width:74%"><col style="width:13%"></colgroup>
  <thead><tr><th>구분</th><th>점검내용</th><th>점검결과</th></tr></thead>
  <tbody><tr><td class="ch85group" rowspan="${e.items.length}">점검<br>항목</td>${rows.replace(/^<tr>/,'')}</tbody>
  <tbody><tr><td class="ch85label" rowspan="2">조치<br>사항</td><td colspan="2" class="ch85action">&lt; 미흡사항 &gt;\n${E(defects)}</td></tr>
@@ -833,7 +841,7 @@ exportInspectionExcel=async function(){
 };
 
 
-/* === M1.0.0 standalone boundary / no production connection === */
+/* === M1.0.1 standalone boundary / no production connection === */
 const M1_REPORT_BEFORE_ISOLATION=report;
 report=function(){
  const raw=M1_REPORT_BEFORE_ISOLATION();
@@ -864,7 +872,62 @@ function m1Sample(){
 actions.sample=m1Sample;
 actions.reset=function(){if(!confirm('독립 모듈의 현재 브라우저 테스트 데이터만 삭제할까요? 기존 플랫폼 데이터는 변경되지 않습니다.'))return;
  d={version:2,info:{},equipment:[],energy:[]};selected='';equipmentViews.clear();equipmentDeleteSelection.clear();save();render();};
-window.PERFORMANCE_M1_VERSION='M1.0.0';
+ /* === M1.0.1 input navigation and dual-mode date controls === */
+ function m101ParseDate(raw){
+  const value=String(raw??'').trim();if(!value)return '';
+  const digits=value.replace(/\D/g,'');
+  let year,month,day;
+  if(/^\d{8}$/.test(digits)){year=+digits.slice(0,4);month=+digits.slice(4,6);day=+digits.slice(6,8)}
+  else if(/^\d{6}$/.test(digits)){year=2000+(+digits.slice(0,2));month=+digits.slice(2,4);day=+digits.slice(4,6)}
+  else return null;
+  if(year<1900||year>2100||month<1||month>12||day<1||day>31)return null;
+  const date=new Date(year,month-1,day);
+  if(date.getFullYear()!==year||date.getMonth()!==month-1||date.getDate()!==day)return null;
+  return `${String(year).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+ }
+ function m101CommitDate(textField,announce=true){
+  if(!textField)return true;
+  const key=textField.dataset.m1DateText,normalized=m101ParseDate(textField.value);
+  const calendar=root()?.querySelector(`[data-m1-date-picker="${key}"]`);
+  const feedback=root()?.querySelector(`[data-m1-date-feedback="${key}"]`);
+  const valid=normalized!==null;
+  textField.classList.toggle('m1-date-invalid',!valid);
+  textField.setAttribute('aria-invalid',String(!valid));
+  if(feedback){feedback.hidden=valid;feedback.textContent=valid?'':'유효한 날짜를 입력하세요. 예: 20261109 또는 2026-11-09';}
+  if(!valid)return false;
+  textField.value=normalized;
+  if(calendar)calendar.value=normalized;
+  if(d.info[key]!==normalized){d.info[key]=normalized;save()}
+  return true;
+ }
+ function m101WireDates(){
+  root()?.querySelectorAll('[data-m1-date-text]').forEach(textField=>{
+   const key=textField.dataset.m1DateText;
+   const calendar=root().querySelector(`[data-m1-date-picker="${key}"]`);
+   textField.oninput=()=>{textField.classList.remove('m1-date-invalid');textField.removeAttribute('aria-invalid');const feedback=root().querySelector(`[data-m1-date-feedback="${key}"]`);if(feedback)feedback.hidden=true};
+   textField.addEventListener('blur',()=>m101CommitDate(textField));
+   calendar?.addEventListener('change',()=>{textField.value=calendar.value;m101CommitDate(textField);textField.focus()});
+  });
+ }
+ const m101PriorBind=bind;
+ bind=function(){m101PriorBind();m101WireDates()};
+ document.addEventListener('keydown',event=>{
+  if(event.key!=='Enter'||event.isComposing||event.keyCode===229||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey)return;
+  const target=event.target;
+  if(!(target instanceof HTMLElement)||!target.matches('input:not([type="file"]):not([type="hidden"]):not([type="date"]):not([type="checkbox"]):not([type="radio"]), select'))return;
+  const modal=target.closest('dialog[open]');
+  const container=modal||root();
+  if(!container||!container.contains(target))return;
+  if(target.hasAttribute('data-m1-date-text')&&!m101CommitDate(target)){event.preventDefault();target.focus();return;}
+  const eligible=[...container.querySelectorAll('input:not([type="file"]):not([type="hidden"]):not([type="date"]):not([type="checkbox"]):not([type="radio"]), select, textarea')].filter(el=>!el.disabled&&!el.readOnly&&!el.closest('[hidden]')&&el.getClientRects().length>0);
+  const index=eligible.indexOf(target);
+  if(index<0)return;
+  const next=eligible[index+1];
+  if(!next){event.preventDefault();target.blur();return;}
+  event.preventDefault();next.focus();if(next instanceof HTMLInputElement&&next.type==='text')next.select();
+ },true);
+ /* === end M1.0.1 === */
+window.PERFORMANCE_M1_VERSION='M1.0.1';
 window.PERFORMANCE_M1_GET_TEST_SNAPSHOT=()=>structuredClone(d);
 window.PERFORMANCE_M1_TEST_RESET=()=>actions.reset();
 /* === end standalone boundary === */
