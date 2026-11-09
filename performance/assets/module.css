@@ -1,0 +1,22 @@
+:root{color-scheme:light;--m1-blue:#173f72;--m1-border:#d5e0ea;--m1-bg:#f3f7fa}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--m1-bg)}body{margin:0;font-family:'Malgun Gothic','Apple SD Gothic Neo',system-ui,-apple-system,sans-serif;color:#20354a}
+.m1-layout{max-width:1200px;margin:0 auto;padding:16px 18px 48px}
+.m1-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid var(--m1-border);border-radius:12px;padding:14px 18px}
+.m1-topbar strong{font-size:20px;display:block}.m1-topbar small{display:block;color:#6a7b8b;font-size:12px;margin-top:4px}.m1-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:#dceafa;color:var(--m1-blue);font-size:13px;padding:8px 14px;font-weight:750;white-space:nowrap}
+.m1-safe{font-size:13px;color:#50677f;background:#e8f4ff;border-left:4px solid #3c88ca;padding:12px 15px;border-radius:6px;line-height:1.6}
+#reportComposerPage{min-height:200px}.m1-editor>header{border-radius:10px;background:var(--m1-blue)}
+.m1-editor>header h2{font-size:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.m1-editor>header p{line-height:1.65;font-size:13px}.m1-editor .m1-version{font-size:12px;border:1px solid #98bddb;border-radius:999px;padding:4px 9px}
+.m1-editor .reTools{display:flex;flex-wrap:wrap;gap:8px}.m1-editor .reTools button,.m1-editor .reTools .reBtn{min-height:40px;display:inline-flex;align-items:center;justify-content:center}
+.m1-editor .reTools button[data-action="reset"]{color:#9a2f35}
+.m1-status{margin-top:10px;font-size:13px;color:#dceeff;font-weight:600}
+.m1-site{padding:13px 16px;margin-top:16px;background:#fff;border:1px solid var(--m1-border);border-radius:10px}
+.m1-site>summary{font-weight:700;font-size:15px;cursor:pointer;list-style-position:inside}
+.m1-editor>.m1-site+.m1-editor h3{margin-top:20px}
+.m1-bottom-notice{padding:12px 14px;background:#fff8e6;border-radius:7px;border:1px solid #f1dcaa;margin:30px 0;color:#6f5b25;font-size:12px;line-height:1.6}
+.m1-footer{margin-top:25px;text-align:center;color:#62788b;font-size:12px;line-height:1.75}
+.re .rePhotoSlot img{object-fit:fill}
+.re .reEquipmentCard{max-width:100%}
+@media(max-width:700px){.m1-layout{padding:10px 8px 38px}.m1-topbar strong{font-size:16px}.m1-badge{font-size:11px;padding:6px 9px}.m1-editor>header h2{font-size:17px}.m1-editor .reTools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.m1-editor .reTools button,.m1-editor .reTools .reBtn{padding:10px 6px;font-size:12px;text-align:center}.m1-site{padding:10px}}
+@media print{.m1-topbar,.m1-safe,.m1-footer,.m1-bottom-notice{display:none!important}}

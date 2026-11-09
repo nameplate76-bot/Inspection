@@ -1,0 +1,16 @@
+{
+  "module": "performance-checklist",
+  "version": "M1.0.0",
+  "source": "Performance_Checklist_PDF_Save_Fix_V86.zip",
+  "basePath": "performance/",
+  "mode": "isolated-local-test-only",
+  "backend": "none",
+  "supabase": false,
+  "testIndexedDB": "performance-m1-isolated-test-v1",
+  "testKey": "demo/current",
+  "testReasonStorageKey": "performance_m1_test_reasons_v1",
+  "equipmentTypes": 27,
+  "hostFilesChanged": 0,
+  "pdf": "browser-print; checklist-only; reference-fidelity-not-certified",
+  "excel": "local editable xlsx with embedded images; stage-1 layout"
+}
