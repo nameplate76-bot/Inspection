@@ -22,7 +22,7 @@ function input(key,value,large=false){
 }
 function itemField(i,k,v,large=false){return large?`<textarea data-item="${i}" data-key="${k}">${E(v)}</textarea>`:`<input data-item="${i}" data-key="${k}" value="${E(v)}">`}
 function equip(){return d.equipment.find(e=>e.uid===selected)}
-function render(){if(!root())return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">M1.0.1</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 운영 DB와 완전 분리된 이 브라우저 테스트 저장소</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저에만 저장 · 운영 Supabase 연결 안 함</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}<div class="m1-bottom-notice">이 페이지는 독립 개발 및 시험용입니다. 기존 업무포털·운영 Supabase 데이터는 수정하지 않습니다.</div></div>`;bind()}
+function render(){if(!root())return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">M1.0.2</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 운영 DB와 완전 분리된 이 브라우저 테스트 저장소</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저에만 저장 · 운영 Supabase 연결 안 함</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}<div class="m1-bottom-notice">이 페이지는 독립 개발 및 시험용입니다. 기존 업무포털·운영 Supabase 데이터는 수정하지 않습니다.</div></div>`;bind()}
 function energyUI(){return `<h4>월별 사용량 (동일 단위로 입력)</h4><div class="reGrid">${Array.from({length:12},(_,i)=>`<label>${i+1}월<input type="number" min="0" step="any" data-month="${i}" value="${E(d.energy[i]??'')}"></label>`).join('')}</div>`}
 function isVacuumPumpItem(e,item){return e?.type==='냉동기'&&String(item?.title||'').includes('⑤ 펌프(용액, 냉매, 진공) 상태(흡수식 냉동기)')}
 function vacuumPumpEditorHTML(item,itemIndex){const labels=['진공펌프 현황사진','진공펌프 적합 사진','진공펌프 미흡사항 사진'];return `<section class="reVacuumBlock"><h5>진공펌프 추가 사진</h5><p>⑤번 점검항목의 기존 사진칸 아래에 현황·적합·미흡사항 사진이 각각 저장되며 같은 페이지에 표시됩니다.</p><div class="reVacuumPhotos">${labels.map((label,index)=>{const photoIndex=index+3,src=item.photos?.[photoIndex]||'';return `<section><b>${label}</b><button type="button" class="rePhotoSlot ${src?'rePhotoFilled':''}" data-photo-slot="${itemIndex}:${photoIndex}" aria-label="${label} ${src?'교체':'첨부'}">${src?`<img src="${src}" alt="${label}">`:`<span class="rePhotoEmpty">＋<strong>사진 칸을 눌러 첨부</strong><small>사진 선택 또는 카메라 촬영</small></span>`}</button>${src?`<button type="button" data-photo-remove="${itemIndex}:${photoIndex}">사진 삭제</button>`:''}</section>`}).join('')}</div></section>`}
@@ -763,7 +763,7 @@ const CHILLER_V85_STYLE=`<style id="chiller-v85-print">
 .ch82.ch85summaryPage .ch85main .ch85notes{height:6mm!important}
 .ch82.ch85summaryPage .ch85instruction table{width:100%!important}
 .ch82.ch85summaryPage .ch85meta th{background:#dcebf5!important}
-/* M1.0.1: 용도 값칸의 오른쪽 두 칸을 병합하고 한 글자 내어쓰기. */
+/* M1.0.2: 용도 값칸의 오른쪽 두 칸을 병합하고 한 글자 내어쓰기. */
 .ch82.ch85summaryPage .ch85meta .ch85purpose{width:auto!important;text-align:left!important;padding-left:2ch!important;padding-right:1ch!important;text-indent:-1ch!important;white-space:pre-wrap!important;word-break:keep-all!important;overflow-wrap:anywhere!important}
 /* 점검방법과 기준을 분리한 표: 텍스트 축소가 아닌 문단과 표 병합 */
 .ch82 .ch85criteriaSection{margin:0 0 1mm!important}
@@ -841,7 +841,102 @@ exportInspectionExcel=async function(){
 };
 
 
-/* === M1.0.1 standalone boundary / no production connection === */
+
+/* M1.0.2 - Output-only changes. Existing input/result/action fields remain intact. */
+function m102CriteriaRows(item,index,forChiller=false){
+ const makeRow=(label,content,rowspan=1)=>`<tr><td class="ch82side ch102side"${rowspan>1?` rowspan="${rowspan}"`:''}>${E(label)}</td><td class="ch82detail ch102detail">${content}</td></tr>`;
+ if(forChiller&&[5,7,14].includes(index)){
+  const fragment=new DOMParser().parseFromString(`<div id="m102Rich">${ch82criteria(item,index)}</div>`,'text/html');
+  const root=fragment.querySelector('#m102Rich'),sections=[...root.querySelectorAll('.ch85criteriaSection')];
+  if(sections.length){
+   const methods=[],criteria=[];
+   for(const section of sections){const label=(section.querySelector('b')?.textContent||'').trim();
+    // Headings are supplied by V86's structured criteria, not inferred from contents.
+    if(/^점검방법/.test(label))methods.push(section.outerHTML);else criteria.push(section.outerHTML);
+    section.remove();
+   }
+   const leftovers=root.querySelector('.ch82rich')?.innerHTML?.trim()||'';
+   if(leftovers)criteria.push(leftovers);
+   return (methods.length?makeRow('점검방법',methods.join('')):'')+makeRow('점검기준',criteria.join(''));
+  }
+  return makeRow('점검기준',ch82criteria(item,index));
+ }
+ const parts=window.PerformanceM1CriteriaLayout?.parse(item.criteria)||[{label:'점검기준',lines:[String(item.criteria||'')]}];
+ return parts.map(group=>group.lines.map((line,k)=>`<tr>${k===0?`<td class="ch82side ch102side"${group.lines.length>1?` rowspan="${group.lines.length}"`:''}>${E(group.label)}</td>`:''}<td class="ch82detail ch102detail">${E(line)}</td></tr>`).join('')).join('');
+}
+const m102OriginalCh82Item=ch82item;
+ch82item=function(e,item,index,options={}){
+ const html=m102OriginalCh82Item(e,item,index,options);
+ const doc=new DOMParser().parseFromString(`<main id="m102item">${html}</main>`,'text/html');
+ const root=doc.getElementById('m102item');
+ const criteria=root.querySelector('.ch82criteria tbody');
+ if(criteria)criteria.innerHTML=m102CriteriaRows(item,index,true);
+ root.querySelectorAll('.ch82photos').forEach(table=>{
+  const first=table.querySelector('tbody tr:first-child');const reason=table.querySelector('tbody tr.ch82reasons');
+  if(first&&reason&&first.cells.length===3&&reason.cells.length===3){
+   first.cells[0].rowSpan=2;first.cells[0].classList.add('ch102statusPhoto');reason.cells[0].remove();
+  }
+ });
+ root.querySelectorAll('.ch82results tr').forEach(row=>{
+  const label=row.querySelector('td,th')?.textContent?.replace(/\s+/g,'').trim();
+  if(label==='판정'||label==='조치사항')row.remove();
+ });
+ root.querySelectorAll('.ch82results').forEach(table=>{if(!table.querySelector('tr'))table.remove()});
+ root.querySelectorAll('.ch82item>h3').forEach(title=>{title.textContent=title.textContent.replace(' - 사진·판정',' - 사진·사유')});
+ return root.innerHTML;
+};
+function m102ImproveStandardReport(html){
+ const doc=new DOMParser().parseFromString(`<main id="m102root">${html}</main>`,'text/html');
+ const root=doc.querySelector('#m102root');
+ root.querySelectorAll('.officialGrid tr').forEach(row=>{
+  const label=row.firstElementChild?.textContent?.replace(/\s+/g,'').trim();
+  if((label==='판정'||label==='조치사항')&&row.closest('.officialMeasure'))row.remove();
+ });
+ root.querySelectorAll('.officialMeasure').forEach(t=>{if(!t.querySelector('tr'))t.remove()});
+ root.querySelectorAll('.officialGrid').forEach(table=>{
+  const cell=table.querySelector('td.officialCriteria');if(!cell)return;
+  const normalisedHtml=cell.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<\/p>/gi,'\n');const parseHolder=doc.createElement('div');parseHolder.innerHTML=normalisedHtml;const original=parseHolder.textContent?.trim()||'';
+  const parts=window.PerformanceM1CriteriaLayout?.parse(original)||[{label:'점검기준',lines:[original]}];
+  const oldRow=cell.closest('tr');if(!oldRow)return;
+  const newRows=parts.map(part=>part.lines.map((line,index)=>`<tr>${index===0?`<th rowspan="${part.lines.length}" class="m102-criteria-head">${E(part.label)}</th>`:''}<td class="officialCriteria m102-criteria-value">${E(line)}</td></tr>`).join('')).join('');
+  oldRow.insertAdjacentHTML('beforebegin',newRows);oldRow.remove();
+ });
+ root.querySelectorAll('.officialPhotoGrid').forEach(grid=>{
+  const first=grid.querySelector('.officialPhotoCell:first-child');if(!first)return;
+  const reason=first.querySelector('.officialReason');if(reason&&!reason.textContent.trim()){
+   first.classList.add('m102-status-photo');reason.remove();
+  }
+ });
+ root.querySelectorAll('.officialItemTitle').forEach(title=>{title.textContent=title.textContent.replace(' - 사진·판정',' - 사진·사유')});
+ return root.innerHTML;
+}
+const M102_PRINT_CSS=`<style id="m102-print-layout">
+/* Every detailed equipment page: full-height status picture, full-frame photos. */
+.ch82 .ch82photos .ch82photobox{padding:1px!important;box-sizing:border-box!important;overflow:hidden!important}
+.ch82 .ch82photos .ch82photobox img,.officialPage .officialPhoto img{
+ width:100%!important;height:100%!important;object-fit:fill!important;object-position:center!important;
+ display:block!important;border:0!important;margin:0!important;padding:0!important;
+}
+.ch82 .ch82photos td.ch102statusPhoto{position:relative!important;padding:0!important;vertical-align:top!important}
+.ch82 .ch82photos td.ch102statusPhoto .ch82photobox{position:absolute!important;inset:1px!important;width:calc(100% - 2px)!important;height:calc(100% - 2px)!important;padding:0!important;box-sizing:border-box!important}
+.ch82 .ch82photos .ch82reasons td{height:17mm!important}
+.ch82 .ch82criteria tr{break-inside:avoid;page-break-inside:avoid}
+.ch82 .ch82criteria .ch102side,.officialPage .m102-criteria-head{width:13%!important;text-align:center!important;vertical-align:middle!important;white-space:normal!important;background:#dcebf5!important}
+.ch82 .ch82criteria .ch102detail,.officialPage .m102-criteria-value{height:auto!important;max-height:none!important;overflow:visible!important;word-break:keep-all!important;overflow-wrap:anywhere!important;text-align:left!important}
+/* Existing multi-equipment detailed output uses grid-based photo panels. */
+.officialPage .officialPhoto{padding:1px!important;box-sizing:border-box!important;overflow:hidden!important}
+.officialPage .officialPhoto.noPhoto{display:flex!important;justify-content:center!important;align-items:center!important}
+.officialPage .officialPhotoGrid .officialPhotoCell.m102-status-photo>.officialPhoto{grid-row:2 / 4!important;height:100%!important;min-height:0!important}
+@media print{
+ .ch82 .ch82photos .ch82photobox img,.officialPage .officialPhoto img{object-fit:fill!important}
+ .ch82 .ch82criteria .ch102detail,.officialPage .m102-criteria-value{overflow:visible!important;max-height:none!important}
+}
+</style>`;
+const m102PriorReport=report;
+report=function(){return m102ImproveStandardReport(m102PriorReport())+M102_PRINT_CSS};
+/* End output-only M1.0.2 change. */
+
+/* === M1.0.2 standalone boundary / no production connection === */
 const M1_REPORT_BEFORE_ISOLATION=report;
 report=function(){
  const raw=M1_REPORT_BEFORE_ISOLATION();
@@ -872,7 +967,7 @@ function m1Sample(){
 actions.sample=m1Sample;
 actions.reset=function(){if(!confirm('독립 모듈의 현재 브라우저 테스트 데이터만 삭제할까요? 기존 플랫폼 데이터는 변경되지 않습니다.'))return;
  d={version:2,info:{},equipment:[],energy:[]};selected='';equipmentViews.clear();equipmentDeleteSelection.clear();save();render();};
- /* === M1.0.1 input navigation and dual-mode date controls === */
+ /* === M1.0.2 input navigation and dual-mode date controls === */
  function m101ParseDate(raw){
   const value=String(raw??'').trim();if(!value)return '';
   const digits=value.replace(/\D/g,'');
@@ -926,8 +1021,8 @@ actions.reset=function(){if(!confirm('독립 모듈의 현재 브라우저 테�
   if(!next){event.preventDefault();target.blur();return;}
   event.preventDefault();next.focus();if(next instanceof HTMLInputElement&&next.type==='text')next.select();
  },true);
- /* === end M1.0.1 === */
-window.PERFORMANCE_M1_VERSION='M1.0.1';
+ /* === end M1.0.2 === */
+window.PERFORMANCE_M1_VERSION='M1.0.2';
 window.PERFORMANCE_M1_GET_TEST_SNAPSHOT=()=>structuredClone(d);
 window.PERFORMANCE_M1_TEST_RESET=()=>actions.reset();
 /* === end standalone boundary === */

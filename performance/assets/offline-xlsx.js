@@ -1,4 +1,4 @@
-/* M1.0.0 independent XLSX exporter. Creates OOXML ZIP with editable cells and embedded images.
+/* M1.0.2 independent XLSX exporter. Creates OOXML ZIP with editable cells and embedded images.
    Uses locally bundled JSZip; it has no HTTP calls or Supabase dependency.
    Stage-1 format is functional, not the final 148-page source-identical template. */
 (()=>{'use strict';
@@ -25,24 +25,43 @@
  const image=e.sitePhoto||e.items.flatMap(it=>it.photos||[]).find(Boolean);
  photo(s,image,0,r,650,250);r+=14;set(s,r,1,'비고',1);set(s,r,2,e['비고']||'');merge(s,`B${r}`,`H${r+2}`);
  return s}
- function buildItem(e,it,i,reasonValue){const s=sheet(`${e.number}_${String(i+1).padStart(2,'0')}`);writeHeader(s,`${e.number} · ${it.title}`,e.number,e,{});
- set(s,6,1,'판정',1);set(s,6,2,it.result||'미작성');merge(s,'B6','H6');
- set(s,8,1,'점검방법·기준',1);merge(s,'A8','H8');set(s,9,1,it.criteria||'');merge(s,'A9','H11');s.heights.set(9,Math.min(250,Math.max(70,Math.ceil(String(it.criteria||'').length/80)*18)));
- [['현황 사진',1],['적합 사진',3],['미흡사항 사진',5]].forEach(([label,c])=>{set(s,13,c,label,1);merge(s,`${colName(c)}13`,`${colName(c+1)}13`)});
- photo(s,it.photos?.[0],0,13);photo(s,it.photos?.[1],2,13);photo(s,it.photos?.[2],4,13);
- for(let r=14;r<=24;r++)s.heights.set(r,20);
- set(s,26,1,'적합 사유',1);merge(s,'A26','B26');set(s,26,3,reasonValue(it,'reason1'));merge(s,'C26','H28');s.heights.set(26,48);
- set(s,29,1,'미흡 사유',1);merge(s,'A29','B29');set(s,29,3,reasonValue(it,'reason2'));merge(s,'C29','H31');s.heights.set(29,48);
- set(s,32,1,'측정값·확인내용',1);merge(s,'A32','B32');set(s,32,3,it.measurement||'');merge(s,'C32','H35');s.heights.set(32,48);
- set(s,36,1,'조치사항',1);merge(s,'A36','B36');set(s,36,3,it.action||'');merge(s,'C36','H39');s.heights.set(36,45);
- if((it.photos||[]).slice(3).some(Boolean)){
-  set(s,40,1,'추가 진공펌프 사진',1);merge(s,'A40','H40');
-  photo(s,it.photos[3],0,41);photo(s,it.photos[4],2,41);photo(s,it.photos[5],4,41);
-  for(let r=42;r<=54;r++)s.heights.set(r,20);
-  set(s,56,1,'진공펌프 적합사유',1);set(s,56,3,reasonValue(it,'vacuumReason1'));merge(s,'C56','H58');
-  set(s,59,1,'진공펌프 미흡사유',1);set(s,59,3,reasonValue(it,'vacuumReason2'));merge(s,'C59','H61');
+ function buildItem(e,it,i,reasonValue){
+ const s=sheet(`${e.number}_${String(i+1).padStart(2,'0')}`);s.columns=Array(9).fill(14.5);
+ writeHeader(s,`${e.number} · ${it.title}`,e.number,e,{});
+ set(s,6,1,'구분',1);merge(s,'A6','B6');set(s,6,3,'점검내용',1);merge(s,'C6','I6');
+ const parts=window.PerformanceM1CriteriaLayout?.parse(it.criteria)||[{label:'점검기준',lines:[String(it.criteria||'')]}];
+ let row=7;
+ for(const part of parts){
+  const start=row;
+  for(const line of part.lines){set(s,row,3,line);merge(s,`C${row}`,`I${row}`);s.heights.set(row,Math.min(80,Math.max(26,Math.ceil(line.length/92)*16)));row++}
+  set(s,start,1,part.label,1);merge(s,`A${start}`,`B${row-1}`);
  }
- return s}
+ row+=1;const titleRow=row,photoStart=++row,photoEnd=photoStart+9,reasonStart=photoEnd+1,reasonEnd=reasonStart+3;
+ [['현황 사진',1],['적합',4],['미흡사항',7]].forEach(([title,col])=>{set(s,titleRow,col,title,1);merge(s,`${colName(col)}${titleRow}`,`${colName(col+2)}${titleRow}`)});
+ merge(s,`A${photoStart}`,`C${reasonEnd}`); // status photo spans the photo row and both reason rows
+ merge(s,`D${photoStart}`,`F${photoEnd}`);merge(s,`G${photoStart}`,`I${photoEnd}`);
+ merge(s,`D${reasonStart}`,`F${reasonEnd}`);set(s,reasonStart,4,'사유 : '+reasonValue(it,'reason1'));
+ merge(s,`G${reasonStart}`,`I${reasonEnd}`);set(s,reasonStart,7,'사유 : '+reasonValue(it,'reason2'));
+ for(let k=photoStart;k<=reasonEnd;k++)s.heights.set(k,20);
+ // All photos stretch to fill their designated areas. A 1px anchor offset is retained.
+ photo(s,it.photos?.[0],0,photoStart-1,317,Math.round((reasonEnd-photoStart+1)*26.67)-2);
+ photo(s,it.photos?.[1],3,photoStart-1,317,Math.round((photoEnd-photoStart+1)*26.67)-2);
+ photo(s,it.photos?.[2],6,photoStart-1,317,Math.round((photoEnd-photoStart+1)*26.67)-2);
+ row=reasonEnd+2;
+ set(s,row,1,'측정값 / 확인내용',1);merge(s,`A${row}`,`B${row+3}`);set(s,row,3,it.measurement||'');merge(s,`C${row}`,`I${row+3}`);s.heights.set(row,36);row+=5;
+ if((it.photos||[]).slice(3).some(Boolean)){
+  set(s,row,1,'진공펌프 추가 사진',1);merge(s,`A${row}`,`I${row}`);row++;
+  const vPhotoStart=row,vPhotoEnd=row+9,vReasonStart=vPhotoEnd+1,vReasonEnd=vReasonStart+3;
+  merge(s,`A${vPhotoStart}`,`C${vReasonEnd}`);merge(s,`D${vPhotoStart}`,`F${vPhotoEnd}`);merge(s,`G${vPhotoStart}`,`I${vPhotoEnd}`);
+  merge(s,`D${vReasonStart}`,`F${vReasonEnd}`);set(s,vReasonStart,4,'사유 : '+reasonValue(it,'vacuumReason1'));
+  merge(s,`G${vReasonStart}`,`I${vReasonEnd}`);set(s,vReasonStart,7,'사유 : '+reasonValue(it,'vacuumReason2'));
+  for(let k=vPhotoStart;k<=vReasonEnd;k++)s.heights.set(k,20);
+  photo(s,it.photos?.[3],0,vPhotoStart-1,317,Math.round((vReasonEnd-vPhotoStart+1)*26.67)-2);
+  photo(s,it.photos?.[4],3,vPhotoStart-1,317,Math.round((vPhotoEnd-vPhotoStart+1)*26.67)-2);
+  photo(s,it.photos?.[5],6,vPhotoStart-1,317,Math.round((vPhotoEnd-vPhotoStart+1)*26.67)-2);
+ }
+ return s;
+}
  function buildMeasurement(e,rows){const s=sheet(`${e.number}_측정값`);writeHeader(s,`${e.number} · 설계·측정값`,e.number,e,{});['구분','항목','설계값','측정값','단위','%','비고'].forEach((x,i)=>set(s,6,i+1,x,1));
  rows.forEach((row,i)=>{const n=7+i;[row.group,row.item,row.design,row.measured,row.unit,row.percent,row.note].forEach((x,k)=>set(s,n,k+1,x||''));s.heights.set(n,24)});return s}
  const styleXml=`<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="${NS}"><fonts count="2"><font><sz val="10"/><name val="Malgun Gothic"/></font><font><b/><sz val="10"/><name val="Malgun Gothic"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDCEBF5"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFB7C7D3"/></left><right style="thin"><color rgb="FFB7C7D3"/></right><top style="thin"><color rgb="FFB7C7D3"/></top><bottom style="thin"><color rgb="FFB7C7D3"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyAlignment="1"><alignment vertical="center" horizontal="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;

@@ -36,3 +36,17 @@ html{background:var(--m1-bg)}body{margin:0;font-family:'Malgun Gothic','Apple SD
 .reReasonDialog .reReasonNew button{display:block;width:100%;min-height:45px;font-size:15px;margin:0}
 .reReasonDialog .reReasonNew[hidden]{display:none!important}
 @media(max-width:650px){.reReasonDialog .reReasonNew textarea{min-height:114px}.reReasonDialog .reReasonDialogBody{padding:14px}.m1-date-row{grid-template-columns:minmax(0,1fr) 44px;gap:5px}}
+
+/* M1.0.2: all editor photo slots stretch the image with only 1px inset. */
+.m1-editor .rePhotos .rePhotoSlot.rePhotoFilled,
+.m1-editor .reVacuumPhotos .rePhotoSlot.rePhotoFilled,
+.m1-editor .reEquipmentPhoto .rePhotoSlot.rePhotoFilled{
+  position:relative!important;box-sizing:border-box!important;padding:0!important;overflow:hidden!important;
+}
+.m1-editor .rePhotos .rePhotoSlot.rePhotoFilled img,
+.m1-editor .reVacuumPhotos .rePhotoSlot.rePhotoFilled img,
+.m1-editor .reEquipmentPhoto .rePhotoSlot.rePhotoFilled img{
+  position:absolute!important;inset:1px!important;width:calc(100% - 2px)!important;
+  height:calc(100% - 2px)!important;max-height:none!important;min-height:0!important;
+  margin:0!important;padding:0!important;border:0!important;object-fit:fill!important;
+}
