@@ -1,11 +1,11 @@
 {
   "module": "performance-checklist",
-  "version": "M1.0.2",
+  "version": "M1.0.3",
   "source": "Performance_Checklist_PDF_Save_Fix_V86.zip",
   "basePath": "performance/",
-  "mode": "isolated-local-test-only",
-  "backend": "none",
-  "supabase": false,
+  "mode": "local-first-authenticated-per-user-test-sync",
+  "backend": "supabase-separate-test-table",
+  "supabase": true,
   "testIndexedDB": "performance-m1-isolated-test-v1",
   "testKey": "demo/current",
   "testReasonStorageKey": "performance_m1_test_reasons_v1",
@@ -13,5 +13,9 @@
   "hostFilesChanged": 0,
   "pdf": "browser-print; checklist-only; reference-fidelity-not-certified",
   "excel": "local editable xlsx with embedded images; stage-1 layout",
-  "layout": "criteria split + rowspan status photo + 1px fill + output-only results cleanup"
+  "layout": "criteria split + rowspan status photo + 1px fill + output-only results cleanup",
+  "cloudTable": "pjt_performance_test_docs_v1",
+  "syncScope": "same authenticated approved user",
+  "realtime": "postgres changes with periodic fallback",
+  "cloudSchema": "test-only-no-operations-tables-changed"
 }

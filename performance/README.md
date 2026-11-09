@@ -1,79 +1,47 @@
-# 성능점검표 독립 개발 모듈 M1.0.2
+# 성능점검표 독립 모듈 M1.0.3 — PC·모바일 계정별 동기화
 
-**기준:** 기존 업무포털 V86 `Performance_Checklist_PDF_Save_Fix_V86.zip`의 `report-editor.js`, `report-editor.css`, `check-templates.js`.
+**기준:** V86에서 분리한 M1.0.2. 기존 업무포털 파일은 수정하지 않습니다.
 
-**목적:** 기존 업무포털 파일은 수정하지 않고 `performance/` 경로에서 성능점검표만 독립 실행. V86에 있는 27종 설비 점검항목, 사진, 사유, 측정값 편집 UI 및 기존 PDF 양식 함수를 재사용합니다.
+## 변경사항
 
-## 실행
+- 로그인한 **동일 Supabase 승인 계정**의 PC/휴대전화가 동일한 성능점검표 시험자료를 조회하고 편집합니다.
+- 기존 로컬 IndexedDB(`performance-m1-isolated-test-v1` / `demo/current`)는 유지합니다. 인터넷이 끊겨도 이 기기에 저장합니다.
+- 중앙 DB는 **새 테이블 `public.pjt_performance_test_docs_v1`만** 사용합니다. `pjt_records`, `pjt_shared_state`, 기존 업무용 저장소를 쓰지 않습니다.
+- 기존 업무포털 `supabase-config.js`의 공개 연결정보 및 `pjt_profiles` 승인 계정을 재사용합니다. 별도 계정 생성은 필요 없습니다.
+- 로컬 작성 자료와 중앙 자료가 서로 다르면 **무단 덮어쓰기 없이** 업로드/불러오기 버튼으로 선택합니다.
+- 작성할 때 로컬에 먼저 저장하고, 연결된 상태라면 약 1.6초 후 클라우드로 자동 저장합니다. 원격 변경은 Realtime과 12초 재확인으로 반영합니다.
+- 동시에 수정해 버전이 충돌하면 서버의 이전 변경을 무단 덮어쓰지 않습니다. 각각의 자료를 JSON으로 백업한 다음 수동으로 선택해야 합니다.
+- 사진과 입력된 사유·측정값은 보고서 데이터와 함께 보관합니다. 등록 사유 라이브러리도 보고서 문서에 포함합니다.
 
-GitHub Pages에 배포된 저장소의 `https://<사용자>.github.io/<저장소>/performance/`로 접속합니다. 로컬에서는 폴더의 상위 디렉터리에서 `python -m http.server 8000` 명령 후 `http://localhost:8000/performance/`에 접속합니다. 파일을 `file://`로 직접 열면 일부 브라우저에서 저장과 사진 기능이 제한될 수 있습니다.
+## GitHub 업로드
 
-## 테스트 절차
+새 ZIP의 폴더 경로를 **그대로** `Inspection/performance/` 아래에 복사합니다. 기존 `Inspection/index.html` 등을 수정할 필요가 없습니다.
 
-1. 오른쪽 위 버전 `M1.0.2`을 확인합니다.
-2. 「예시 냉동기 생성」 또는 27종 목록에서 설비종류와 번호를 입력해 추가합니다.
-3. 설비 기본정보, 점검 결과, 사진, 적합·미흡 사유, 조치사항, 설계·측정값을 입력합니다.
-4. 새로고침 후 입력값이 유지되는지 확인합니다.
-5. 「점검표 PDF 미리보기」를 누르고 새 창에서 「PDF로 저장 / 인쇄」를 사용합니다. 브라우저 팝업을 허용해야 합니다.
-6. 「점검표 Excel 다운로드」를 클릭하여 `.xlsx`를 다운로드합니다. 파일에는 **편집 가능한 셀과 사진**이 들어갑니다.
-7. 「테스트 JSON 백업」 및 「백업 불러오기」로 이 모듈의 데이터만 내보내고 가져올 수 있습니다.
+수정 파일: `performance/index.html`, `performance/manifest.json`, `performance/README.md`, `performance/assets/legacy-checklist-engine.js`, `performance/assets/module.css`.
+신규 파일: `performance/assets/cloud-sync.js`, `performance/supabase_test_sync_setup.sql`, `performance/SYNC_TEST_CHECKLIST.md`.
 
-## 운영 데이터에 영향이 없는 이유
+`performance/vendor/`, `performance/assets/check-templates.js`, `performance/assets/offline-xlsx.js`, `performance/assets/criteria-layout.js` 등 기존 파일은 유지합니다.
 
-- 원래 포털의 `index.html`, `report-editor.js`, DB 및 SQL 파일은 ZIP에 포함되지 않습니다.
-- Supabase 클라이언트, API URL, 인증 토큰 및 `shared-realtime-v34.js`를 로딩하지 않습니다.
-- 브라우저 IndexedDB 이름은 **`performance-m1-isolated-test-v1`**, 키는 **`demo/current`**입니다. V86의 `mechanical-report-v2/current`를 읽거나 쓰지 않습니다.
-- 사유 라이브러리 localStorage 키도 **`performance_m1_test_reasons_v1`**으로 분리했습니다.
-- 기존 서버 동기화 함수 이름을 비활성 이름으로 교체했습니다.
-- 외부 네트워크에 의존하는 런타임 자산이 없습니다. Excel 파일은 `vendor/jszip.min.js`를 이용해 로컬에서 생성합니다.
+## 첫 사용
 
-## 한계 및 다음 단계
+1. 사용자 승인 계정으로 기존 업무포털 또는 독립 모듈에서 로그인합니다.
+2. PC에서 기존에 작성한 시험자료를 먼저 `테스트 JSON 백업` 버튼으로 다운로드합니다.
+3. `이 기기 자료 클라우드에 올리기` 버튼을 눌러 최초 1회 공유 등록합니다.
+4. 휴대전화에서도 **동일한 계정**으로 로그인합니다. 해당 휴대전화에 로컬 자료가 없으면 클라우드 자료가 자동으로 열립니다. 이미 로컬 자료가 있으면 수동 선택을 요구합니다.
+5. PC의 적합 사유나 사진을 수정하면 클라우드로 자동 저장되고, 모바일에서는 열린 화면에서 업데이트를 확인합니다.
 
-- **M1은 기존 V86 기능 보존형 첫 분리본입니다.** UI 내부에 V86의 다중 탭 관련 유휴 함수가 아직 남아 있으며, 다음 단계에서 `templates/`, `editor/`, `export/`, `data/`로 실제 코드 분리를 진행해야 합니다.
-- PDF는 V86의 HTML 인쇄 기능을 점검표 페이지만 출력하도록 제한한 것입니다. 원본 148페이지 양식과 완전 일치함을 보장하지 않습니다.
-- Excel은 독립 모듈용 로컬 OOXML 생성기를 사용합니다. 모든 텍스트/사진/측정값을 편집 가능한 시트로 내보내지만 원본 PDF의 정밀한 셀 병합·인쇄 페이지 완전 일치는 향후 작업입니다.
-- 테스트 데이터는 **해당 브라우저/기기에서만** 저장됩니다. 다른 기기와 자동 동기화되지 않습니다. 브라우저 데이터를 삭제하면 테스트 자료가 사라지므로 JSON 백업을 권장합니다.
-- 외부 백업(JSON)을 불러오는 기능은 V86 형식 `version:2`를 지원하지만, 운영 데이터는 직접 가져오기 전 별도 백업해야 합니다.
-- 대용량 사진이 많으면 브라우저 IndexedDB 저장 용량 제한 및 출력 파일 크기 문제가 있을 수 있습니다.
-- 보안상 `performance/`는 시험용 공개 페이지입니다. 실제 고객·현장·개인정보를 입력하지 말고 가상 테스트 데이터로만 사용하세요. GitHub Pages는 기본적으로 URL을 아는 사람이 페이지에 접근할 수 있으며 로그인 제한이 없습니다.
+> **주의:** 다른 직원 계정끼리의 공동 편집은 M1.0.3 범위가 아닙니다. 현재는 같은 Supabase 계정의 PC와 모바일에서만 공유됩니다. 실 운영의 다중 사용자·현장별 분리는 추가적인 권한 설계가 필요합니다.
 
-## 파일 배치
+## 환경·제한
 
-```text
-Repository/
-  index.html                        # 운영본: 변경하지 않음
-  ...                               # 운영본: 변경하지 않음
-  performance/
-    index.html
-    README.md
-    manifest.json
-    assets/
-      legacy-checklist-engine.js
-      legacy-editor.css
-      check-templates.js
-      offline-xlsx.js
-      module.css
-    vendor/
-      jszip.min.js
-      LICENSE.markdown
-```
+- GitHub Pages가 현재 저장소의 **`../supabase-config.js`** 를 제공해야 합니다. 회사 포털과 같은 Supabase 프로젝트의 **publishable/anon 키**만 사용합니다. **service_role 비밀키는 절대 웹에 두지 않습니다.**
+- 브라우저는 Supabase JavaScript 클라이언트를 CDN에서 로드하므로 동기화에는 인터넷 연결이 필요합니다. 클라이언트를 로드하지 못한 경우 로컬 작성을 계속할 수 있습니다.
+- RLS는 `auth.uid()`와 `pjt_profiles.approved=true`를 검증합니다. 로그인하지 않은 사용자에게는 중앙 데이터를 공개하지 않습니다.
+- 데이터는 **계정당 시험용 문서 한 건(`demo/current`)**으로 관리됩니다. 27종 모든 설비가 해당 문서 안에 있습니다.
+- 사진 데이터까지 JSONB에 저장하는 1단계 공유 구조입니다. 문서가 약 24MB를 넘으면 클라우드 업로드를 제한합니다. 실서비스 전에는 현장별 문서와 사진용 Storage로 개선해야 합니다.
+- 이전 운영 보고서 또는 다른 계정에서 생성한 자료는 자동으로 가져오지 않습니다.
+- 정식 서비스 전에는 다중계정 권한 및 서버 로그, 사진 용량, 대량 설비 분리, 장기 충돌 해소 기능을 추가 검증해야 합니다.
 
-기준: 성능점검표 소스 V86 / 독립모듈 M1.0.2 (2026-11-09).
+## SQL 설정
 
-
-## M1.0.2 변경 내용 (2026-11-09)
-- 입력 후 Enter 키로 다음 입력 항목에 이동 (textarea는 줄바꿈 유지)
-- 현장 점검시작일/종료일: YYYYMMDD, YYMMDD, YYYY-MM-DD 입력 후 정규화 및 달력 선택
-- 날짜 유효성 확인 (존재하지 않는 날짜 입력 시 경고)
-- 적합·미흡 사유 입력 팝업의 textarea 전체 폭 적용
-- 냉동기 PDF 요약표 구분 열폭을 점검자 열과 동일한 13%로 조정
-- 냉동기 PDF 용도 오른쪽 칸 병합, 왼쪽 정렬 및 한 글자 내어쓰기
-- 운영 Supabase 연결·저장 기능은 계속 비활성화
-
-## M1.0.2 출력양식 수정
-
-- 현황사진은 하단 빈 칸까지 세로 병합하여 사진 1장으로 표시합니다. 적합/미흡 사유는 별도 유지합니다.
-- 점검방법이 명확하게 구분되는 경우 방법/기준을 별도 행으로 출력합니다. 방법이 없는 항목은 점검기준만 표시합니다. 원본의 문구는 변경하지 않습니다.
-- 세부 점검표에서 판정/조치사항 행은 출력하지 않습니다. 저장 데이터와 입력 화면은 유지합니다.
-- PDF 세부사진은 화면 비율과 관계없이 사방 1px 여유로 채웁니다. Excel에도 합쳐진 사진 셀 구조를 적용합니다.
-- 기존 운영 Supabase 연결 없음. 테스트 저장소 이름/키 변경 없음.
+`supabase_test_sync_setup.sql`은 신규 시험용 테이블의 설계 및 RLS·Realtime 구성 파일입니다. 이 테이블이 Supabase 프로젝트에 생성되어 있어야 동기화 기능이 동작합니다. 이미 설치되어 있다면 **중복 실행할 필요가 없습니다.**

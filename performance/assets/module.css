@@ -50,3 +50,18 @@ html{background:var(--m1-bg)}body{margin:0;font-family:'Malgun Gothic','Apple SD
   height:calc(100% - 2px)!important;max-height:none!important;min-height:0!important;
   margin:0!important;padding:0!important;border:0!important;object-fit:fill!important;
 }
+
+/* M1.0.3: same-account PC / mobile shared test draft sync controls */
+.m1-cloud-panel{margin:13px 0 15px;border:1px solid #a8c4dc;background:#fff;border-radius:11px;padding:14px 16px;box-shadow:0 2px 8px rgba(12,52,85,.05)}
+.m1-cloud-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;font-size:16px;color:#143b61}
+#m103CloudStatus{font-size:13px;font-weight:650;background:#edf5fd;border-radius:99px;padding:7px 11px;color:#245777}
+.m1-cloud-help,.m1-cloud-warning{font-size:13px;line-height:1.65;color:#4e687d;margin:8px 0}
+.m1-cloud-warning{color:#80601e;background:#fff8e6;border-left:3px solid #dfb14c;padding:7px 10px;border-radius:3px;margin-bottom:0}
+.m1-cloud-actions,.m1-cloud-login{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:12px}
+.m1-cloud-login input{flex:1 1 210px;min-width:0;padding:10px 12px;border:1px solid #b5c9dc;border-radius:7px;font-size:14px;min-height:42px}
+.m1-cloud-actions button,.m1-cloud-login button{border:1px solid #a1bbd3;background:#fff;color:#173f72;border-radius:7px;min-height:42px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer}
+.m1-cloud-login button,#m103Upload{background:#1e5b8d!important;color:#fff!important;border-color:#1e5b8d!important}
+#m103Account{font-size:12px;color:#42566c;margin-right:auto;overflow-wrap:anywhere}
+.m1-cloud-login[hidden],.m1-cloud-actions[hidden]{display:none!important}
+@media(max-width:680px){.m1-cloud-panel{padding:12px}.m1-cloud-actions{display:grid;grid-template-columns:1fr 1fr}.m1-cloud-actions button{min-height:46px;white-space:normal}.m1-cloud-actions #m103Account{grid-column:1/-1}.m1-cloud-actions #m103Refresh{grid-column:1/-1}.m1-cloud-login{display:grid;grid-template-columns:1fr}.m1-cloud-login input{min-height:45px;width:100%}}
+@media print{.m1-cloud-panel{display:none!important}}
