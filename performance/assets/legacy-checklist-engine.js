@@ -16,13 +16,13 @@ function status(s){let el=document.getElementById('reStatus');if(el)el.textConte
 function input(key,value,large=false){
  if(key==='점검시작일'||key==='점검종료일'){
   const date=String(value||''),isIso=/^\d{4}-\d{2}-\d{2}$/.test(date);
-  return `<div class="m1-date-row"><input type="text" data-info="${E(key)}" data-m1-date-text="${E(key)}" inputmode="numeric" autocomplete="off" placeholder="YYYYMMDD 또는 YYYY-MM-DD" value="${E(date)}" maxlength="10" aria-label="${E(key)} 직접 입력"><input type="date" data-m1-date-picker="${E(key)}" aria-label="${E(key)} 달력에서 선택" value="${isIso?E(date):''}" title="달력에서 날짜 선택"></div><small class="m1-date-feedback" data-m1-date-feedback="${E(key)}" role="status" hidden></small>`;
+  return `<div class="m1-date-row"><input type="text" data-info="${E(key)}" data-m1-date-text="${E(key)}" inputmode="numeric" autocomplete="off" placeholder="YYYYMMDD 또는 YYYY-MM-DD" value="${E(date)}" maxlength="10" aria-label="${E(key)} 직접 입력"><span class="m1-date-calendar-control" title="달력에서 날짜 선택"><svg class="m1-date-calendar-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M7 3v4M17 3v4M3 10h18"></path><path d="M8 14h3M8 17h3"></path></svg><input type="date" data-m1-date-picker="${E(key)}" aria-label="${E(key)} 달력에서 선택" value="${isIso?E(date):''}" title="달력에서 날짜 선택"></span></div><small class="m1-date-feedback" data-m1-date-feedback="${E(key)}" role="status" hidden></small>`;
  }
  return large?`<textarea data-info="${E(key)}">${E(value)}</textarea>`:`<input data-info="${E(key)}" value="${E(value)}">`;
 }
 function itemField(i,k,v,large=false){return large?`<textarea data-item="${i}" data-key="${k}">${E(v)}</textarea>`:`<input data-item="${i}" data-key="${k}" value="${E(v)}">`}
 function equip(){return d.equipment.find(e=>e.uid===selected)}
-function render(){if(!root())return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">M1.0.4</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 브라우저 로컬 저장 + 선택적 계정별 시험자료 클라우드 공유</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}<div class="m1-bottom-notice">이 페이지는 독립 개발 및 시험용입니다. 운영 보고서 데이터는 수정하지 않습니다. 별도 시험용 테이블만 사용합니다.</div></div>`;bind()}
+function render(){if(!root())return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">M1.0.5</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 브라우저 로컬 저장 + 선택적 계정별 시험자료 클라우드 공유</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}<div class="m1-bottom-notice">이 페이지는 독립 개발 및 시험용입니다. 운영 보고서 데이터는 수정하지 않습니다. 별도 시험용 테이블만 사용합니다.</div></div>`;bind()}
 function energyUI(){return `<h4>월별 사용량 (동일 단위로 입력)</h4><div class="reGrid">${Array.from({length:12},(_,i)=>`<label>${i+1}월<input type="number" min="0" step="any" data-month="${i}" value="${E(d.energy[i]??'')}"></label>`).join('')}</div>`}
 function isVacuumPumpItem(e,item){return e?.type==='냉동기'&&String(item?.title||'').includes('⑤ 펌프(용액, 냉매, 진공) 상태(흡수식 냉동기)')}
 function vacuumPumpEditorHTML(item,itemIndex){const labels=['진공펌프 현황사진','진공펌프 적합 사진','진공펌프 미흡사항 사진'];return `<section class="reVacuumBlock"><h5>진공펌프 추가 사진</h5><p>⑤번 점검항목의 기존 사진칸 아래에 현황·적합·미흡사항 사진이 각각 저장되며 같은 페이지에 표시됩니다.</p><div class="reVacuumPhotos">${labels.map((label,index)=>{const photoIndex=index+3,src=item.photos?.[photoIndex]||'';return `<section><b>${label}</b><button type="button" class="rePhotoSlot ${src?'rePhotoFilled':''}" data-photo-slot="${itemIndex}:${photoIndex}" aria-label="${label} ${src?'교체':'첨부'}">${src?`<img src="${src}" alt="${label}">`:`<span class="rePhotoEmpty">＋<strong>사진 칸을 눌러 첨부</strong><small>사진 선택 또는 카메라 촬영</small></span>`}</button>${src?`<button type="button" data-photo-remove="${itemIndex}:${photoIndex}">사진 삭제</button>`:''}</section>`}).join('')}</div></section>`}
@@ -32,7 +32,7 @@ function reasonValue(item,key){return item?.[key]||(!item?.[key+'Deleted']?defau
 function reasonLibrary(){try{const stored=d.reasonLibrary||JSON.parse(localStorage.getItem(REASON_LIBRARY_KEY)||'{}');return stored&&typeof stored==='object'&&!Array.isArray(stored)?stored:{}}catch{return {}}}
 function reasonLibraryId(e,item,key){return [e?.type||'',item?.title||'',key].join('|||')}
 function reasonOptions(e,item,key){const stored=reasonLibrary()[reasonLibraryId(e,item,key)],saved=Array.isArray(stored)?stored:[],current=String(item?.[key]||'').trim(),fallback=defaultReason(item,key);return [...new Set([current,fallback,...saved].filter(value=>typeof value==='string'&&value.trim()))]}
-async function addReasonToLibrary(e,item,key,value){const clean=String(value||'').trim();if(!clean)return;const library=reasonLibrary(),id=reasonLibraryId(e,item,key),saved=Array.isArray(library[id])?library[id]:[];library[id]=[...new Set([...saved,clean])];d.reasonLibrary=library;localStorage.setItem(REASON_LIBRARY_KEY,JSON.stringify(library));/* M1.0.4: library moves with synced document */}
+async function addReasonToLibrary(e,item,key,value){const clean=String(value||'').trim();if(!clean)return;const library=reasonLibrary(),id=reasonLibraryId(e,item,key),saved=Array.isArray(library[id])?library[id]:[];library[id]=[...new Set([...saved,clean])];d.reasonLibrary=library;localStorage.setItem(REASON_LIBRARY_KEY,JSON.stringify(library));/* M1.0.5: library moves with synced document */}
 function tidyVoiceReason(raw,key){let text=String(raw||'').replace(/[,.!?]+$/g,'').replace(/\s+/g,' ').trim();text=text.replace(/^(어|음|그|저기|그러니까|그냥|일단)(\s+|,\s*)+/g,'').replace(/^(적합|미흡(?:사항)?)(?:\s*사유)?(?:는|가|로)?\s*/,'').replace(/문제\s*없음/g,'문제 없음').replace(/이상\s*없음/g,'이상 없음').replace(/소음\s*(?:및|과|,)?\s*진동/g,'소음 및 진동').trim();if(!text)return '';if(/(적합함|미흡함|필요함|확인됨|양호함|정상임|불량함|없음|있음)$/.test(text))return text+'.';return key==='reason1'?`${text}. 점검 결과 점검기준에 적합함.`:`${text}. 점검 결과 점검·정비 또는 개선이 필요함.`}
 function reasonVoiceSupported(){return Boolean(window.SpeechRecognition||window.webkitSpeechRecognition)}
 function stopReasonVoice(){try{reasonRecognition?.stop()}catch{}reasonRecognition=null;const dialog=document.getElementById('reReasonDialog'),button=dialog?.querySelector('#reReasonVoice'),status=dialog?.querySelector('#reReasonVoiceStatus');button?.classList.remove('listening');if(button)button.textContent='🎙 음성으로 사유 말하기';if(status&&status.textContent==='듣고 있습니다. 점검 상태를 말씀하세요…')status.textContent='음성 인식이 종료되었습니다.'}
@@ -362,9 +362,9 @@ equipmentCheckUI=function(e){
  const item=e.items[currentItem(e)];
  return equipmentCheckUIBeforeQuickNavigation(e)
  .replace('<button type="button" data-show-info>← 기본정보·현장사진</button>','<div class="reCheckHeadActions"><button type="button" class="reCheckMeasurement" data-measure-edit>설계·측정값 입력·수정</button><button type="button" data-show-info>← 기본정보·현장사진</button></div>')
- .replace(`<h4>${E(item?.title||'')}</h4>`,`<h4 class="m104ItemHeading ${m104ItemCompleted(item)?'is-complete':'is-pending'}">${E(item?.title||'')}</h4>`);
+  ;
 };
-/* M1.0.4: 점검항목 선택 - 미완료 굵게, 완료 회색. HTML 기본 option 스타일은 iOS에서 무시되어 독립 목록 사용. */
+/* M1.0.5: 점검항목 선택 - 미완료 굵게, 완료 회색. HTML 기본 option 스타일은 iOS에서 무시되어 독립 목록 사용. */
 function m104ItemCompleted(item){const result=String(item?.result??'').trim();return result!==''&&result!=='미작성'}
 const pagerBeforeItemJump=pager;
 pager=function(e,i){
@@ -791,7 +791,7 @@ const CHILLER_V85_STYLE=`<style id="chiller-v85-print">
 .ch82.ch85summaryPage .ch85main .ch85notes{height:6mm!important}
 .ch82.ch85summaryPage .ch85instruction table{width:100%!important}
 .ch82.ch85summaryPage .ch85meta th{background:#dcebf5!important}
-/* M1.0.4: 용도 값칸의 오른쪽 두 칸을 병합하고 한 글자 내어쓰기. */
+/* M1.0.5: 용도 값칸의 오른쪽 두 칸을 병합하고 한 글자 내어쓰기. */
 .ch82.ch85summaryPage .ch85meta .ch85purpose{width:auto!important;text-align:left!important;padding-left:2ch!important;padding-right:1ch!important;text-indent:-1ch!important;white-space:pre-wrap!important;word-break:keep-all!important;overflow-wrap:anywhere!important}
 /* 점검방법과 기준을 분리한 표: 텍스트 축소가 아닌 문단과 표 병합 */
 .ch82 .ch85criteriaSection{margin:0 0 1mm!important}
@@ -870,7 +870,7 @@ exportInspectionExcel=async function(){
 
 
 
-/* M1.0.4 - Output-only changes. Existing input/result/action fields remain intact. */
+/* M1.0.5 - Output-only changes. Existing input/result/action fields remain intact. */
 function m102CriteriaRows(item,index,forChiller=false){
  const makeRow=(label,content,rowspan=1)=>`<tr><td class="ch82side ch102side"${rowspan>1?` rowspan="${rowspan}"`:''}>${E(label)}</td><td class="ch82detail ch102detail">${content}</td></tr>`;
  if(forChiller&&[5,7,14].includes(index)){
@@ -962,9 +962,9 @@ const M102_PRINT_CSS=`<style id="m102-print-layout">
 </style>`;
 const m102PriorReport=report;
 report=function(){return m102ImproveStandardReport(m102PriorReport())+M102_PRINT_CSS};
-/* End output-only M1.0.4 change. */
+/* End output-only M1.0.5 change. */
 
-/* === M1.0.4 standalone boundary / no production connection === */
+/* === M1.0.5 standalone boundary / no production connection === */
 const M1_REPORT_BEFORE_ISOLATION=report;
 report=function(){
  const raw=M1_REPORT_BEFORE_ISOLATION();
@@ -1030,6 +1030,7 @@ actions.reset=function(){if(!confirm(window.PERFORMANCE_M1_CLOUD?.debug()?.enabl
    textField.oninput=()=>{textField.classList.remove('m1-date-invalid');textField.removeAttribute('aria-invalid');const feedback=root().querySelector(`[data-m1-date-feedback="${key}"]`);if(feedback)feedback.hidden=true};
    textField.addEventListener('blur',()=>m101CommitDate(textField));
    calendar?.addEventListener('change',()=>{textField.value=calendar.value;m101CommitDate(textField);textField.focus()});
+   calendar?.addEventListener('click',()=>{try{calendar.showPicker?.()}catch(_){/* iPhone Safari uses native date input tap */}});
   });
  }
  const m101PriorBind=bind;
@@ -1050,7 +1051,7 @@ actions.reset=function(){if(!confirm(window.PERFORMANCE_M1_CLOUD?.debug()?.enabl
   event.preventDefault();next.focus();if(next instanceof HTMLInputElement&&next.type==='text')next.select();
  },true);
  /* === end M1.0.1 navigation === */
-/* M1.0.4: 판정 변경 즉시 두 개의 점검항목 메뉴와 현재 제목 스타일 동기화. */
+/* M1.0.5: 판정 변경 즉시 두 개의 점검항목 메뉴와 현재 제목 스타일 동기화. */
 function m104RefreshItemStyles(){
  const e=equip();if(!e)return;
  const current=currentItem(e),done=e.items.filter(m104ItemCompleted).length;
@@ -1067,9 +1068,7 @@ function m104RefreshItemStyles(){
   const state=menu.querySelector('.reItemJumpCurrentState');if(state)state.textContent=activeDone?'완료':'미완료';
   menu.querySelector('.reItemJumpChoices')?.setAttribute('aria-label',`점검항목 목록, 완료 ${done}개, 미완료 ${e.items.length-done}개`);
  });
- root()?.querySelectorAll('.m104ItemHeading').forEach(heading=>{
-  const completed=m104ItemCompleted(e.items[current]);heading.classList.toggle('is-complete',completed);heading.classList.toggle('is-pending',!completed);
- });
+
 }
 const m104BindBeforeStatus=bind;
 bind=function(){
@@ -1080,7 +1079,7 @@ bind=function(){
   m104RefreshItemStyles();
  }));
 };
-window.PERFORMANCE_M1_VERSION='M1.0.4';
+window.PERFORMANCE_M1_VERSION='M1.0.5';
 window.PERFORMANCE_M1_GET_TEST_SNAPSHOT=()=>structuredClone(d);
 window.PERFORMANCE_M1_TEST_RESET=()=>actions.reset();
 /* === end standalone boundary === */
