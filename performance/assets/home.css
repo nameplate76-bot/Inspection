@@ -77,3 +77,17 @@ h1{margin:0 0 14px;font-size:clamp(48px,5.6vw,78px);line-height:1.04;letter-spac
 .hero-art .mascot{width:94%;height:94%}
 @media(max-width:900px){.hero-art .brand-backdrop{left:41%;top:42%;opacity:.5}.hero-art .mascot-stage{width:min(100%,380px);margin-right:8px}.backdrop-wordmark{width:clamp(310px,56vw,520px)}}
 @media(max-width:670px){.topbar{display:block;min-height:86px;padding:16px 0 14px}.topbar .brand{display:block}.topbar .official-wordmark{width:92px;height:72px}.top-right{position:absolute;top:14px;right:0;width:auto;justify-content:flex-end;z-index:3}.version{font-size:12px;padding:8px 12px}.hero{padding-top:18px}.hero-copy{max-width:none}.hero-art{min-height:420px;justify-content:center}.hero-art::before{inset:16px 4px 12px}.hero-art .brand-backdrop{left:44%;top:32%;opacity:.56}.backdrop-wordmark{width:250px}.hero-art .mascot-stage{width:min(100%,286px);margin:78px auto 0}.hero-art .mascot{width:100%;height:100%}.footer{margin-top:18px}}
+
+
+/* M1.1.6 overrides: crisp wordmark and mascot 50% smaller at top-right */
+.topbar .official-wordmark{width:132px;height:auto;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 6px 16px rgba(0,0,0,.12))}
+.hero-art{min-height:560px;justify-content:center;align-items:center}
+.hero-art .brand-backdrop{position:relative;left:auto;top:auto;transform:none;z-index:1;opacity:1;filter:none;display:block;width:min(100%,660px);padding:30px 24px 22px}
+.backdrop-wordmark{display:block;width:min(100%,520px);height:auto;object-fit:contain;mix-blend-mode:normal;opacity:1;filter:drop-shadow(0 10px 22px rgba(0,0,0,.10))}
+.hero-art .mascot-stage{position:absolute;right:52px;top:34px;z-index:2;width:235px;max-width:235px;aspect-ratio:auto;display:block;margin:0}
+.hero-art .mascot-motion{animation:tt-hover 5.5s ease-in-out infinite}
+.hero-art .mascot{width:100%;height:auto;display:block;filter:drop-shadow(0 18px 20px rgba(0,5,19,.28))}
+.hero-art .mascot-sparkle{display:none}
+@media(max-width:1100px){.hero-art .brand-backdrop{width:min(100%,560px);padding:28px 18px 20px}.backdrop-wordmark{width:min(100%,440px)}.hero-art .mascot-stage{right:28px;top:22px;width:210px;max-width:210px}}
+@media(max-width:900px){.hero-art{min-height:430px}.hero-art .brand-backdrop{width:min(100%,460px);padding:22px 14px 18px}.backdrop-wordmark{width:min(100%,360px)}.hero-art .mascot-stage{right:18px;top:22px;width:176px;max-width:176px}}
+@media(max-width:670px){.topbar .official-wordmark{width:102px}.top-right{top:12px;right:0}.hero-art{min-height:320px}.hero-art::before{inset:14px 4px 10px}.hero-art .brand-backdrop{width:min(100%,320px);padding:8px 6px 8px}.backdrop-wordmark{width:240px}.hero-art .mascot-stage{right:10px;top:6px;width:120px;max-width:120px}.cta-row{min-height:74px}}

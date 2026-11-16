@@ -57,3 +57,12 @@
 - 모바일 메인화면에서 `독립 점검 모듈 M1.1.5` 버전 배지가 항상 오른쪽 위에 보이도록 위치를 고정했습니다.
 - 변경 파일: `index.html`, `assets/home.css`, `assets/ttoktti-check-wordmark-locked.png`, `manifest.json`, `README.md`
 - 점검표 엔진, 도움말 로직, 동기화 코드와 운영 데이터 관련 파일은 변경하지 않았습니다.
+
+
+# M1.1.6 — 상표 선명도 강화 및 똑띠i 크기/위치 조정
+
+- 똑띠체크 문자상표 PNG를 같은 디자인 그대로 더 선명하고 깨끗하게 보이도록 고해상도로 보정했습니다.
+- 메인화면에서 배경 상표는 더 또렷하게 표시되도록 조정했습니다.
+- 똑띠i는 메인 상표의 오른쪽 위에 배치하고, 이전보다 약 50% 작은 크기로 줄였습니다.
+- 변경 파일: `index.html`, `assets/home.css`, `assets/ttoktti-check-wordmark-locked.png`, `manifest.json`, `README.md`
+- 점검표, 도움말, 생성형 AI 연결 코드, 동기화 및 운영 데이터 관련 파일은 변경하지 않았습니다.
