@@ -1,6 +1,6 @@
 {
   "module": "performance-checklist",
-  "version": "M1.0.5",
+  "version": "M1.0.6",
   "source": "Performance_Checklist_PDF_Save_Fix_V86.zip",
   "basePath": "performance/",
   "mode": "local-first-authenticated-per-user-test-sync",
@@ -18,5 +18,13 @@
   "syncScope": "same authenticated approved user",
   "realtime": "postgres changes with periodic fallback",
   "cloudSchema": "test-only-no-operations-tables-changed",
-  "itemNavigation": "incomplete-bold;completed-gray;custom-accessible-menu-mobile-desktop"
+  "itemNavigation": "incomplete-bold;completed-gray;custom-accessible-menu-mobile-desktop",
+  "landingPage": "performance/index.html",
+  "editorPage": "performance/checklist.html",
+  "designBrand": "똑띠i",
+  "changes": [
+    "add branded landing page",
+    "move existing checklist editor to checklist.html unchanged logic",
+    "add return to home navigation"
+  ]
 }
