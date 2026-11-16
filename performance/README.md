@@ -48,3 +48,12 @@
 - 변경 파일: `index.html`, `assets/home.css`, `manifest.json`, `README.md`
 - **점검표 엔진, checklist.html, Supabase 연결·SQL, 운영 데이터, 권한, 기존 점검 내역은 변경하지 않았습니다.**
 - 홈의 `점검표 작성 시작하기` 및 단일 바로가기 카드는 종전대로 `./checklist.html`을 엽니다.
+
+
+# M1.1.5 — 메인 상표 가독성 및 모바일 위치 보정
+
+- 똑띠체크 문자상표 이미지의 흰색 배경을 제거해 투명 바탕으로 표시되도록 조정했습니다.
+- 메인화면에서 배경 상표와 똑띠i가 겹쳐 보이던 문제를 줄이기 위해, 배경 상표는 더 왼쪽·위로, 똑띠i는 더 작게·오른쪽으로 배치했습니다.
+- 모바일 메인화면에서 `독립 점검 모듈 M1.1.5` 버전 배지가 항상 오른쪽 위에 보이도록 위치를 고정했습니다.
+- 변경 파일: `index.html`, `assets/home.css`, `assets/ttoktti-check-wordmark-locked.png`, `manifest.json`, `README.md`
+- 점검표 엔진, 도움말 로직, 동기화 코드와 운영 데이터 관련 파일은 변경하지 않았습니다.
