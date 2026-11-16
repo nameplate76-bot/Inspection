@@ -26,3 +26,7 @@
 .tt-help-note{padding:0 11px 9px;background:white;color:#577285;font-size:10px;line-height:1.4}
 @media(max-width:550px){.tt-help{right:max(9px,env(safe-area-inset-right));bottom:max(9px,env(safe-area-inset-bottom))}.tt-help-launch{width:62px;height:62px}.tt-help-window{height:min(540px,calc(100dvh - 94px));width:calc(100vw - 18px);margin-bottom:10px}}
 @media(prefers-reduced-motion:reduce){.tt-help-launch:hover{transform:none}}
+
+/* M1.1.4 trial quota status, no paid checkout */
+.tt-help-usage{font:700 11px/1.5 system-ui,sans-serif;padding:8px 12px;background:#e9faf7;color:#075c62;border-bottom:1px solid #bde7e0}
+.tt-help-send:disabled,.tt-help-input:disabled{opacity:.55;cursor:wait}
