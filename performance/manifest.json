@@ -1,7 +1,7 @@
 {
   "name": "똑띠체크 — 기계설비 성능점검 독립 모듈",
   "short_name": "똑띠체크",
-  "description": "브랜드 배경형 메인화면이 적용된 AI 기반 기계설비 성능점검 독립 모듈",
+  "description": "A안 단순화 메인화면이 적용된 AI 기반 기계설비 성능점검 독립 모듈",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -12,5 +12,5 @@
     {"src": "./assets/ttoktti-icon.png", "sizes": "192x192", "type": "image/png"},
     {"src": "./assets/ttoktti-icon.png", "sizes": "512x512", "type": "image/png"}
   ],
-  "version": "M1.1.0"
+  "version": "M1.1.1"
 }
