@@ -1,6 +1,6 @@
 {
   "module": "performance-checklist",
-  "version": "M1.0.6",
+  "version": "M1.0.7",
   "source": "Performance_Checklist_PDF_Save_Fix_V86.zip",
   "basePath": "performance/",
   "mode": "local-first-authenticated-per-user-test-sync",
