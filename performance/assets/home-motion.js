@@ -1,4 +1,4 @@
-/* M1.0.8 — 메인 화면 캐릭터 모션 제어. 네트워크/DB/저장소 접근 없음. */
+/* M1.0.9 — 메인 화면 캐릭터 모션 제어. 네트워크/DB/운영데이터 접근 없음. */
 (() => {
   'use strict';
   const button = document.querySelector('.motion-toggle');

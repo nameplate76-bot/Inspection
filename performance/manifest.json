@@ -1,32 +1,24 @@
 {
-  "module": "performance-checklist",
-  "version": "M1.0.8",
-  "source": "Performance_Checklist_PDF_Save_Fix_V86.zip",
-  "basePath": "performance/",
-  "mode": "local-first-authenticated-per-user-test-sync",
-  "backend": "supabase-separate-test-table",
-  "supabase": true,
-  "testIndexedDB": "performance-m1-isolated-test-v1",
-  "testKey": "demo/current",
-  "testReasonStorageKey": "performance_m1_test_reasons_v1",
-  "equipmentTypes": 27,
-  "hostFilesChanged": 0,
-  "pdf": "browser-print; checklist-only; reference-fidelity-not-certified",
-  "excel": "local editable xlsx with embedded images; stage-1 layout",
-  "layout": "criteria split + rowspan status photo + 1px fill + output-only results cleanup",
-  "cloudTable": "pjt_performance_test_docs_v1",
-  "syncScope": "same authenticated approved user",
-  "realtime": "postgres changes with periodic fallback",
-  "cloudSchema": "test-only-no-operations-tables-changed",
-  "itemNavigation": "incomplete-bold;completed-gray;custom-accessible-menu-mobile-desktop",
-  "landingPage": "performance/index.html",
-  "editorPage": "performance/checklist.html",
-  "designBrand": "똑띠i",
-  "changes": [
-    "add branded landing page",
-    "move existing checklist editor to checklist.html unchanged logic",
-    "add return to home navigation",
-    "M1.0.8 home-only lightweight mascot animation with toggle"
+  "name": "똑띠체크 — 기계설비 성능점검 독립 모듈",
+  "short_name": "똑띠체크",
+  "description": "공식 캐릭터와 애니메이션이 적용된 AI 기반 기계설비 성능점검 독립 모듈",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#05111f",
+  "theme_color": "#061528",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "./assets/ttoktti-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./assets/ttoktti-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ],
-  "homeAnimation": "css-hover-sway-glow-sparkle-with-reduced-motion-toggle"
+  "version": "M1.0.9"
 }
