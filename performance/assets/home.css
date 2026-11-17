@@ -129,3 +129,12 @@ h1{margin:0 0 14px;font-size:clamp(48px,5.6vw,78px);line-height:1.04;letter-spac
 .start-cue{left:auto;right:-6px;top:-72px}.start-cue img{width:70px;height:70px}.cue-message{box-shadow:0 8px 22px rgba(0,0,0,.16)}
 @media(max-width:1100px){.hero{grid-template-columns:1fr;grid-template-areas:"copy" "art" "actions";row-gap:12px}.hero-copy,.hero-actions{max-width:none}.hero-art{min-height:390px}.hero-art .brand-backdrop{width:min(100%,560px)}.backdrop-wordmark{width:min(100%,420px)}.hero-art .mascot-stage{right:18px;top:-8px;width:122px;max-width:122px}}
 @media(max-width:670px){.hero{grid-template-columns:1fr;grid-template-areas:"copy" "art" "actions";row-gap:8px;padding-top:10px}.hero-copy{order:0}.hero-art{order:0;min-height:322px;margin-top:4px}.hero-actions{order:0}.hero-copy .eyebrow{font-size:11px;letter-spacing:3px;margin-bottom:10px}.hero-copy h1{font-size:clamp(32px,9.6vw,52px);line-height:1.08;letter-spacing:-1.7px;margin-bottom:4px}.mobile-break{display:block}.hero-art::before{inset:16px 4px 12px;border-radius:26px}.hero-art .brand-backdrop{width:min(100%,320px);padding:28px 8px 20px}.backdrop-wordmark{width:252px}.hero-art .mascot-stage{right:8px;top:-8px;width:104px;max-width:104px}.hero-actions .hero-sub{font-size:13px;line-height:1.75;margin-bottom:14px}.cta-row{min-height:96px}.hero-cta{width:100%;min-height:58px;padding:0 18px;font-size:14px;border-radius:18px}.start-cue{right:0;top:-74px}.start-cue img{width:62px;height:62px}.cue-message{font-size:10px;padding:7px 9px}}
+
+
+/* M1.1.9 overrides: smoother logo rendering and single-line mobile second headline */
+.hero-copy h1{max-width:none}
+.headline-ai,.headline-tail{display:inline-block;white-space:nowrap}
+.hero-art .brand-backdrop{padding:30px 18px 24px}
+.backdrop-wordmark{width:min(100%,470px);max-width:470px;height:auto;image-rendering:auto;filter:drop-shadow(0 6px 14px rgba(4,19,40,.10));transform:translateZ(0);backface-visibility:hidden}
+@media(max-width:1100px){.backdrop-wordmark{width:min(100%,410px);max-width:410px}}
+@media(max-width:670px){.hero-copy h1{font-size:clamp(28px,8.2vw,46px);line-height:1.08;letter-spacing:-1.5px}.headline-ai,.headline-tail{display:inline;white-space:nowrap}.mobile-break{display:inline !important}.hero-art .brand-backdrop{width:min(100%,320px);padding:30px 10px 22px}.backdrop-wordmark{width:230px;max-width:230px;filter:drop-shadow(0 5px 12px rgba(4,19,40,.10))}.hero-art .mascot-stage{right:2px;top:-10px;width:96px;max-width:96px}}
