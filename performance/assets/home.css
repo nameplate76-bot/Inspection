@@ -138,3 +138,12 @@ h1{margin:0 0 14px;font-size:clamp(48px,5.6vw,78px);line-height:1.04;letter-spac
 .backdrop-wordmark{width:min(100%,470px);max-width:470px;height:auto;image-rendering:auto;filter:drop-shadow(0 6px 14px rgba(4,19,40,.10));transform:translateZ(0);backface-visibility:hidden}
 @media(max-width:1100px){.backdrop-wordmark{width:min(100%,410px);max-width:410px}}
 @media(max-width:670px){.hero-copy h1{font-size:clamp(28px,8.2vw,46px);line-height:1.08;letter-spacing:-1.5px}.headline-ai,.headline-tail{display:inline;white-space:nowrap}.mobile-break{display:inline !important}.hero-art .brand-backdrop{width:min(100%,320px);padding:30px 10px 22px}.backdrop-wordmark{width:230px;max-width:230px;filter:drop-shadow(0 5px 12px rgba(4,19,40,.10))}.hero-art .mascot-stage{right:2px;top:-10px;width:96px;max-width:96px}}
+
+
+/* M1.2.0 overrides: remove start cue and refine wordmark edge rendering */
+.start-cue{display:none !important}
+.hero-actions .cta-row{min-height:auto}
+.hero-art .brand-backdrop{padding:34px 22px 26px}
+.backdrop-wordmark{width:min(100%,450px);max-width:450px;image-rendering:auto;filter:drop-shadow(0 4px 10px rgba(4,19,40,.08));transform:translateZ(0);backface-visibility:hidden}
+@media(max-width:1100px){.backdrop-wordmark{width:min(100%,390px);max-width:390px}}
+@media(max-width:670px){.backdrop-wordmark{width:214px;max-width:214px}.hero-art .brand-backdrop{width:min(100%,300px);padding:26px 10px 20px}.hero-actions .cta-row{margin-top:0}}

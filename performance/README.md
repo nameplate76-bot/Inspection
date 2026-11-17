@@ -96,3 +96,12 @@
 - 모바일 메인화면 제목에서 `AI 도우미 똑띠i와 함께`가 줄바꿈되지 않고 같은 줄에 표시되도록 수정했습니다.
 - 변경 파일: `index.html`, `assets/home.css`, `assets/ttoktti-check-wordmark-locked.png`, `manifest.json`, `README.md`
 - 점검표, 도움말, 생성형 AI 연결 코드와 운영 데이터 관련 파일은 변경하지 않았습니다.
+
+
+# M1.2.0 — 시작 안내 삭제 및 상표 가장자리 재보정
+
+- `점검표 작성 시작하기` 버튼 위에 표시되던 똑띠i와 `여기를 눌러 시작해요!` 안내 요소를 삭제했습니다.
+- 똑띠체크 문자상표는 원본 업로드 이미지를 기준으로 다시 투명 배경 처리하고, 새로 고해상도 렌더링해 가장자리 거칠음을 줄이도록 재보정했습니다.
+- 메인 비주얼에서 상표 이미지는 약간 더 작고 안정적으로 표시되도록 조정했습니다.
+- 변경 파일: `index.html`, `assets/home.css`, `assets/ttoktti-check-wordmark-locked.png`, `manifest.json`, `README.md`
+- 점검표, 도움말, 생성형 AI 연결 코드와 운영 데이터 관련 파일은 변경하지 않았습니다.
