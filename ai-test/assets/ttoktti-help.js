@@ -12,7 +12,7 @@
  const log=el('div','tt-help-log');log.setAttribute('role','log');log.setAttribute('aria-live','polite');log.setAttribute('aria-relevant','additions');
  const form=el('form','tt-help-form');const input=el('input','tt-help-input');input.type='text';input.placeholder='궁금한 내용을 직접 입력하세요';input.maxLength=250;input.autocomplete='off';input.setAttribute('aria-label','똑띠i에게 질문 입력');const send=el('button','tt-help-send','전송');send.type='submit';form.append(input,send);
  const usage=el('div','tt-help-usage','테스트 기본형 월 0원 · GPT-6 Luna · 전체 월 1,000건 · 개인 월 30건 + 추가 크레딧 · 결제 비활성');
- const note=el('small','tt-help-note','직접 질문은 로그인 후 생성형 AI로 전달됩니다. 연결 전에는 내장 도움말을 제공합니다. 개인정보·현장 민감정보는 입력하지 마세요.');
+ const note=el('small','tt-help-note','질문 시 현재 저장된 점검표의 측정값·사유·사진 일부를 AI 서버로 자동 전송해 분석합니다. 사진은 전송용으로만 축소됩니다. 개인정보와 민감한 자료가 포함되지 않았는지 점검해 주세요.');
  panel.append(header,usage,log,form,note);
  const launch=el('button','tt-help-launch');launch.type='button';launch.setAttribute('aria-label','똑띠i 도움말 열기');launch.setAttribute('aria-controls','tt-help-panel');launch.setAttribute('aria-expanded','false');
  const launchImg=el('img');launchImg.src='./assets/ttoktti-i-official-locked.png';launchImg.alt='';launch.append(launchImg);host.append(panel,launch);document.body.append(host);
@@ -133,15 +133,42 @@ async function refreshUsage(){
    if(r.error){usage.textContent='테스트 기본형 월 0원 · GPT-6 Luna · 월 1,000건 / 개인 30건 · '+r.error;return;}
    usage.textContent=`테스트 기본형 월 0원 · ${r.model} · 전체 ${r.global_used}/${r.global_limit}건 · 내 기본 ${r.included_used}/${r.included_limit}건 · 추가 크레딧 ${r.credits_remaining}건 · 결제 비활성`;
  }
+
+ // No re-upload by the user: read the current inspection document via the read-only bridge.
+ // Compress photos in memory solely for this authenticated AI request.
+ async function prepareInspectionContext(question){
+   const bridge=window.TTOKTTI_READ_INSPECTION_CONTEXT;
+   if(typeof bridge!=='function')return {context:null,images:[],warning:'점검표 데이터 접근 모듈이 로드되지 않았습니다.'};
+   let snapshot;
+   try{snapshot=bridge(question);}catch(e){return {context:null,images:[],warning:'점검표를 읽지 못했습니다: '+String(e?.message||e)}}
+   const sources=snapshot.photoSources||[];
+   const photos=[];
+   // Limit transferred image count to bound latency and cost; keep full photo count transparent.
+   for(const p of sources.slice(0,5)){
+     try{
+       if(!/^data:image\/(jpeg|png|webp);base64,/i.test(p.dataUrl))continue;
+       const img=new Image();img.src=p.dataUrl;await img.decode();
+       const canvas=document.createElement('canvas');const ratio=Math.min(1,640/Math.max(img.naturalWidth,img.naturalHeight));
+       canvas.width=Math.max(1,Math.round(img.naturalWidth*ratio));canvas.height=Math.max(1,Math.round(img.naturalHeight*ratio));
+       canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+       photos.push({equipment:p.equipment,item:p.item,dataUrl:canvas.toDataURL('image/jpeg',0.57)});
+     }catch(e){console.warn('AI 사진 전송용 축소 실패',e)}
+   }
+   snapshot.data.sentPhotos=photos.map(p=>({equipment:p.equipment,item:p.item}));
+   snapshot.data.unseenPhotos=sources.length-photos.length;
+   return {context:snapshot.data,images:photos,warning:''};
+ }
+
  async function directQuestion(question){
    const q=String(question||'').trim().slice(0,250);if(!q||busy)return;
    busy=true;const version=sessionVersion;send.disabled=true;input.disabled=true;
    say('user',q);log.querySelector('.tt-help-questions')?.remove();
    const pending=el('div','tt-help-msg bot','똑띠i가 답변을 준비 중입니다…');log.append(pending);bottom();
-   const r=await aiCall({question:q});
+   const contextData=await prepareInspectionContext(q);
+   const r=await aiCall({question:q,inspection:contextData.context,images:contextData.images});
    pending.remove();
    if(version!==sessionVersion){busy=false;send.disabled=false;input.disabled=false;return;}
-   if(r.answer){say('bot',r.answer);}
+   if(r.answer){say('bot',r.answer+(contextData.warning?'\n\n자료 접근 안내: '+contextData.warning:''));}
    else{
      const known=answerFor(q);
      say('bot',(r.error||'AI 설정이 완료되지 않았습니다.')+(known?'\n\n내장 도움말: '+known.answer:'\n\n현재는 생성형 AI 도움을 제공할 수 없습니다. 먼저 서버 설정을 확인해 주세요.'));

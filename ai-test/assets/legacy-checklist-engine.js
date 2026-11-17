@@ -22,7 +22,7 @@ function input(key,value,large=false){
 }
 function itemField(i,k,v,large=false){return large?`<textarea data-item="${i}" data-key="${k}">${E(v)}</textarea>`:`<input data-item="${i}" data-key="${k}" value="${E(v)}">`}
 function equip(){return d.equipment.find(e=>e.uid===selected)}
-function render(){if(!root())return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">M1.2.4</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 브라우저 로컬 저장 + 선택적 계정별 시험자료 클라우드 공유</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
+function render(){if(!root())return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">M1.2.8</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 브라우저 로컬 저장 + 선택적 계정별 시험자료 클라우드 공유</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
 function energyUI(){return `<h4>월별 사용량 (동일 단위로 입력)</h4><div class="reGrid">${Array.from({length:12},(_,i)=>`<label>${i+1}월<input type="number" min="0" step="any" data-month="${i}" value="${E(d.energy[i]??'')}"></label>`).join('')}</div>`}
 function isVacuumPumpItem(e,item){return e?.type==='냉동기'&&String(item?.title||'').includes('⑤ 펌프(용액, 냉매, 진공) 상태(흡수식 냉동기)')}
 function vacuumPumpEditorHTML(item,itemIndex){const labels=['진공펌프 현황사진','진공펌프 적합 사진','진공펌프 미흡사항 사진'];return `<section class="reVacuumBlock"><h5>진공펌프 추가 사진</h5><p>⑤번 점검항목의 기존 사진칸 아래에 현황·적합·미흡사항 사진이 각각 저장되며 같은 페이지에 표시됩니다.</p><div class="reVacuumPhotos">${labels.map((label,index)=>{const photoIndex=index+3,src=item.photos?.[photoIndex]||'';return `<section><b>${label}</b><button type="button" class="rePhotoSlot ${src?'rePhotoFilled':''}" data-photo-slot="${itemIndex}:${photoIndex}" aria-label="${label} ${src?'교체':'첨부'}">${src?`<img src="${src}" alt="${label}">`:`<span class="rePhotoEmpty">＋<strong>사진 칸을 눌러 첨부</strong><small>사진 선택 또는 카메라 촬영</small></span>`}</button>${src?`<button type="button" data-photo-remove="${itemIndex}:${photoIndex}">사진 삭제</button>`:''}</section>`}).join('')}</div></section>`}
@@ -1144,6 +1144,47 @@ bindMeasurementDialog=function(dialog,e){
    v86GeneralChillerCalc(e);v86RefreshRatios(e,dialog);v86UpdateCalculatedCells(dialog,e);
   });
  });
+};
+
+
+// M1.2.8 READ-ONLY bridge: all pages of the current test document, not just visible DOM.
+// Does not modify stored inspection data or trigger cloud synchronization.
+window.TTOKTTI_READ_INSPECTION_CONTEXT = function(question){
+ const q=String(question||'');
+ const matches=(d.equipment||[]).filter(x=>{if(!x.number)return false;const escaped=String(x.number).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return new RegExp('(^|[^\\w-])'+escaped+'(?![\\w-])','i').test(q);});
+ // Exact equipment number has priority, then currently selected equipment.
+ const prioritized=matches.length?matches:(d.equipment||[]).filter(x=>x.uid===selected);
+ const others=(d.equipment||[]).filter(x=>!prioritized.includes(x));
+ const all=[...prioritized,...others];
+ const clean=(v,max=1000)=>String(v??'').slice(0,max);
+ const data={scope:'현재 브라우저에서 열린 시험 점검 문서의 모든 저장 페이지',site:{},equipment:[],energy:Array.isArray(d.energy)?d.energy.slice(0,12):[],selection:prioritized.map(e=>e.number),totalEquipment:all.length};
+ for(const [k,v] of Object.entries(d.info||{})) if(v!==null&&v!=='') data.site[k]=clean(v,1500);
+ let remaining=62000, truncated=false;
+ for(const e of all){
+   const info={number:clean(e.number,80),type:clean(e.type,80),format:clean(e.equipmentFormat||e['설비형식']||'',100),basic:{},measurements:[],items:[],photoRefs:[]};
+   for(const k of ['용도','설치위치','제조사','설치년도','사양','점검일','점검자','측정값'])if(e[k])info.basic[k]=clean(e[k],400);
+   for(const r of measurementRows(structuredClone(e)))info.measurements.push({group:clean(r.group,100),item:clean(r.item,150),design:clean(r.design,80),measured:clean(r.measured,80),unit:clean(r.unit,30),percent:clean(r.percent,40),note:clean(r.note,300)});
+   if(e.sitePhoto)info.photoRefs.push({item:'설비 현장사진',index:0,kind:'site'});
+   (e.items||[]).forEach((it,i)=>{
+     const item={index:i+1,title:clean(it.title,350),result:clean(it.result,60),measurement:clean(it.measurement,400),action:clean(it.action,600),reasons:{}};
+     for(const k of ['reason0','reason1','reason2','vacuumReason1','vacuumReason2']){
+       const v=typeof reasonValue==='function'?reasonValue(it,k):it[k];
+       if(v)item.reasons[k]=clean(v,1000);
+     }
+     if(Array.isArray(it.photos))it.photos.forEach((photo,j)=>{if(photo)info.photoRefs.push({item:clean(it.title,150),itemIndex:i,index:j,kind:'item'})});
+     info.items.push(item);
+   });
+   const bytes=JSON.stringify(info).length;
+   if(bytes>remaining){truncated=true;break;}
+   remaining-=bytes; data.equipment.push(info);
+ }
+ data.truncated=truncated;data.photoCount=all.reduce((sum,e)=>sum+(e.sitePhoto?1:0)+(e.items||[]).reduce((n,it)=>n+(it.photos||[]).filter(Boolean).length,0),0);
+ return {data, photoSources:all.flatMap(e=>{
+   let photos=[];
+   if(e.sitePhoto)photos.push({equipment:e.number,item:'설비 현장사진',dataUrl:e.sitePhoto});
+   (e.items||[]).forEach(it=>(it.photos||[]).forEach((url,j)=>{if(url)photos.push({equipment:e.number,item:clean(it.title,100)+' 사진 '+(j+1),dataUrl:url})}));
+   return photos;
+ })};
 };
 
 })();
