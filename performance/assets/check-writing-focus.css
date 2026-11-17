@@ -1,0 +1,18 @@
+/*
+  M1.2.2: 점검항목 작성 화면 전용 간소화.
+  요소를 삭제하거나 저장·동기화 기능을 변경하지 않으며 표시만 제어합니다.
+*/
+body.tt-check-writing #m103Cloud,
+body.tt-check-writing #reportComposerPage .m1-editor > header,
+body.tt-check-writing #reportComposerPage .m1-site {
+  display: none !important;
+}
+body.tt-check-writing .m1-layout {
+  padding-top: 4px;
+}
+@media print {
+  body.tt-check-writing #reportComposerPage .m1-editor > header,
+  body.tt-check-writing #reportComposerPage .m1-site {
+    display: none !important;
+  }
+}
