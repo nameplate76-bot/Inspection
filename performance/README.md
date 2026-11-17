@@ -66,3 +66,14 @@
 - 똑띠i는 메인 상표의 오른쪽 위에 배치하고, 이전보다 약 50% 작은 크기로 줄였습니다.
 - 변경 파일: `index.html`, `assets/home.css`, `assets/ttoktti-check-wordmark-locked.png`, `manifest.json`, `README.md`
 - 점검표, 도움말, 생성형 AI 연결 코드, 동기화 및 운영 데이터 관련 파일은 변경하지 않았습니다.
+
+
+# M1.1.7 — 모바일 메인화면 정리 및 CTA 강조
+
+- 왼쪽 위에 표시되던 똑띠체크 상표를 삭제했습니다.
+- 모바일 메인화면에서 `AI FACILITY CHECK APP`과 `기계설비 성능점검 AI 도우미 똑띠i와 함께` 문구를 메인 상표 영역 위에 먼저 보이도록 정렬했습니다.
+- 제목의 `함께`는 모바일에서 줄바꿈되도록 조정했습니다.
+- 배경의 똑띠체크 상표가 더 매끄럽고 깔끔하게 보이도록 표시 품질과 배치, 그림자 표현을 조정했습니다.
+- `점검표 작성 시작하기` 버튼에 진한 파란색 테두리와 반복 펄스 효과를 넣어 시각적으로 더 눈에 띄도록 수정했습니다.
+- 변경 파일: `index.html`, `assets/home.css`, `assets/ttoktti-check-wordmark-locked.png`, `manifest.json`, `README.md`
+- 점검표, 도움말, 생성형 AI 연결 코드와 운영 데이터 관련 파일은 변경하지 않았습니다.
