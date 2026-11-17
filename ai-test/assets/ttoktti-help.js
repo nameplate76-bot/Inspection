@@ -41,28 +41,57 @@
   const aiPassword=el('input','tt-help-test-password');aiPassword.type='password';aiPassword.required=true;aiPassword.placeholder='테스트 계정 비밀번호';aiPassword.autocomplete='current-password';
   const aiLoginBtn=el('button','tt-help-test-submit','AI 테스트 로그인');aiLoginBtn.type='submit';
   const logoutBtn=el('button','tt-help-test-logout','AI 로그아웃');logoutBtn.type='button';logoutBtn.hidden=true;
-  const authState=el('small','tt-help-test-state','AI 테스트 서버를 연결하려면 별도 테스트 계정으로 로그인하세요.');
+  const authState=el('small','tt-help-test-state','AI 테스트 서버 연결을 확인하고 있습니다.');
   loginForm.append(aiEmail,aiPassword,aiLoginBtn);loginWrap.append(loginTitle,loginForm,logoutBtn,authState);
   panel.insertBefore(loginWrap,log);
+  const authGuide=el('div','tt-help-test-setup');
+  authGuide.hidden=true;
+  authGuide.textContent='설정 필요: GitHub의 ai-test/assets/ttoktti-ai-test-config.js 파일에서 테스트 Supabase 프로젝트의 공개용 publishable key를 입력한 후 다시 배포하세요. Supabase → Project Settings → API Keys에서 확인할 수 있습니다. 비밀번호나 secret/service_role 키를 입력하지 마세요.';
+  loginWrap.append(authGuide);
+  function getAiConfigError(){
+    const url=String(window.TTOKTTI_AI_TEST_URL||'').trim();
+    const key=String(window.TTOKTTI_AI_TEST_PUBLISHABLE_KEY||'').trim();
+    if(!window.supabase)return 'Supabase JS 라이브러리를 불러오지 못했습니다. 네트워크 및 CDN을 확인해 주세요.';
+    if(!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(url))return 'AI TEST Supabase 프로젝트 URL이 설정되지 않았거나 형식이 잘못되었습니다.';
+    if(!key||key.startsWith('PASTE_'))return 'AI TEST 공개용 publishable key가 아직 설정되지 않았습니다. 입력한 비밀번호 문제가 아닙니다.';
+    if(key.startsWith('sb_secret_')||key.startsWith('sb_service_'))return '비밀키는 웹 페이지에 넣을 수 없습니다. 공개용 publishable key만 사용하세요.';
+    return '';
+  }
   function getAiClient(){
     if(aiClient)return aiClient;
-    const url=window.TTOKTTI_AI_TEST_URL,key=window.TTOKTTI_AI_TEST_PUBLISHABLE_KEY;
-    if(!window.supabase||!url||!key||key.startsWith('PASTE_'))return null;
-    try{aiClient=window.supabase.createClient(url,key,{auth:{storageKey:'ttoktti-ai-test-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});return aiClient;}
+    if(getAiConfigError())return null;
+    try{aiClient=window.supabase.createClient(window.TTOKTTI_AI_TEST_URL,window.TTOKTTI_AI_TEST_PUBLISHABLE_KEY,{auth:{storageKey:'ttoktti-ai-test-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});return aiClient;}
     catch{return null;}
   }
   async function updateAiAuthUI(){
-    const sb=getAiClient();if(!sb){authState.textContent='AI 테스트 공개 설정 파일에 Supabase publishable key를 입력해 주세요.';return;}
-    const {data:{session}}=await sb.auth.getSession();
-    loginForm.hidden=!!session;logoutBtn.hidden=!session;
-    authState.textContent=session?'AI 테스트 로그인: '+String(session.user?.email||'인증됨'):'AI 테스트 전용 계정으로 로그인해 주세요.';
+    const configError=getAiConfigError();
+    const sb=getAiClient();
+    if(!sb){
+      loginForm.hidden=true;logoutBtn.hidden=true;authGuide.hidden=false;
+      authState.textContent=configError||'AI TEST 프로젝트 설정을 확인해 주세요.';
+      return;
+    }
+    authGuide.hidden=true;
+    try{
+      const {data,error}=await sb.auth.getSession();
+      if(error)throw error;
+      const session=data?.session;
+      loginForm.hidden=!!session;logoutBtn.hidden=!session;
+      authState.textContent=session?'AI 테스트 로그인: '+String(session.user?.email||'인증됨'):'AI 테스트 프로젝트에 등록된 계정으로 로그인해 주세요. (운영 포털 계정과 별도일 수 있습니다.)';
+    }catch(e){loginForm.hidden=false;logoutBtn.hidden=true;authState.textContent='세션 확인 실패: '+String(e?.message||e);}
+
   }
   loginForm.addEventListener('submit',async ev=>{ev.preventDefault();
     const sb=getAiClient();if(!sb){await updateAiAuthUI();return;}
     aiLoginBtn.disabled=true;authState.textContent='로그인 확인 중…';
     try{const {error}=await sb.auth.signInWithPassword({email:aiEmail.value.trim(),password:aiPassword.value});aiPassword.value='';
       if(error)throw error;await updateAiAuthUI();void refreshUsage();}
-    catch(e){authState.textContent='테스트 계정 로그인 실패: '+String(e?.message||e)}
+    catch(e){
+      const message=String(e?.message||e);
+      authState.textContent=/invalid login credentials/i.test(message)
+        ? '로그인 정보가 일치하지 않습니다. 테스트 Supabase 프로젝트의 Authentication → Users에서 가입 여부와 비밀번호를 확인하세요.'
+        : '테스트 계정 로그인 실패: '+message;
+    }
     finally{aiLoginBtn.disabled=false;}
   });
   logoutBtn.addEventListener('click',async()=>{const sb=getAiClient();if(sb)await sb.auth.signOut();await updateAiAuthUI();});

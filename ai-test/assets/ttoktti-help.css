@@ -37,3 +37,7 @@
 .tt-help-test-auth input{min-width:90px;flex:1 1 120px;border:1px solid #aab9c7;border-radius:6px;padding:7px;font-size:12px}
 .tt-help-test-auth button,.tt-help-test-logout{border:0;border-radius:7px;padding:7px 9px;background:#174e7c;color:#fff;cursor:pointer}
 .tt-help-test-state{font-size:11px;color:#3b5266}
+
+/* M1.2.5: missing public AI test config is visible before credentials */
+.tt-help-test-setup{padding:9px 10px;border:1px solid #eab67f;background:#fff7eb;color:#703b09;border-radius:8px;font-size:11px;line-height:1.55;overflow-wrap:anywhere}
+.tt-help-test-setup[hidden]{display:none!important}
