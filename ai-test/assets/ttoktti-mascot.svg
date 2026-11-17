@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="660" height="680" viewBox="0 0 660 680" role="img" aria-labelledby="title desc">
+  <title id="title">똑띠i — 친근한 설비 엔지니어 AI 캐릭터</title>
+  <desc id="desc">청록색 발광 얼굴과 안전모를 착용한 독창적인 로봇 엔지니어 캐릭터. 가슴에 똑띠i 이름과 설비 점검 마크가 있다.</desc>
+  <defs>
+    <linearGradient id="body" x1=".08" y1="0" x2=".88" y2="1"><stop stop-color="#3BCDE1"/><stop offset=".43" stop-color="#1486B9"/><stop offset="1" stop-color="#123F79"/></linearGradient>
+    <linearGradient id="helmet" x1="0" y1="0" x2=".91" y2="1"><stop stop-color="#E6FCFF"/><stop offset=".55" stop-color="#C6E9FA"/><stop offset="1" stop-color="#85C5E4"/></linearGradient>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#143A64"/><stop offset="1" stop-color="#041B3A"/></linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#113F68"/><stop offset="1" stop-color="#0B2D51"/></linearGradient>
+    <radialGradient id="aura"><stop stop-color="#58E1F1" stop-opacity=".65"/><stop offset="1" stop-color="#3DA4FF" stop-opacity="0"/></radialGradient>
+    <filter id="shadow" x="-.5" y="-.5" width="2" height="2"><feDropShadow dx="0" dy="19" stdDeviation="16" flood-color="#021129" flood-opacity=".38"/></filter>
+    <filter id="glow" x="-.6" y="-.6" width="2.2" height="2.2"><feGaussianBlur stdDeviation="6" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <circle cx="332" cy="323" r="288" fill="url(#aura)" opacity=".78"/>
+  <g opacity=".35" fill="none" stroke="#7EEAFB" stroke-width="2"><circle cx="330" cy="310" r="251" stroke-dasharray="5 14"/><circle cx="330" cy="310" r="212" stroke-dasharray="3 18"/></g>
+  <g opacity=".9" fill="#6EE8F1"><circle cx="90" cy="282" r="5"/><circle cx="572" cy="172" r="6"/><circle cx="578" cy="464" r="4"/><circle cx="96" cy="500" r="4"/></g>
+  <g filter="url(#shadow)">
+    <!-- 다리 -->
+    <path d="M253 533 238 615Q235 632 260 638L302 638 319 556Z" fill="#113863" stroke="#69C6E3" stroke-width="6"/>
+    <path d="M353 555 367 638 414 638Q434 631 424 608L403 533Z" fill="#154D83" stroke="#69C6E3" stroke-width="6"/>
+    <rect x="215" y="617" width="100" height="27" rx="13" fill="#E3FAFF" stroke="#7CDCEF" stroke-width="5"/>
+    <rect x="348" y="617" width="100" height="27" rx="13" fill="#E3FAFF" stroke="#7CDCEF" stroke-width="5"/>
+    <!-- 팔 -->
+    <path d="M220 413Q148 419 126 485" fill="none" stroke="#0F5484" stroke-width="53" stroke-linecap="round"/>
+    <path d="M220 413Q148 419 126 485" fill="none" stroke="#37C9DB" stroke-width="34" stroke-linecap="round"/>
+    <path d="M430 410Q503 419 528 482" fill="none" stroke="#0F5484" stroke-width="53" stroke-linecap="round"/>
+    <path d="M430 410Q503 419 528 482" fill="none" stroke="#37C9DB" stroke-width="34" stroke-linecap="round"/>
+    <circle cx="124" cy="489" r="35" fill="#E5F9FF" stroke="#56CBE6" stroke-width="8"/>
+    <circle cx="531" cy="488" r="35" fill="#E5F9FF" stroke="#56CBE6" stroke-width="8"/>
+    <path d="M115 476 130 503M134 472 111 497" stroke="#1979A6" stroke-width="7" stroke-linecap="round"/>
+    <path d="M523 473V503M539 478V498" stroke="#1979A6" stroke-width="7" stroke-linecap="round"/>
+    <!-- 몸통 -->
+    <path d="M231 381Q195 393 207 456L221 542Q231 574 268 580L390 580Q433 579 442 538L454 463Q462 400 417 383Z" fill="url(#body)" stroke="#8BE6F3" stroke-width="7"/>
+    <path d="M246 406 273 435 385 435 416 402" fill="none" stroke="#C9FBFF" stroke-opacity=".7" stroke-width="8" stroke-linecap="round"/>
+    <rect x="252" y="456" width="159" height="78" rx="22" fill="url(#plate)" stroke="#60D9E7" stroke-width="5"/>
+    <text x="332" y="507" font-family="'Noto Sans KR','Malgun Gothic',sans-serif" text-anchor="middle" font-size="40" font-weight="900" fill="#F5FFFF">똑띠<tspan fill="#54E9EC">i</tspan></text>
+    <circle cx="270" cy="552" r="7" fill="#9AF5FD"/><circle cx="394" cy="552" r="7" fill="#9AF5FD"/>
+    <!-- 목 -->
+    <rect x="289" y="360" width="86" height="41" rx="18" fill="#0B4F79" stroke="#65D7EC" stroke-width="7"/>
+    <!-- 귀 -->
+    <rect x="158" y="244" width="47" height="93" rx="20" fill="#C5EAF4" stroke="#4EB8D8" stroke-width="7"/>
+    <rect x="451" y="244" width="47" height="93" rx="20" fill="#C5EAF4" stroke="#4EB8D8" stroke-width="7"/>
+    <rect x="171" y="261" width="24" height="61" rx="10" fill="#3CE2EA" opacity=".85"/>
+    <rect x="461" y="261" width="24" height="61" rx="10" fill="#3CE2EA" opacity=".85"/>
+    <!-- 얼굴 외피 -->
+    <rect x="186" y="169" width="284" height="217" rx="84" fill="url(#helmet)" stroke="#76D9F1" stroke-width="9"/>
+    <rect x="208" y="216" width="241" height="143" rx="55" fill="url(#face)" stroke="#6BDCE9" stroke-width="7"/>
+    <path d="M224 250Q274 211 386 228" stroke="#D8FEFF" opacity=".16" stroke-width="18" fill="none" stroke-linecap="round"/>
+    <!-- 눈 -->
+    <path d="M262 279Q278 266 293 279" fill="none" stroke="#8DF9FC" stroke-width="13" stroke-linecap="round" filter="url(#glow)"/>
+    <path d="M358 279Q374 266 388 279" fill="none" stroke="#8DF9FC" stroke-width="13" stroke-linecap="round" filter="url(#glow)"/>
+    <path d="M292 323Q329 347 366 322" fill="none" stroke="#53F2E9" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="250" cy="321" r="9" fill="#FFBEAC" opacity=".65"/><circle cx="400" cy="321" r="9" fill="#FFBEAC" opacity=".65"/>
+    <!-- 안전모 -->
+    <path d="M215 189Q218 124 283 110Q327 96 375 111Q428 126 436 188L436 215 215 215Z" fill="url(#helmet)" stroke="#63D5EF" stroke-width="8"/>
+    <path d="M306 116Q323 101 343 114L349 187 300 187Z" fill="#19A8D1" stroke="#B8F2FB" stroke-width="4"/>
+    <path d="M203 203Q325 219 452 204" stroke="#E8FCFF" stroke-width="20" stroke-linecap="round"/>
+    <rect x="302" y="147" width="56" height="48" rx="16" fill="#0E5286" stroke="#63E1E9" stroke-width="4"/>
+    <path d="M329 157V187M315 172H343" stroke="#8EFAEF" stroke-width="6" stroke-linecap="round"/>
+    <!-- 안테나 -->
+    <path d="M327 100 327 75" stroke="#8CDBEA" stroke-width="11" stroke-linecap="round"/>
+    <circle cx="327" cy="64" r="16" fill="#42E4E7" stroke="#C5F9FB" stroke-width="6" filter="url(#glow)"/>
+  </g>
+  <g transform="translate(486 100)" filter="url(#shadow)">
+    <circle r="39" fill="#173D67" stroke="#79E3EE" stroke-width="4"/>
+    <path d="m-18 0 12 12 26-28" stroke="#93F7DA" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
