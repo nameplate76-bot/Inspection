@@ -1085,4 +1085,65 @@ window.PERFORMANCE_M1_TEST_RESET=()=>actions.reset();
 /* === end standalone boundary === */
 
 let request=indexedDB.open('performance-m1-isolated-test-v1',1);request.onupgradeneeded=()=>request.result.createObjectStore('reports');request.onerror=()=>alert('보고서 저장공간을 열지 못했습니다. 브라우저 저장 설정을 확인하세요.');request.onsuccess=()=>{db=request.result;let get=db.transaction('reports').objectStore('reports').get('demo/current');get.onsuccess=()=>{if(get.result){d=get.result;localReportAvailable=true}selected=d.equipment[0]?.uid||'';window.renderComposer=render;window.openLandManualReport=(page,key)=>{tab=3;render()};if(root()?.classList.contains('active')){render();loadSharedReport()}window.PERFORMANCE_M1_CLOUD?.localReady?.({get:()=>structuredClone(d),replace:async snapshot=>{d=structuredClone(snapshot);selected=d.equipment[0]?.uid||'';await save();render()}})}};
+
+/* M1.2.4: V86-style live measurement ratios and general-chiller calculated heat.
+   Existing direct-fired calculations and AI review remain untouched. */
+function v86CalcRow(e,group,item){return measurementRows(e).find(r=>r.group===group&&r.item===item)}
+function v86RefreshRatios(e,dialog){
+ const rows=measurementRows(e);
+ rows.forEach((r,i)=>{
+  const a=aiMeasureNumber(r.design),b=aiMeasureNumber(r.measured);
+  const pct=a!==null&&b!==null&&a!==0?`${aiRound(b/a*100,1)}%`:'';
+  if(r.percent!==pct)r.percent=pct;
+  const input=dialog?.querySelector(`[data-dialog-measure-row="${i}"][data-measure-key="percent"]`);
+  if(input){input.value=pct;input.readOnly=true;input.classList.add('reAutoPercent')}
+ });
+}
+function v86GeneralChillerCalc(e){
+ if(e.type!=='냉동기'||e.equipmentFormat!=='일반냉동기')return;
+ const rows=measurementRows(e);
+ for(const key of ['design','measured']){
+  const val=(group,item)=>aiMeasureNumber(v86CalcRow(e,group,item)?.[key]);
+  const set=(group,item,n,digits)=>{const r=v86CalcRow(e,group,item);if(r)r[key]=Number.isFinite(n)?(digits?Number(n.toFixed(digits)).toFixed(digits):measurementThousandsValue(String(Math.round(n)))):''};
+  const ci=val('증발기(냉수)','입구온도'),co=val('증발기(냉수)','출구온도'),cf=val('증발기(냉수)','유량');
+  const evap=[ci,co,cf].every(Number.isFinite)?Math.abs(ci-co)*cf*60:NaN;
+  set('증발기(냉수)','증발열량',evap,0);
+  const hi=val('응축기(냉각수)','입구온도'),ho=val('응축기(냉각수)','출구온도'),hf=val('응축기(냉각수)','유량');
+  set('응축기(냉각수)','응축열량',[hi,ho,hf].every(Number.isFinite)?Math.abs(ho-hi)*hf*60:NaN,0);
+  const power=val('압축기','동력');
+  set('성능','COP',Number.isFinite(evap)&&Number.isFinite(power)&&power>0?evap/(power*860):NaN,2);
+ }
+}
+function v86UpdateCalculatedCells(dialog,e){
+ if(e.type!=='냉동기'||e.equipmentFormat!=='일반냉동기')return;
+ measurementRows(e).forEach((r,i)=>{
+  if(!(['증발열량','응축열량','COP'].includes(r.item)))return;
+  for(const key of ['design','measured']){
+   const input=dialog.querySelector(`[data-dialog-measure-row="${i}"][data-measure-key="${key}"]`);
+   if(input){input.value=r[key]||'';input.readOnly=true;input.classList.add('reAutoCalculated');input.title='관련 온도·유량 또는 압축기 동력으로 자동 계산됩니다.'}
+  }
+ });
+}
+const v86PreviousMeasurementBody=measurementDialogBody;
+measurementDialogBody=function(e){
+ if(e.type==='냉동기'){v86GeneralChillerCalc(e);v86RefreshRatios(e,null)}
+ let html=v86PreviousMeasurementBody(e);
+ if(e.type==='냉동기'&&e.equipmentFormat==='일반냉동기'){
+  html=html.replace('<div class="reMeasurementFreezeBar">','<div class="reDirectFiredFormula"><b>냉동기 자동계산</b><span>증발열량 = 냉수유량 × 온도차 × 60</span><span>응축열량 = 냉각수유량 × 온도차 × 60</span><span>COP = 증발열량 ÷ (압축기 동력 kW × 860)</span></div><div class="reMeasurementFreezeBar">');
+ }
+ return html;
+};
+const v86PreviousMeasurementBind=bindMeasurementDialog;
+bindMeasurementDialog=function(dialog,e){
+ v86PreviousMeasurementBind(dialog,e);
+ if(e.type!=='냉동기')return;
+ v86GeneralChillerCalc(e);v86RefreshRatios(e,dialog);v86UpdateCalculatedCells(dialog,e);
+ dialog.querySelectorAll('[data-dialog-measure-row]').forEach(input=>{
+  if(!['design','measured'].includes(input.dataset.measureKey)||input.readOnly)return;
+  input.addEventListener('input',()=>{
+   v86GeneralChillerCalc(e);v86RefreshRatios(e,dialog);v86UpdateCalculatedCells(dialog,e);
+  });
+ });
+};
+
 })();

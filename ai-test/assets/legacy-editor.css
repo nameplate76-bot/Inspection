@@ -196,3 +196,6 @@
 .reMeasurementPage .reMeasurementPageFooter{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:14px 0 4px;}
 .reMeasurementPage .reMeasurementPageFooter button{flex:0 0 auto;min-width:120px;min-height:44px;margin:0;}
 @media(max-width:700px){.reMeasurementPage .reMeasurementPageFooter{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:12px;}.reMeasurementPage .reMeasurementPageFooter button{min-width:0;width:100%;}}
+
+/* V86 measurement ratio fields */
+.reMeasurementDialog input.reAutoPercent{background:#edf6ff!important;color:#075b91!important;font-weight:800!important;cursor:default}
