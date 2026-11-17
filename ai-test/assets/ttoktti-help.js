@@ -34,6 +34,7 @@
  // Calls go via authenticated Supabase Edge Function. OpenAI keys must never be in client code.
    let busy=false;let sessionVersion=0;
   let aiClient=null;
+  let authCheckGeneration=0; // Ignore stale async auth UI results.
   const loginWrap=el('div','tt-help-test-login');
   const loginTitle=el('small','', 'AI 테스트 전용 Supabase 계정 (기존 점검표 공유 로그인과 별개)');
   const loginForm=el('form','tt-help-test-auth');
@@ -67,25 +68,33 @@
     const configError=getAiConfigError();
     const sb=getAiClient();
     if(!sb){
-      loginForm.hidden=true;logoutBtn.hidden=true;authGuide.hidden=false;
+      loginForm.hidden=true;loginTitle.hidden=false;logoutBtn.hidden=true;authGuide.hidden=false;
       authState.textContent=configError||'AI TEST 프로젝트 설정을 확인해 주세요.';
       return;
     }
     authGuide.hidden=true;
+    const checkId=++authCheckGeneration;
     try{
       const {data,error}=await sb.auth.getSession();
       if(error)throw error;
+      if(checkId!==authCheckGeneration)return;
       const session=data?.session;
-      loginForm.hidden=!!session;logoutBtn.hidden=!session;
+      loginForm.hidden=!!session;loginTitle.hidden=!!session;logoutBtn.hidden=!session;
+      if(session)aiPassword.value='';
       authState.textContent=session?'AI 테스트 로그인: '+String(session.user?.email||'인증됨'):'AI 테스트 프로젝트에 등록된 계정으로 로그인해 주세요. (운영 포털 계정과 별도일 수 있습니다.)';
-    }catch(e){loginForm.hidden=false;logoutBtn.hidden=true;authState.textContent='세션 확인 실패: '+String(e?.message||e);}
+    }catch(e){if(checkId!==authCheckGeneration)return;loginForm.hidden=false;loginTitle.hidden=false;logoutBtn.hidden=true;authState.textContent='세션 확인 실패: '+String(e?.message||e);}
 
   }
   loginForm.addEventListener('submit',async ev=>{ev.preventDefault();
     const sb=getAiClient();if(!sb){await updateAiAuthUI();return;}
     aiLoginBtn.disabled=true;authState.textContent='로그인 확인 중…';
-    try{const {error}=await sb.auth.signInWithPassword({email:aiEmail.value.trim(),password:aiPassword.value});aiPassword.value='';
-      if(error)throw error;await updateAiAuthUI();void refreshUsage();}
+    try{const {data,error}=await sb.auth.signInWithPassword({email:aiEmail.value.trim(),password:aiPassword.value});aiPassword.value='';
+      if(error)throw error;
+      if(!data?.session)throw new Error('인증 세션을 발급받지 못했습니다. 이메일 인증 상태를 확인하세요.');
+      // Apply immediate UI state without waiting for another network request.
+      loginForm.hidden=true;loginTitle.hidden=true;logoutBtn.hidden=false;authGuide.hidden=true;
+      authState.textContent='AI 테스트 로그인: '+String(data.session.user?.email||'인증됨');
+      await updateAiAuthUI();void refreshUsage();}
     catch(e){
       const message=String(e?.message||e);
       authState.textContent=/invalid login credentials/i.test(message)
@@ -94,7 +103,17 @@
     }
     finally{aiLoginBtn.disabled=false;}
   });
-  logoutBtn.addEventListener('click',async()=>{const sb=getAiClient();if(sb)await sb.auth.signOut();await updateAiAuthUI();});
+  logoutBtn.addEventListener('click',async()=>{
+    const sb=getAiClient();logoutBtn.disabled=true;authState.textContent='AI 테스트 로그아웃 중…';
+    try{
+      if(!sb)throw new Error('Supabase 연결 설정을 확인해 주세요.');
+      const {error}=await sb.auth.signOut();if(error)throw error;
+      loginForm.hidden=false;loginTitle.hidden=false;logoutBtn.hidden=true;aiPassword.value='';
+      authState.textContent='로그아웃되었습니다. 다시 로그인할 수 있습니다.';
+      await updateAiAuthUI();
+    }catch(e){authState.textContent='로그아웃 실패: '+String(e?.message||e);}
+    finally{logoutBtn.disabled=false;}
+  });
   async function aiCall(payload){
     const sb=getAiClient();if(!sb)return {error:'AI 테스트 공개 설정(프로젝트 URL 및 publishable key)을 확인해 주세요.'};
     const {data:{session},error:sessionError}=await sb.auth.getSession();

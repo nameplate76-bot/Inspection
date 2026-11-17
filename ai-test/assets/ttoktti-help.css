@@ -41,3 +41,7 @@
 /* M1.2.5: missing public AI test config is visible before credentials */
 .tt-help-test-setup{padding:9px 10px;border:1px solid #eab67f;background:#fff7eb;color:#703b09;border-radius:8px;font-size:11px;line-height:1.55;overflow-wrap:anywhere}
 .tt-help-test-setup[hidden]{display:none!important}
+
+/* M1.2.6: enforce authenticated visibility; flex/grid author rules override UA [hidden]. */
+.tt-help-test-login [hidden]{display:none!important}
+.tt-help-test-logout{justify-self:start}
