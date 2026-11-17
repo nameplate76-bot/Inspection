@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#153f72">
   <meta name="robots" content="noindex,nofollow">
-  <title>똑띠체크 | 성능점검표 작성 M1.1.4</title>
+  <title>똑띠체크 | 성능점검표 작성 M1.2.1</title>
   <link rel="stylesheet" href="./assets/legacy-editor.css?v=M1.0.6">
   <link rel="stylesheet" href="./assets/module.css?v=M1.0.6">
   <style>
@@ -18,11 +18,6 @@
 <body>
   <nav class="ttoktti-back" aria-label="똑띠i 메인화면으로 돌아가기"><a href="./index.html" aria-label="메인화면으로 돌아가기">← 똑띠i 홈으로</a></nav>
   <main class="m1-layout">
-    <div class="m1-topbar">
-      <div><strong>기계설비 성능점검표</strong><small>독립 개발 · 운영 업무포털과 분리</small></div>
-      <span class="m1-badge">M1.0.6</span>
-    </div>
-    <p class="m1-safe" role="note">V86의 27종 설비 템플릿 기반 · 기본은 로컬 저장 · 로그인 후 PC·모바일 간 시험자료 동기화 가능</p>
     <section class="m1-cloud-panel" id="m103Cloud" aria-label="PC·모바일 동기화">
       <div class="m1-cloud-heading"><strong>PC · 모바일 점검표 공유</strong><span id="m103CloudStatus" role="status" aria-live="polite">계정 연결을 확인 중…</span></div>
       <p class="m1-cloud-help">동일한 업무포털 Supabase 계정으로 로그인한 기기에서 같은 시험용 점검표를 확인할 수 있습니다. 첫 업로드/덮어쓰기는 직접 선택합니다.</p>
@@ -31,7 +26,6 @@
       <p class="m1-cloud-warning">시험용 공유 테이블에만 저장합니다. 기존 업무포털·영업·점검배정 및 운영 보고서 자료는 변경하지 않습니다. 동일 계정 기준으로 공유됩니다.</p>
     </section>
     <div id="reportComposerPage" class="active" aria-label="성능점검표 독립 개발 화면"></div>
-    <footer class="m1-footer">V86 기반 성능점검표 독립 모듈 M1.0.6 · 별도 시험용 클라우드 저장소 · 기존 운영 테이블 미변경</footer>
   </main>
   <script src="./vendor/jszip.min.js?v=M1.0.6"></script>
   <script src="./assets/check-templates.js?v=M1.0.6"></script>
@@ -40,9 +34,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../supabase-config.js"></script>
   <script src="./assets/cloud-sync.js?v=M1.0.6"></script>
-  <script src="./assets/legacy-checklist-engine.js?v=M1.0.6"></script>
+  <script src="./assets/legacy-checklist-engine.js?v=M1.2.1"></script>
   <!-- Isolated help widget: no writes to existing reports, authentication or cloud storage. -->
-  <link rel="stylesheet" href="./assets/ttoktti-help.css?v=M1.1.4">
-  <script src="./assets/ttoktti-help.js?v=M1.1.4" defer></script>
+  <link rel="stylesheet" href="./assets/ttoktti-help.css?v=M1.2.1">
+  <script src="./assets/ttoktti-help.js?v=M1.2.1" defer></script>
 </body>
 </html>
