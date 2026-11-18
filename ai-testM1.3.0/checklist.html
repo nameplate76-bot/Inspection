@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#153f72">
   <meta name="robots" content="noindex,nofollow">
-  <title>똑띠체크 | 성능점검표 작성 M1.3.1</title>
-  <link rel="stylesheet" href="./assets/legacy-editor.css?v=M1.3.1">
+  <title>똑띠체크 | 성능점검표 작성 M1.3.2</title>
+  <link rel="stylesheet" href="./assets/legacy-editor.css?v=M1.3.2">
   <link rel="stylesheet" href="./assets/module.css?v=M1.0.6">
   <style>
   .ttoktti-back{background:#0c2945;padding:9px clamp(12px,3vw,24px);text-align:left}
@@ -14,7 +14,7 @@
   .ttoktti-back a:hover{background:rgba(120,227,237,.19)}
   .ttoktti-back a:focus-visible{outline:3px solid #f5d76d;outline-offset:2px}
   </style>
-<link rel="stylesheet" href="./assets/account.css?v=M1.3.1"></head>
+<link rel="stylesheet" href="./assets/account.css?v=M1.3.2"></head>
 <body>
   <nav class="ttoktti-back" aria-label="계정 및 메인화면"><a href="./index.html" aria-label="메인화면으로 돌아가기">← 똑띠i 홈으로</a><span id="ttAccountNav" class="tt-account-nav" style="display:inline-flex;margin-left:12px"><button id="ttLoginOpen">로그인</button><button id="ttProfileOpen" hidden>내 정보</button><button id="ttAdminOpen" hidden>사용자 관리</button><button id="ttLogout" hidden>로그아웃</button></span></nav>
   <main class="m1-layout">
@@ -25,6 +25,12 @@
       <div id="m103CloudActions" class="m1-cloud-actions" hidden><span id="m103Account"></span><button type="button" id="m103Upload">이 기기 자료 클라우드에 올리기</button><button type="button" id="m103Download">클라우드 자료 불러오기</button><button type="button" id="m103Refresh">다른 기기 변경 확인</button></div>
       <p class="m1-cloud-warning">시험용 공유 테이블에만 저장합니다. 기존 업무포털·영업·점검배정 및 운영 보고서 자료는 변경하지 않습니다. 동일 계정 기준으로 공유됩니다.</p>
     </section>
+    <section class="m132-recovery" aria-label="이전 버전 점검자료 복구" style="margin:14px 0;padding:16px;border:1px solid #b1cbdc;border-radius:12px;background:#f7fbff;color:#17334f;font-family:system-ui,sans-serif">
+      <h3 style="margin:0 0 6px;font-size:17px">이전 버전 점검자료 복구 (M1.2.8 이전 저장자료)</h3>
+      <p style="margin:0 0 10px;font-size:13px;line-height:1.6">M1.3.0부터 계정별 저장공간이 분리되었습니다. 같은 브라우저에 남은 이전 사진·측정값·사유를 찾을 수 있습니다. 먼저 백업한 후 직접 복구를 선택하세요. 클라우드에 자동 업로드하지 않습니다.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="m132Scan" type="button">이전 자료 찾기</button><button id="m132Backup" type="button" disabled>이전 자료 JSON 백업</button><button id="m132Restore" type="button" disabled>현재 계정에 복구</button></div>
+      <p id="m132RecoveryStatus" role="status" aria-live="polite" style="font-size:13px;white-space:pre-wrap;margin:10px 0 0">기존 저장공간은 변경하지 않습니다.</p>
+    </section>
     <div id="reportComposerPage" class="active" aria-label="성능점검표 독립 개발 화면"></div>
   </main>
   <script src="./vendor/jszip.min.js?v=M1.0.6"></script>
@@ -33,15 +39,16 @@
   <script src="./assets/offline-xlsx.js?v=M1.0.6"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../supabase-config.js"></script>
-  <script src="./assets/ttoktti-ai-test-config.js?v=M1.3.1"></script>
-  <script src="./assets/account.js?v=M1.3.1"></script>
-  <script src="./assets/cloud-sync.js?v=M1.3.1"></script>
-  <script src="./assets/permission-gate.js?v=M1.3.1"></script>
+  <script src="./assets/ttoktti-ai-test-config.js?v=M1.3.2"></script>
+  <script src="./assets/account.js?v=M1.3.2"></script>
+  <script src="./assets/cloud-sync.js?v=M1.3.2"></script>
+  <script src="./assets/permission-gate.js?v=M1.3.2"></script>
+  <script src="./assets/legacy-recovery.js?v=M1.3.2" defer></script>
   <!-- Isolated help widget: no writes to existing reports, authentication or cloud storage. -->
-  <link rel="stylesheet" href="./assets/ttoktti-help.css?v=M1.3.1">
+  <link rel="stylesheet" href="./assets/ttoktti-help.css?v=M1.3.2">
   
-  <script src="./assets/ttoktti-help.js?v=M1.3.1-AI-TEST" defer></script>
-  <link rel="stylesheet" href="./assets/check-writing-focus.css?v=M1.3.1">
-  <script src="./assets/check-writing-focus.js?v=M1.3.1" defer></script>
+  <script src="./assets/ttoktti-help.js?v=M1.3.2-AI-TEST" defer></script>
+  <link rel="stylesheet" href="./assets/check-writing-focus.css?v=M1.3.2">
+  <script src="./assets/check-writing-focus.js?v=M1.3.2" defer></script>
 </body>
 </html>

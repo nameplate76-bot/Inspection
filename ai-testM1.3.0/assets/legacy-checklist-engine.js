@@ -22,7 +22,7 @@ function input(key,value,large=false){
 }
 function itemField(i,k,v,large=false){return large?`<textarea data-item="${i}" data-key="${k}">${E(v)}</textarea>`:`<input data-item="${i}" data-key="${k}" value="${E(v)}">`}
 function equip(){return d.equipment.find(e=>e.uid===selected)}
-function render(){if(!root()||!window.TTOKTTI_ACCOUNT?.has('check_view'))return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">M1.3.0</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 브라우저 로컬 저장 + 선택적 계정별 시험자료 클라우드 공유</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
+function render(){if(!root()||!window.TTOKTTI_ACCOUNT?.has('check_view'))return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">M1.3.2</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 브라우저 로컬 저장 + 선택적 계정별 시험자료 클라우드 공유</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
 function energyUI(){return `<h4>월별 사용량 (동일 단위로 입력)</h4><div class="reGrid">${Array.from({length:12},(_,i)=>`<label>${i+1}월<input type="number" min="0" step="any" data-month="${i}" value="${E(d.energy[i]??'')}"></label>`).join('')}</div>`}
 function isVacuumPumpItem(e,item){return e?.type==='냉동기'&&String(item?.title||'').includes('⑤ 펌프(용액, 냉매, 진공) 상태(흡수식 냉동기)')}
 function vacuumPumpEditorHTML(item,itemIndex){const labels=['진공펌프 현황사진','진공펌프 적합 사진','진공펌프 미흡사항 사진'];return `<section class="reVacuumBlock"><h5>진공펌프 추가 사진</h5><p>⑤번 점검항목의 기존 사진칸 아래에 현황·적합·미흡사항 사진이 각각 저장되며 같은 페이지에 표시됩니다.</p><div class="reVacuumPhotos">${labels.map((label,index)=>{const photoIndex=index+3,src=item.photos?.[photoIndex]||'';return `<section><b>${label}</b><button type="button" class="rePhotoSlot ${src?'rePhotoFilled':''}" data-photo-slot="${itemIndex}:${photoIndex}" aria-label="${label} ${src?'교체':'첨부'}">${src?`<img src="${src}" alt="${label}">`:`<span class="rePhotoEmpty">＋<strong>사진 칸을 눌러 첨부</strong><small>사진 선택 또는 카메라 촬영</small></span>`}</button>${src?`<button type="button" data-photo-remove="${itemIndex}:${photoIndex}">사진 삭제</button>`:''}</section>`}).join('')}</div></section>`}
@@ -1079,8 +1079,18 @@ bind=function(){
   m104RefreshItemStyles();
  }));
 };
-window.PERFORMANCE_M1_VERSION='M1.3.0';
+window.PERFORMANCE_M1_VERSION='M1.3.2';
 window.PERFORMANCE_M1_GET_TEST_SNAPSHOT=()=>structuredClone(d);
+window.PERFORMANCE_M1_RECOVER_LOCAL=async snapshot=>{
+ if(!window.TTOKTTI_ACCOUNT?.getUser()||!window.TTOKTTI_ACCOUNT?.has('check_edit'))throw Error('로그인 및 점검표 수정 권한이 필요합니다.');
+ if(!db)throw Error('저장공간 초기화가 완료되지 않았습니다.');
+ if(!snapshot||snapshot.version!==2||!Array.isArray(snapshot.equipment)||!snapshot.info||!Array.isArray(snapshot.energy))throw Error('이전 버전 자료 형식이 올바르지 않습니다.');
+ if(d.equipment.length||Object.values(d.info||{}).some(v=>String(v??'').trim()))throw Error('현재 계정에 작성된 자료가 있습니다. 기존 자료 보존을 위해 자동 복구를 중단합니다. JSON 백업으로 수동 비교·이전해 주세요.');
+ if(window.PERFORMANCE_M1_CLOUD?.debug()?.enabled)throw Error('클라우드 연결된 문서가 있습니다. 자동 덮어쓰기를 중단합니다.');
+ d=structuredClone(snapshot);selected=d.equipment[0]?.uid||'';
+ await save();render();return true;
+};
+
 window.PERFORMANCE_M1_TEST_RESET=()=>actions.reset();
 /* === end standalone boundary === */
 
