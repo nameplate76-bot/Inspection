@@ -9,14 +9,17 @@
  const header=el('header','tt-help-header');const avatar=el('img');avatar.src='./assets/ttoktti-i-official-locked.png';avatar.alt='똑띠i 원본 캐릭터';
  const headTitle=el('div','tt-help-header-title');headTitle.append(el('b','', '똑띠i'),el('small','', '점검표 화면 사용을 도와드려요'));
  const close=el('button','tt-help-close','×');close.type='button';close.setAttribute('aria-label','도움말 닫기');header.append(avatar,headTitle,close);
+ const listNav=el('div','tt-help-navigation');const listBack=el('button','tt-help-back','← 질문 목록 보기');listBack.type='button';listBack.hidden=true;listBack.setAttribute('aria-label','질문 목록으로 돌아가기');listNav.append(listBack);listNav.hidden=true;
  const log=el('div','tt-help-log');log.setAttribute('role','log');log.setAttribute('aria-live','polite');log.setAttribute('aria-relevant','additions');
  const form=el('form','tt-help-form');const input=el('input','tt-help-input');input.type='text';input.placeholder='궁금한 내용을 직접 입력하세요';input.maxLength=250;input.autocomplete='off';input.setAttribute('aria-label','똑띠i에게 질문 입력');const send=el('button','tt-help-send','전송');send.type='submit';form.append(input,send);
  const usage=el('div','tt-help-usage','테스트 기본형 월 0원 · GPT-6 Luna · 전체 월 1,000건 · 개인 월 30건 + 추가 크레딧 · 결제 비활성');
  const note=el('small','tt-help-note','질문 시 현재 저장된 점검표의 측정값·사유·사진 일부를 AI 서버로 자동 전송해 분석합니다. 사진은 전송용으로만 축소됩니다. 개인정보와 민감한 자료가 포함되지 않았는지 점검해 주세요.');
- panel.append(header,usage,log,form,note);
+ panel.append(header,usage,listNav,log,form,note);
  const launch=el('button','tt-help-launch');launch.type='button';launch.setAttribute('aria-label','똑띠i 도움말 열기');launch.setAttribute('aria-controls','tt-help-panel');launch.setAttribute('aria-expanded','false');
  const launchImg=el('img');launchImg.src='./assets/ttoktti-i-official-locked.png';launchImg.alt='';launch.append(launchImg);host.append(panel,launch);document.body.append(host);
  const bottom=()=>{log.scrollTop=log.scrollHeight};
+ function showListNavigation(show){listNav.hidden=!show;listBack.hidden=!show;}
+ listBack.addEventListener('click',()=>{showWelcome();listBack.focus();});
  function say(kind,message){const bubble=el('div','tt-help-msg '+kind,message);log.append(bubble);bottom();}
  function suggestions(){const wrap=el('div','tt-help-questions');const featured=[10,0,1,2,3,4,5,6,7,8,9,11];featured.forEach(n=>{const b=el('button','',entries[n].title);b.type='button';b.onclick=()=>ask(entries[n].title,n);wrap.append(b)});log.append(wrap);bottom();}
  function answerFor(query){const q=normalize(query);let best=null,highest=0;
@@ -25,7 +28,7 @@
  if(score>highest){highest=score;best=entry;}}
  return highest>=4?best:null;}
  function ask(question,forcedIndex){const q=String(question||'').trim().slice(0,250);if(!q)return;
- say('user',q);log.querySelector('.tt-help-questions')?.remove();const chosen=Number.isInteger(forcedIndex)?entries[forcedIndex]:answerFor(q);
+ showListNavigation(true);say('user',q);log.querySelector('.tt-help-questions')?.remove();const chosen=Number.isInteger(forcedIndex)?entries[forcedIndex]:answerFor(q);
  if(chosen){say('bot',chosen.answer);}
  else{say('bot','입력하신 질문에 대해 이 버전의 내장 도움말에서 확인된 답변을 찾지 못했습니다. 점검표 작성, 사진, 사유, PDF, Excel, 저장 또는 동기화처럼 기능명을 포함해 질문해 주세요.\n\n※ 임의로 답변을 만들어 안내하지 않습니다. 실제 생성형 AI 연동은 별도 보안 서버와 검증이 필요합니다.');}
  }
@@ -163,7 +166,7 @@ async function refreshUsage(){
  async function directQuestion(question){
    const q=String(question||'').trim().slice(0,250);if(!q||busy)return;
    busy=true;const version=sessionVersion;send.disabled=true;input.disabled=true;
-   say('user',q);log.querySelector('.tt-help-questions')?.remove();
+   showListNavigation(true);say('user',q);log.querySelector('.tt-help-questions')?.remove();
    const pending=el('div','tt-help-msg bot','똑띠i가 답변을 준비 중입니다…');log.append(pending);bottom();
    const contextData=await prepareInspectionContext(q);
    const r=await aiCall({question:q,inspection:contextData.context,images:contextData.images});
@@ -180,6 +183,7 @@ async function refreshUsage(){
  function resetHelpSession(){
    sessionVersion++;
    log.replaceChildren();
+   showListNavigation(false);
    input.value='';
    log.scrollTop=0;
  }

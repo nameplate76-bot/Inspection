@@ -45,3 +45,9 @@
 /* M1.2.6: enforce authenticated visibility; flex/grid author rules override UA [hidden]. */
 .tt-help-test-login [hidden]{display:none!important}
 .tt-help-test-logout{justify-self:start}
+
+/* M1.3.3: return to the question list without closing the assistant. */
+.tt-help-navigation{padding:8px 12px;background:#f4fbfc;border-bottom:1px solid #d3e5eb}
+.tt-help-navigation[hidden],.tt-help-navigation button[hidden]{display:none!important}
+.tt-help-back{width:100%;padding:10px 12px;border:1px solid #8acdd5;border-radius:10px;background:#fff;color:#075c70;font-size:13px!important;font-weight:750;cursor:pointer;text-align:left}
+.tt-help-back:hover{background:#e6f8f6;border-color:#22aeb5}
