@@ -20,19 +20,34 @@ Deno.serve(async req=>{
   }
   if(action==='create'){
    const email=String(b.email||'').trim().toLowerCase(),password=String(b.password||'');
+   const role=b.role==='admin'?'admin':b.role==='user'||b.role==null?'user':null;
+   if(!role)return respond({error:'잘못된 사용자 구분'},400);
    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||password.length<8)return respond({error:'이메일과 8자 이상의 초기 비밀번호가 필요합니다.'},400);
    const {data,error}=await admin.auth.admin.createUser({email,password,email_confirm:true});if(error||!data.user)return respond({error:error?.message||'계정 생성 실패'},400);
-   const {error:insertError}=await admin.from('tt_users').insert({id:data.user.id,email,role:'user',active:true,permissions:clean(b.permissions)});
+   const {error:insertError}=await admin.from('tt_users').insert({id:data.user.id,email,role,active:true,permissions:role==='admin'?allPermissions():clean(b.permissions)});
    if(insertError){await admin.auth.admin.deleteUser(data.user.id);throw insertError;}
    return respond({ok:true});
   }
   if(!/^[0-9a-f-]{36}$/i.test(String(b.id||'')))return respond({error:'잘못된 사용자 ID'},400);
-  const {data:target}=await admin.from('tt_users').select('role').eq('id',b.id).single();
+  const {data:target}=await admin.from('tt_users').select('role,active').eq('id',b.id).single();
   if(!target)return respond({error:'사용자 없음'},404);
-  if(target.role==='admin')return respond({error:'관리자 계정은 이 메뉴에서 수정할 수 없습니다.'},403);
+  // 관리자 계정의 비밀번호는 다른 관리자만 재설정할 수 있습니다.
+  if(action==='reset'&&target.role==='admin'&&b.id===user.id)return respond({error:'본인의 비밀번호는 내 정보에서 변경하세요.'},403);
   if(action==='update'){
-   const patch:Record<string,unknown>={};if(typeof b.active==='boolean')patch.active=b.active;if(b.permissions&&typeof b.permissions==='object')patch.permissions=clean(b.permissions);
+   const patch:Record<string,unknown>={};
+   if(b.role!==undefined){if(b.role!=='admin'&&b.role!=='user')return respond({error:'잘못된 사용자 구분'},400);patch.role=b.role;}
+   if(typeof b.active==='boolean')patch.active=b.active;
+   if(b.permissions&&typeof b.permissions==='object')patch.permissions=clean(b.permissions);
+   const newRole=String(patch.role||target.role);
+   if(newRole==='admin')patch.permissions=allPermissions();
    if(!Object.keys(patch).length)return respond({error:'변경사항 없음'},400);
+   // 마지막 활성 관리자를 강등/중지할 수 없고 자기 자신의 관리자 권한도 해제할 수 없습니다.
+   if(target.role==='admin'&&(newRole!=='admin'||patch.active===false)){
+     if(b.id===user.id)return respond({error:'현재 로그인한 관리자의 권한이나 활성 상태는 변경할 수 없습니다.'},403);
+     const {count,error:countError}=await admin.from('tt_users').select('id',{count:'exact',head:true}).eq('role','admin').eq('active',true);
+     if(countError)throw countError;
+     if((count||0)<=1&&target.active)return respond({error:'마지막 활성 관리자는 강등하거나 중지할 수 없습니다.'},409);
+   }
    const {error}=await admin.from('tt_users').update(patch).eq('id',b.id);if(error)throw error;return respond({ok:true});
   }
   if(action==='reset'){
@@ -43,3 +58,5 @@ Deno.serve(async req=>{
  }catch(e){return respond({error:String(e instanceof Error?e.message:e)},500)}
 });
 function clean(input:Record<string,unknown>){return Object.fromEntries(['check_view','check_edit','check_delete','check_export','sync','ai'].map(k=>[k,input?.[k]===true]));}
+
+function allPermissions(){return Object.fromEntries(['check_view','check_edit','check_delete','check_export','sync','ai'].map(k=>[k,true]));}
