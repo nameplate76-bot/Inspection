@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {analyzeReadOnly} from '../engine/index.mjs';
+import {parseFiniteNumber} from '../engine/normalize.mjs';
+const snapshot={data:{equipment:[{number:'CH-01',type:'냉동기',measurements:[{group:'증발기(냉수)',item:'출구온도',unit:'℃',design:'7',measured:'10.2'},{group:'증발기(냉수)',item:'유량',unit:'LPM',design:'1,200',measured:''}]}],site:{name:'테스트'},photoCount:3,truncated:false,sentPhotos:[],unseenPhotos:3}};
+const untouched=JSON.stringify(snapshot);
+const a=analyzeReadOnly(snapshot,{question:'냉수 출구온도'});
+assert.equal(a.comparison[0].difference,3.2);assert.equal(a.comparison[0].judgment,'hold');assert.equal(a.comparison[1].judgment,'hold');
+assert.equal(JSON.stringify(snapshot),untouched);assert.equal(a.evidence.imagesSent,0);
+const c=[{group:'증발기(냉수)',item:'출구온도',unit:'℃',min:6,max:9,operator:'between_inclusive',approved:true,source:'테스트용 가상 기준',version:'demo-1',effectiveDate:'2026-01-01'}];
+const b=analyzeReadOnly(snapshot,{criteria:c});assert.equal(b.comparison[0].judgment,'outside_criterion');assert.equal(b.comparison[1].judgment,'hold');
+assert.equal(analyzeReadOnly(snapshot,{number:'CH-02'}).status,'hold');
+assert.equal(parseFiniteNumber('1,234.5'),1234.5);assert.equal(parseFiniteNumber('12C'),null);
+assert.equal(analyzeReadOnly(snapshot,{criteria:[{...c,approved:false}]}).comparison[0].judgment,'hold');
+assert.equal(JSON.stringify(snapshot),untouched);
+console.log('PASS: 9 checks — numeric comparison, hold, evidence, no mutation, criteria, missing equipment, parsing, unapproved criteria');
