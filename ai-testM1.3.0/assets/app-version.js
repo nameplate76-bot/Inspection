@@ -1,2 +1,2 @@
 /* Update this value when releasing a new version. */
-window.TTOKTTI_APP_VERSION='M1.3.9';
+window.TTOKTTI_APP_VERSION='M1.3.10';
