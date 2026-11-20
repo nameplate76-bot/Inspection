@@ -22,9 +22,9 @@ function input(key,value,large=false){
 }
 function itemField(i,k,v,large=false){return large?`<textarea data-item="${i}" data-key="${k}">${E(v)}</textarea>`:`<input data-item="${i}" data-key="${k}" value="${E(v)}">`}
 function equip(){return d.equipment.find(e=>e.uid===selected)}
-function render(){if(!root()||!window.TTOKTTI_ACCOUNT?.has('check_view'))return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">${E(window.TTOKTTI_APP_VERSION||"M1.3.11")}</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 기기 자동 저장 + 동일 계정 PC·모바일 클라우드 자동 동기화</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${k==='주소'?`<div class="m134-address-row">${input(k,d.info[k]||'')}<button type="button" class="m134-address-button" data-address-search>주소 검색</button></div><small class="m134-address-help">도로명·지번·건물명으로 검색 후 주소를 선택하세요. 직접 입력도 가능합니다.</small>`:input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
+function render(){if(!root()||!window.TTOKTTI_ACCOUNT?.has('check_view'))return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">${E(window.TTOKTTI_APP_VERSION||"M1.3.12")}</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 기기 자동 저장 + 동일 계정 PC·모바일 클라우드 자동 동기화</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${k==='주소'?`<div class="m134-address-row">${input(k,d.info[k]||'')}<button type="button" class="m134-address-button" data-address-search>주소 검색</button></div><small class="m134-address-help">도로명·지번·건물명으로 검색 후 주소를 선택하세요. 직접 입력도 가능합니다.</small>`:input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
 
-/* M1.3.11: embedded postcode search avoids browser popup blocking. */
+/* M1.3.12: embedded postcode search avoids browser popup blocking. */
 let m135PostcodeLoading=null;
 function m135EnsureAddressDialog(){
  let overlay=document.getElementById('m135AddressOverlay');
@@ -290,7 +290,7 @@ function finalReferenceReport(){let html=page('기계설비 성능점검 보고�
 report=finalReferenceReport;
 function equipmentFormatName(e){return e.equipmentFormat==='직접입력'?(e.equipmentFormatDirect||'직접입력'):(e.equipmentFormat||e['설비형식']||e.type)}
 function measurementOfficialPage(e){const rows=measurementRows(e);return `<section class="paper officialPage officialMeasurementPage">${officialHeader()}<h2 class="officialItemTitle">${E(equipmentFormatName(e))} · 설계·측정값표</h2><table class="officialGrid officialMeasurementTable"><thead><tr><th colspan="7" class="equipmentNumber">${E(e.number)}</th></tr><tr><th>구분</th><th>항목</th><th>설계값</th><th>측정값</th><th>단위</th><th>%</th><th>비고</th></tr></thead><tbody>${rows.map(row=>`<tr><td>${E(row.group||'')}</td><td>${E(row.item||'')}</td><td>${E(row.design||'')}</td><td>${E(row.measured||'')}</td><td>${E(row.unit||'')}</td><td>${E(row.percent||'')}</td><td>${E(row.note||'')}</td></tr>`).join('')}</tbody></table><div class="officialMeasurementNote">※ 설계값과 측정값을 비교하고, 부하율·효율 및 특이사항을 비고란에 기록합니다.</div>${officialFooter()}</section>`}
-const equipmentOfficialPagesBeforeMeasurement=equipmentOfficialPages;
+let equipmentOfficialPagesBeforeMeasurement=equipmentOfficialPages;
 async function buildExcelMeasurement(wb,e,equipmentIndex){const ws=wb.addWorksheet(safeSheetName(`${e.number}_측정값`,`설비${equipmentIndex+1}_측정값`));setupExcelSheet(ws);fillExcelTitle(ws,`${equipmentFormatName(e)} · 설계·측정값표`);const rows=measurementRows(e),fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFD9E8F3'}};ws.mergeCells('A4:I4');ws.getCell('A4').value=e.number;ws.getCell('A4').font={name:'Malgun Gothic',size:14,bold:true,color:{argb:'FFFF2020'}};ws.getCell('A4').alignment={horizontal:'center',vertical:'middle'};[['A5:B5','구분'],['C5:C5','항목'],['D5:E5','설계값'],['F5:F5','측정값'],['G5:G5','단위'],['H5:H5','%'],['I5:I5','비고']].forEach(([range,value])=>{if(range.includes(':')&&range.split(':')[0]!==range.split(':')[1])ws.mergeCells(range);const cell=ws.getCell(range.split(':')[0]);cell.value=value;cell.fill=fill;cell.font={name:'Malgun Gothic',size:10,bold:true};cell.alignment={horizontal:'center',vertical:'middle'}});let rowNumber=6;for(const row of rows){ws.mergeCells(rowNumber,1,rowNumber,2);ws.getCell(rowNumber,1).value=row.group||'';ws.getCell(rowNumber,3).value=row.item||'';ws.mergeCells(rowNumber,4,rowNumber,5);ws.getCell(rowNumber,4).value=row.design||'';ws.getCell(rowNumber,6).value=row.measured||'';ws.getCell(rowNumber,7).value=row.unit||'';ws.getCell(rowNumber,8).value=row.percent||'';ws.getCell(rowNumber,9).value=row.note||'';ws.getRow(rowNumber).height=24;rowNumber++}styleExcelRange(ws,`A4:I${rowNumber-1}`,{minRow:4,maxRow:rowNumber-1,minCol:1,maxCol:9,fontSize:9});ws.getCell('A4').font={name:'Malgun Gothic',size:14,bold:true,color:{argb:'FFFF2020'}};ws.getCell('A4').alignment={horizontal:'center',vertical:'middle'};['A5','C5','D5','F5','G5','H5','I5'].forEach(address=>{ws.getCell(address).fill=fill;ws.getCell(address).font={name:'Malgun Gothic',size:10,bold:true};ws.getCell(address).alignment={horizontal:'center',vertical:'middle'}});ws.pageSetup.fitToHeight=1;ws.pageSetup.printArea=`A1:I${Math.max(rowNumber,28)}`}
 function finalReferenceReportWithMeasurements(){let html=page('기계설비 성능점검 보고서',table(fields[0].filter(k=>k!=='제출문').map(k=>[k,d.info[k]||'미입력'])));html+=page('점검완료 제출문','<p>'+E(d.info['제출문']||'미입력').replace(/\n/g,'<br>')+'</p>');html+=page('목차','<ol>'+titles.map(t=>'<li>'+E(t)+'</li>').join('')+'</ol>');html+=page('Ⅰ. 성능점검 계획서',textSections(1));html+=page('Ⅱ. 성능점검 결과보고서',textSections(2));for(const e of d.equipment)html+=equipmentOfficialPagesBeforeMeasurement(e);html+=page('Ⅳ. 기계설비 시스템 검토',textSections(4));html+=page('Ⅴ. 성능개선 계획 수립',textSections(5));html+=page('Ⅵ. 에너지사용량 분석',textSections(6));for(const e of d.equipment)html+=measurementOfficialPage(e);return html}
 report=finalReferenceReportWithMeasurements;
@@ -1231,6 +1231,74 @@ bindMeasurementDialog=function(dialog,e){
  });
 };
 
+
+
+/* M1.3.12: 출력 양식 통일 — 냉동기 출력은 원본 그대로 보존.
+ * 냉각탑~방음방진내진 26종의 PDF 요약/항목 페이지에 냉동기 V85 표, 글꼴,
+ * 배경색 및 여백을 재사용. 점검 기준 문장은 기존 템플릿을 그대로 출력. */
+function m1312CriteriaTable(item){
+ const raw=String(item.criteria||'').replace(/\r/g,'').trim();
+ const parts=window.PerformanceM1CriteriaLayout?.parse(raw)||[{label:'점검기준',lines:[raw]}];
+ const rows=parts.map(part=>{
+  const lines=part.lines?.length?part.lines:[''];
+  return lines.map((line,i)=>`<tr>${i===0?`<td class="ch82side ch102side" rowspan="${lines.length}">${E(part.label)}</td>`:''}<td class="ch82detail ch102detail">${E(line).replace(/\n/g,'<br>')}</td></tr>`).join('');
+ }).join('');
+ return `<table class="ch82criteria m1312criteria"><thead><tr><th style="width:13%">구분</th><th>점검내용</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function m1312PhotoTable(item){
+ const titles=['현황 사진','적합','미흡사항'];
+ return `<table class="ch82photos m1312photos"><thead><tr>${titles.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody><tr>${titles.map((title,i)=>`<td${i===0?' class="ch102statusPhoto" rowspan="2"':''}><div class="ch82photobox">${item.photos?.[i]?`<img src="${item.photos[i]}" alt="${E(title)}">`:'사진 미첨부'}</div></td>`).join('')}</tr><tr class="ch82reasons"><td>사유 : ${E(reasonValue(item,'reason1')||'').replace(/\n/g,'<br>')}</td><td>사유 : ${E(reasonValue(item,'reason2')||'').replace(/\n/g,'<br>')}</td></tr></tbody></table>`;
+}
+function m1312Item(e,item,index,mode){
+ const headline=`<h3>${E(item.title)}${mode==='photos'?' - 사진·사유':''}</h3>`;
+ const criteria=mode==='photos'?'':m1312CriteriaTable(item);
+ const photos=mode==='criteria'?'':m1312PhotoTable(item);
+ const result=mode==='criteria'?'':`<table class="ch82results m1312results"><tr><td class="ch82key" style="width:18%">측정값 / 확인내용</td><td>${E(item.measurement||'').replace(/\n/g,'<br>')}</td></tr>${item.action?`<tr><td class="ch82key">조치사항</td><td>${E(item.action).replace(/\n/g,'<br>')}</td></tr>`:''}</table>`;
+ return `<div class="ch82item m1312item">${headline}${criteria}${photos}${result}</div>`;
+}
+function m1312EquipmentPages(e){
+ // Chiller output is intentionally not changed.
+ if(e.type==='냉동기')return equipmentOfficialPages(e);
+ const summary=ch85summary(e)
+  .replace('냉동기 성능점검표',E(e.type)+' 성능점검표')
+  .replace('5. 압축식 냉동기, 흡수식 냉동기, 냉온수기, 공랭식 냉동기 등을 포함하여 작성한다.',
+           '5. 해당 설비의 원본 점검항목별 점검방법 및 점검기준을 참고하여 작성한다.')
+  .replace('ch85summaryPage','ch85summaryPage m1312summary');
+ let html=summary;
+ (e.items||[]).forEach((item,index)=>{
+  const criteria=String(item.criteria||'');
+  // 긴 원본 기준은 별도 페이지로 분리해 표 글꼴 축소와 내용 잘림을 방지한다.
+  if(criteria.length>430 || criteria.split('\n').length>10){
+   html+=ch82page(m1312Item(e,item,index,'criteria'),'m1312detail m1312criteriaPage');
+   html+=ch82page(m1312Item(e,item,index,'photos'),'m1312detail m1312photoPage');
+  }else html+=ch82page(m1312Item(e,item,index,'both'),'m1312detail');
+ });
+ return html;
+}
+equipmentOfficialPagesBeforeMeasurement=m1312EquipmentPages;
+const M1312_STANDARD_CSS=`<style id="m1312-matched-chiller-format">
+.ch82.m1312detail,.ch82.m1312summary{font-family:'Malgun Gothic','맑은 고딕',sans-serif!important;color:#161b22!important}
+.ch82.m1312detail .ch82item h3{font-size:13pt!important;font-weight:700!important;line-height:1.35!important}
+.ch82.m1312detail table{border-collapse:collapse!important;width:100%!important;table-layout:fixed!important}
+.ch82.m1312detail .ch82criteria th,.ch82.m1312detail .ch82photos th,.ch82.m1312detail .ch82results .ch82key{background:#dcebf5!important;color:#142d45!important;text-align:center!important;font-weight:700!important}
+.ch82.m1312detail .ch82criteria td,.ch82.m1312detail .ch82criteria th{font-size:10pt!important;line-height:1.4!important;vertical-align:middle!important;border:1px solid #777!important;padding:4px 6px!important}
+.ch82.m1312detail .ch82criteria .ch102side{width:13%!important;background:#dcebf5!important;text-align:center!important;font-weight:700!important}
+.ch82.m1312detail .ch82criteria .ch102detail{white-space:pre-wrap!important;overflow-wrap:anywhere!important;word-break:keep-all!important;text-align:left!important}
+.ch82.m1312detail .ch82photos th,.ch82.m1312detail .ch82photos td{border:1px solid #777!important;font-size:9pt!important}
+.ch82.m1312detail .ch82photos .ch82photobox{min-height:36mm!important;height:36mm!important}
+.ch82.m1312detail .ch82photos td.ch102statusPhoto .ch82photobox{height:calc(100% - 2px)!important;min-height:0!important}
+.ch82.m1312detail .ch82photos .ch82reasons td{height:17mm!important;white-space:pre-wrap!important;line-height:1.35!important}
+.ch82.m1312detail .ch82results td{font-size:9pt!important;white-space:pre-wrap!important;line-height:1.35!important;border:1px solid #777!important;padding:5px!important}
+.ch82.m1312detail .ch82results{margin-top:2mm!important}
+.ch82.m1312summary .ch85main td,.ch82.m1312summary .ch85main th{font-size:10pt!important}
+@media print{
+ .ch82.m1312detail .ch82criteria tr{break-inside:avoid!important;page-break-inside:avoid!important}
+ .ch82.m1312detail .ch82photos img{width:100%!important;height:100%!important;object-fit:fill!important}
+ .ch82.m1312detail .ch82criteria td{overflow:visible!important;max-height:none!important}
+}
+</style>`;
+const M1312_BEFORE_REPORT=report;
+report=function(){return M1312_BEFORE_REPORT()+M1312_STANDARD_CSS};
 
 // M1.2.8 READ-ONLY bridge: all pages of the current test document, not just visible DOM.
 // Does not modify stored inspection data or trigger cloud synchronization.

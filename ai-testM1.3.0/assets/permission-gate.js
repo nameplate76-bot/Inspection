@@ -52,7 +52,7 @@ async function sync(){
   if(!user||!profile?.active){root.hidden=true;document.getElementById('m103Cloud').hidden=true;message('로그인이 필요합니다. 상단 로그인 버튼으로 접속하세요.');return}
   if(initialId&&initialId!==user.id){location.reload();return}initialId=user.id;
   if(!has('check_view')){permissions();return}
-  if(!loaded){loaded=true;const script=document.createElement('script');script.src='./assets/legacy-checklist-engine.js?v='+encodeURIComponent(window.TTOKTTI_APP_VERSION||'M1.3.11');script.onerror=()=>message('점검표 프로그램을 불러오지 못했습니다.');document.body.appendChild(script)}
+  if(!loaded){loaded=true;const script=document.createElement('script');script.src='./assets/legacy-checklist-engine.js?v='+encodeURIComponent(window.TTOKTTI_APP_VERSION||'M1.3.12');script.onerror=()=>message('점검표 프로그램을 불러오지 못했습니다.');document.body.appendChild(script)}
   permissions();
  }catch(e){root.hidden=true;message('권한을 확인할 수 없습니다. 다시 로그인해 주세요.')}finally{checking=false}
 }
