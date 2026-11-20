@@ -15,33 +15,59 @@
  const msg=t=>{const x=$('ttMessage');if(x)x.textContent=t};
  const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const has=p=>!!(profile?.active&&(profile?.role==='admin'||profile?.permissions?.[p]===true));
- const authReady=async()=>{const s=get();if(!s)return;
-  const offline=!navigator.onLine;let user=null,cached=null;
-  try{
-    if(offline){const r=await s.auth.getSession();user=r.data?.session?.user||null}
-    else{const r=await s.auth.getUser();user=r.data?.user||null;if(r.error)throw r.error}
-  }catch(err){if(!navigator.onLine){const r=await s.auth.getSession();user=r.data?.session?.user||null}else{console.warn('계정 확인 대기',err);return}}
-  me=user;profile=null;
-  if(me){
-    const key='ttoktti-offline-profile-v139-'+me.id;
+ // M1.3.14: share one authorization request across the account UI, permission gate,
+ // and editor. Authorization is NEVER granted from an online local cache alone.
+ let authFlight=null, verifiedAt=0;
+ const withDeadline=(promise,ms,label)=>Promise.race([Promise.resolve(promise),new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' 응답 시간 초과')),ms))]);
+ const authReady=(force=false)=>{
+  if(authFlight)return authFlight;
+  if(!force&&verifiedAt&&Date.now()-verifiedAt<20000)return Promise.resolve();
+  authFlight=(async()=>{
+   const s=get();if(!s){me=null;profile=null;updateNav();return}
+   const offline=!navigator.onLine;let user=null,cached=null;
+   try{
+    // getSession reads the persisted local session, while the protected profile
+    // SELECT validates the active session and authorization through server RLS.
+    const r=await withDeadline(s.auth.getSession(),9000,'로그인 정보');
+    if(r.error)throw r.error;
+    user=r.data?.session?.user||null;
+    if(!user){me=null;profile=null;verifiedAt=Date.now();updateNav();return}
+    const key='ttoktti-offline-profile-v139-'+user.id;
     try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
-    if(offline){if(cached?.profile?.id===me.id&&cached.profile.active&&Date.now()-cached.at<7*24*3600*1000)profile=cached.profile}
-    else{
-      try{const r=await s.from('tt_users').select('id,email,role,active,permissions').eq('id',me.id).maybeSingle();if(!r.error&&r.data?.active){profile=r.data;try{localStorage.setItem(key,JSON.stringify({at:Date.now(),profile:r.data}))}catch{}}}catch(err){console.warn('권한 확인 대기',err)}
+    let nextProfile=null;
+    if(offline){
+     if(cached?.profile?.id===user.id&&cached.profile.active&&Date.now()-cached.at<7*24*3600*1000)nextProfile=cached.profile;
+    }else{
+     const result=await withDeadline(s.from('tt_users').select('id,email,role,active,permissions').eq('id',user.id).maybeSingle(),9000,'사용자 권한');
+     if(result.error)throw result.error;
+     if(result.data?.active&&result.data.id===user.id){
+      nextProfile=result.data;
+      try{localStorage.setItem(key,JSON.stringify({at:Date.now(),profile:result.data}))}catch{}
+     }
     }
-  }
-  updateNav();window.dispatchEvent(new CustomEvent('ttoktti-account-change',{detail:{authenticated:!!me,active:!!profile,offline}}));
-};
+    const changed=me?.id!==user.id||JSON.stringify(profile)!==JSON.stringify(nextProfile);
+    me=user;profile=nextProfile;verifiedAt=Date.now();updateNav();
+    if(changed)window.dispatchEvent(new CustomEvent('ttoktti-account-change',{detail:{authenticated:!!me,active:!!profile,offline}}));
+   }catch(err){
+    console.warn('계정 확인 지연 또는 실패',err);
+    // Fail closed for online authorization; never reuse outdated privilege cache.
+    profile=null;me=user;verifiedAt=0;updateNav();
+    const status=document.getElementById('m103CloudStatus');
+    if(status)status.textContent='계정 연결 지연 · 인터넷 상태를 확인한 뒤 다시 시도하세요 ('+String(err?.message||err)+')';
+   }
+  })().finally(()=>{authFlight=null});
+  return authFlight;
+ };
  const updateNav=()=>{for(const id of ['ttLoginOpen','ttProfileOpen','ttAdminOpen','ttLogout']){if($(id))$(id).hidden=true}if($('ttLoginOpen'))$('ttLoginOpen').hidden=!!me;if($('ttProfileOpen'))$('ttProfileOpen').hidden=!me;if($('ttLogout'))$('ttLogout').hidden=!me;if($('ttAdminOpen'))$('ttAdminOpen').hidden=profile?.role!=='admin';};
- function login(){show('<h2>똑띠체크 로그인</h2><form id="ttLoginForm"><label>아이디(이메일)<input id="ttEmail" type="email" required autocomplete="username"></label><label>비밀번호<input id="ttPassword" type="password" required autocomplete="current-password"></label><button class="primary">로그인</button></form><p id="ttMessage" class="tt-msg"></p>');$('ttLoginForm').onsubmit=async e=>{e.preventDefault();const s=get();if(!s){msg('Supabase 공개 설정을 확인하세요.');return}const r=await s.auth.signInWithPassword({email:$('ttEmail').value.trim(),password:$('ttPassword').value});$('ttPassword').value='';if(r.error){msg(r.error.message);return}await authReady();if(!profile){await s.auth.signOut();await authReady();msg('승인된 활성 사용자 계정이 아닙니다. 관리자에게 문의하세요.');return}overlay.hidden=true;};}
+ function login(){show('<h2>똑띠체크 로그인</h2><form id="ttLoginForm"><label>아이디(이메일)<input id="ttEmail" type="email" required autocomplete="username"></label><label>비밀번호<input id="ttPassword" type="password" required autocomplete="current-password"></label><button class="primary">로그인</button></form><p id="ttMessage" class="tt-msg"></p>');$('ttLoginForm').onsubmit=async e=>{e.preventDefault();const s=get();if(!s){msg('Supabase 공개 설정을 확인하세요.');return}const r=await s.auth.signInWithPassword({email:$('ttEmail').value.trim(),password:$('ttPassword').value});$('ttPassword').value='';if(r.error){msg(r.error.message);return}await authReady(true);if(!profile){await s.auth.signOut();await authReady();msg('승인된 활성 사용자 계정이 아닙니다. 관리자에게 문의하세요.');return}overlay.hidden=true;};}
  async function profileView(){if(!me)return login();show('<h2>내 정보</h2><p>아이디: <strong>'+safe(me.email)+'</strong></p><p>권한: '+safe(profile?.role==='admin'?'관리자':profile?'일반 사용자':'미승인')+'</p><p>비밀번호: 보안상 표시하지 않습니다.</p><p id="ttUsage">똑띠i 사용량 조회 중…</p><form id="ttChangePassword"><label>새 비밀번호 (8자 이상)<input type="password" id="ttNewPassword" minlength="8" autocomplete="new-password" required></label><label>새 비밀번호 확인<input type="password" id="ttConfirmPassword" minlength="8" autocomplete="new-password" required></label><button class="primary">비밀번호 변경</button></form><p id="ttMessage" class="tt-msg"></p>');$('ttChangePassword').onsubmit=async e=>{e.preventDefault();if($('ttNewPassword').value!==$('ttConfirmPassword').value){msg('비밀번호 확인이 일치하지 않습니다.');return}const r=await get().auth.updateUser({password:$('ttNewPassword').value});$('ttNewPassword').value='';$('ttConfirmPassword').value='';msg(r.error?r.error.message:'비밀번호가 변경되었습니다. 다른 기기의 세션도 확인하세요.')};try{const {data:{session}}=await get().auth.getSession();if(!session)throw Error('로그인 세션 없음');const c=config();const r=await fetch(c.url.replace(/\/$/,'')+'/functions/v1/ttoktti-ai',{method:'POST',headers:{Authorization:'Bearer '+session.access_token,apikey:c.key,'Content-Type':'application/json'},body:JSON.stringify({mode:'status'})});const d=await r.json();if(!r.ok)throw Error(d.error||'조회 실패');$('ttUsage').textContent=`똑띠i 사용량: ${d.included_used??'확인 불가'}건 / 기본 ${d.included_limit??'확인 불가'}건 · 기본 잔여 ${Number.isFinite(d.included_limit-d.included_used)?Math.max(0,d.included_limit-d.included_used):'확인 불가'}건 · 추가 잔여 ${d.credits_remaining??'확인 불가'}건`;}catch(e){if($('ttUsage'))$('ttUsage').textContent='똑띠i 사용량: 서버 조회 불가 ('+e.message+')';}}
  async function admin(){if(profile?.role!=='admin')return;show('<h2>사용자 관리</h2><p>관리자만 계정을 생성하고 권한을 변경할 수 있습니다.</p><form id="ttCreate"><label>아이디(이메일)<input type="email" id="ttCreateEmail" required></label><label>초기 비밀번호<input type="password" id="ttCreatePass" minlength="8" required></label>'+roleSelect()+'<fieldset id="ttCreatePermissions"><legend>사용 권한</legend>'+perms.map((p,i)=>`<label class="tt-perm"><input type="checkbox" name="permission" value="${p}" ${i===0?'checked':''}>${names[i]}</label>`).join('')+'</fieldset><p id="ttAdminRoleHint" class="tt-role-hint"></p><button class="primary">사용자 등록</button></form><p id="ttMessage" class="tt-msg"></p><h3>등록 사용자</h3><div id="ttUsers">불러오는 중…</div>');const applyCreateRole=()=>{const isAdmin=document.querySelector('#ttCreate [name="newRole"]:checked')?.value==='admin';for(const input of document.querySelectorAll('#ttCreatePermissions input[type="checkbox"]')){if(isAdmin)input.checked=true;input.disabled=isAdmin;}$('ttAdminRoleHint').textContent=isAdmin?'관리자는 모든 기능과 사용자 등록·권한 설정을 사용할 수 있습니다.':'일반 사용자는 체크한 기능만 사용할 수 있습니다.';};
  $('ttCreate').querySelectorAll('[name="newRole"]').forEach(el=>el.addEventListener('change',applyCreateRole));applyCreateRole();
  $('ttCreate').onsubmit=async e=>{e.preventDefault();const role=document.querySelector('#ttCreate [name="newRole"]:checked')?.value||'user';const permission=role==='admin'?allPermissions():Object.fromEntries(perms.map(p=>[p,!!document.querySelector('#ttCreate input[value="'+p+'"]:checked')]));try{await adminCall({action:'create',email:$('ttCreateEmail').value.trim(),password:$('ttCreatePass').value,role,permissions:permission});msg((role==='admin'?'관리자':'일반 사용자')+' 계정이 등록되었습니다.');$('ttCreatePass').value='';await loadUsers()}catch(e){msg(e.message)}};await loadUsers();}
  async function adminCall(body){const s=get(),{data:{session}}=await s.auth.getSession();if(!session)throw Error('로그인 필요');const c=config();const r=await fetch(c.url.replace(/\/$/,'')+'/functions/v1/ttoktti-admin',{method:'POST',headers:{Authorization:'Bearer '+session.access_token,apikey:c.key,'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'관리자 서버 오류');return d;}
  async function loadUsers(){const x=$('ttUsers');if(!x)return;try{const d=await adminCall({action:'list'});x.innerHTML='';for(const u of d.users||[]){const row=document.createElement('div');row.className='tt-user-row';row.innerHTML='<strong>'+safe(u.email)+'</strong> · '+(u.role==='admin'?'관리자':'일반 사용자')+' · '+(u.active?'사용':'중지')+'<fieldset class="tt-existing-role"><legend>사용자 구분</legend><label><input type="radio" name="role-'+safe(u.id)+'" value="user" '+(u.role==='user'?'checked':'')+'> 일반 사용자</label><label><input type="radio" name="role-'+safe(u.id)+'" value="admin" '+(u.role==='admin'?'checked':'')+'> 관리자</label></fieldset><div class="tt-existing-perms">'+perms.map((p,i)=>`<label class="tt-perm"><input type="checkbox" data-perm="${p}" ${(u.role==='admin'||u.permissions?.[p])?'checked':''} ${u.role==='admin'?'disabled':''}>${names[i]}</label>`).join('')+'</div><p class="tt-role-hint">'+(u.role==='admin'?'관리자: 모든 기능 허용':'일반 사용자: 체크한 권한만 허용')+'</p><button type="button" class="ttSaveUser">권한 및 사용자 구분 저장</button><button type="button" class="ttToggleUser">'+(u.active?'사용 중지':'사용 재개')+'</button><button type="button" class="ttResetUser">임시 비밀번호 재설정</button>';const applyRowRole=()=>{const isAdmin=row.querySelector('[value="admin"]:checked')!==null;row.querySelectorAll('[data-perm]').forEach(el=>{if(isAdmin)el.checked=true;el.disabled=isAdmin;});row.querySelector('.tt-role-hint').textContent=isAdmin?'관리자: 모든 기능 허용':'일반 사용자: 체크한 권한만 허용'};row.querySelectorAll('[type="radio"]').forEach(el=>el.addEventListener('change',applyRowRole));row.querySelector('.ttSaveUser').onclick=async()=>{try{const role=row.querySelector('[type="radio"]:checked')?.value||u.role;await adminCall({action:'update',id:u.id,role,permissions:role==='admin'?allPermissions():Object.fromEntries(perms.map(p=>[p,!!row.querySelector('[data-perm="'+p+'"]').checked]))});msg('사용자 구분과 권한 저장 완료');await loadUsers()}catch(e){msg(e.message)}};row.querySelector('.ttToggleUser').onclick=async()=>{try{await adminCall({action:'update',id:u.id,active:!u.active});await loadUsers()}catch(e){msg(e.message)}};row.querySelector('.ttResetUser').onclick=async()=>{const password=prompt('새 임시 비밀번호를 입력하세요 (8자 이상). 전달 후 사용자가 변경하도록 안내하세요.');if(password===null)return;try{await adminCall({action:'reset',id:u.id,password});msg('임시 비밀번호 변경 완료')}catch(e){msg(e.message)}};x.append(row)} }catch(e){x.textContent='사용자 목록 조회 실패: '+e.message}}
- $('ttLoginOpen')?.addEventListener('click',login);$('ttProfileOpen')?.addEventListener('click',profileView);$('ttAdminOpen')?.addEventListener('click',admin);$('ttLogout')?.addEventListener('click',async()=>{await get()?.auth.signOut();await authReady()});
+ $('ttLoginOpen')?.addEventListener('click',login);$('ttProfileOpen')?.addEventListener('click',profileView);$('ttAdminOpen')?.addEventListener('click',admin);$('ttLogout')?.addEventListener('click',async()=>{await get()?.auth.signOut();verifiedAt=0;me=null;profile=null;await authReady(true)});
  window.TTOKTTI_ACCOUNT={getClient:get,getUser:()=>me,getProfile:()=>profile,has,refresh:authReady,ready:()=>authReady(),openLogin:login,openProfile:profileView};
- window.addEventListener('online',()=>void authReady());window.addEventListener('offline',()=>void authReady());
- const s=get();if(s){s.auth.onAuthStateChange(()=>setTimeout(authReady,0));authReady()}else updateNav();
+ window.addEventListener('online',()=>{verifiedAt=0;void authReady(true)});window.addEventListener('offline',()=>{verifiedAt=0;void authReady(true)});
+ const s=get();if(s){s.auth.onAuthStateChange((event)=>{if(event==='SIGNED_IN'||event==='SIGNED_OUT'||event==='USER_UPDATED'){verifiedAt=0;setTimeout(()=>void authReady(true),0)}});void authReady()}else updateNav();
 })();

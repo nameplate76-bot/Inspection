@@ -4,3 +4,7 @@
 
 /* M1.3.1: account roles */
 .tt-account-dialog .tt-role-field label,.tt-account-dialog .tt-existing-role label{display:inline-flex;gap:7px;align-items:center;margin:6px 16px 6px 0;cursor:pointer}.tt-role-field input[type=radio],.tt-existing-role input[type=radio]{width:auto}.tt-role-hint{font-size:13px;color:#466477;margin:6px 0 12px}.tt-existing-role{margin:10px 0;border:1px solid #b9cbd9;border-radius:8px}.tt-user-row .tt-existing-perms{margin-top:7px}
+
+/* M1.3.14 explicit cloud refresh button */
+.tt-account-nav .tt-sync-refresh{white-space:nowrap;background:#126451;border-color:#78e0c5;color:#fff;font-weight:800}
+.tt-account-nav .tt-sync-refresh:focus-visible{outline:3px solid #f7cf65;outline-offset:2px}

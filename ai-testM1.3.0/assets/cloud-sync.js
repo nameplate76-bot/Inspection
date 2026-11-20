@@ -129,17 +129,25 @@
     }catch(e){enabled=false;conflict=true;notify('자동 병합 보류 · 기기 자료는 유지됨: '+describeError(e));console.error(e)}
     finally{merging=false}
   }
+  let connectFlight=null;
   async function connect(){
+    if(connectFlight)return connectFlight;
+    connectFlight=connectCore().finally(()=>{connectFlight=null});
+    return connectFlight;
+  }
+  async function connectCore(){
     if(!adapter||!sb)return;
     if(isOffline()){pendingLocal=!!(await adapter.getPending?.().catch(()=>null));localQueueLabel();return}
 
     try{
       notify('계정 및 승인 상태 확인 중…');
-      const result=await sb.auth.getUser();
-      if(result.error||!result.data?.user){account=null;disengage();showLogin();return}
-      account=result.data.user;
-      const {data:profile,error}=await sb.from('tt_users').select('active,role,permissions').eq('id',account.id).single();
-      if(error||!profile?.active||!(profile.role==='admin'||(profile.permissions?.sync===true&&profile.permissions?.check_view===true))){account=null;disengage();showLogin();notify('동기화 권한이 있는 사용자만 공유 가능');return}
+      await window.TTOKTTI_ACCOUNT?.ready?.();
+      const verified=window.TTOKTTI_ACCOUNT?.getUser?.();
+      const profile=window.TTOKTTI_ACCOUNT?.getProfile?.();
+      if(!verified||!profile?.active||profile.id!==verified.id||!(profile.role==='admin'||(profile.permissions?.sync===true&&profile.permissions?.check_view===true))){
+        account=null;disengage();showLogin();notify('로그인 또는 동기화 권한을 확인할 수 없습니다.');return;
+      }
+      account=verified;
       showAccount();
       const pending=await adapter.getPending?.();pendingLocal=!!pending;
       const row=await getRemote();
@@ -269,10 +277,18 @@
     catch(e){notify('클라우드 불러오기 실패: '+describeError(e))}
   }
   async function manualRefresh(){
-    if(!account)return;
-    if(syncPausedByTimeout){notify('저장 시간 초과로 동기화가 일시 정지됨 · 먼저 테스트 JSON 백업 후 Supabase 상태를 확인하세요');return}
-    if(!enabled){await connect();return}
-    await checkChanges();if(enabled&&!cloudDirty)notify(`클라우드 최신 상태 · 버전 ${remoteRevision}`);
+    if(isOffline()){localQueueLabel();return {ok:false,message:'오프라인 · 클라우드 연결 후 다시 확인하세요'}}
+    if(!adapter||!sb)return {ok:false,message:'점검표 로딩 중입니다. 다시 시도하세요'};
+    if(syncPausedByTimeout){notify('기존 저장 시간 초과 · 로컬 원본 보관됨. JSON 백업 후 용량을 확인하세요.');return {ok:false,message:'저장 시간 초과로 동기화 중지됨'}}
+    if(!account||!enabled){await connect();}
+    if(!account||!enabled)return {ok:false,message:statusText?.textContent||'로그인·동기화 상태 확인 필요'};
+    // Check server first, so pending changes can be reconciled without overwriting.
+    await checkChanges();
+    if(cloudDirty&&!conflict&&!committing)await flush();
+    if(!cloudDirty&&!conflict)await checkChanges();
+    const msg=statusText?.textContent||`클라우드 최신 상태 · 버전 ${remoteRevision}`;
+    if(!cloudDirty&&!conflict)notify(`새로고침 완료 · 클라우드 버전 ${remoteRevision}`);
+    return {ok:!cloudDirty&&!conflict,message:cloudDirty?'미전송 자료가 남아 있습니다. '+msg:msg};
   }
   async function loginSubmit(ev){
     ev.preventDefault();if(!sb)return;
@@ -309,5 +325,5 @@
   window.addEventListener('online',()=>{notify('인터넷 연결 복구 · 미전송 자료 확인 중…');setTimeout(()=>void connect(),700)});
   window.addEventListener('focus',()=>{if(enabled)void checkChanges()});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&enabled)void checkChanges()});
-  window.PERFORMANCE_M1_CLOUD={localReady,localSaved,debug:()=>({pendingLocal,isOffline:isOffline(),authenticated:!!account,enabled,remoteRevision,cloudDirty,conflict,recoveryCount,syncPausedByTimeout,channelState,localBytes:adapter?sizeOf(adapter.get()):null})};
+  window.PERFORMANCE_M1_CLOUD={localReady,localSaved,refreshNow:manualRefresh,debug:()=>({pendingLocal,isOffline:isOffline(),authenticated:!!account,enabled,remoteRevision,cloudDirty,conflict,recoveryCount,syncPausedByTimeout,channelState,localBytes:adapter?sizeOf(adapter.get()):null})};
 })();

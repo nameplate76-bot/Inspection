@@ -5,18 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#153f72">
   <meta name="robots" content="noindex,nofollow">
-  <title>똑띠체크 | 성능점검표 작성 M1.3.13</title>
-  <link rel="stylesheet" href="./assets/legacy-editor.css?v=M1.3.13">
+  <title>똑띠체크 | 성능점검표 작성 M1.3.14</title>
+  <link rel="stylesheet" href="./assets/legacy-editor.css?v=M1.3.14">
   <link rel="stylesheet" href="./assets/module.css?v=M1.0.6">
   <style>
   .ttoktti-back{background:#0c2945;padding:9px clamp(12px,3vw,24px);text-align:left}
   .ttoktti-back a{display:inline-block;padding:8px 13px;border:1px solid rgba(167,231,244,.35);border-radius:9px;background:rgba(255,255,255,.06);color:#e6fbff;font:700 13px/1.4 "Malgun Gothic",system-ui,sans-serif;text-decoration:none}
   .ttoktti-back a:hover{background:rgba(120,227,237,.19)}
   .ttoktti-back a:focus-visible{outline:3px solid #f5d76d;outline-offset:2px}
+  .ttoktti-back .tt-sync-refresh{background:#126451;border:1px solid #6de0c0;color:#fff;font-weight:800;min-height:38px}
+  .ttoktti-back .tt-sync-refresh:hover{background:#0b8065}
+  .ttoktti-back .tt-sync-refresh:disabled{opacity:.65;cursor:wait}
+  .tt-nav-sync-status{display:inline-block;margin:4px 0 0 10px;color:#c9f6ed;font:600 12px/1.45 "Malgun Gothic",sans-serif;max-width:360px;vertical-align:middle}
+  @media(max-width:650px){.ttoktti-back .tt-sync-refresh{min-height:44px}.tt-nav-sync-status{display:block;margin:7px 0 0 0}}
   </style>
-<link rel="stylesheet" href="./assets/account.css?v=M1.3.13"></head>
+<link rel="stylesheet" href="./assets/account.css?v=M1.3.14"></head>
 <body>
-  <nav class="ttoktti-back" aria-label="계정 및 메인화면"><a href="./index.html" aria-label="메인화면으로 돌아가기">← 똑띠i 홈으로</a><span id="ttAccountNav" class="tt-account-nav" style="display:inline-flex;margin-left:12px"><button id="ttLoginOpen">로그인</button><button id="ttProfileOpen" hidden>내 정보</button><button id="ttAdminOpen" hidden>사용자 관리</button><button id="ttLogout" hidden>로그아웃</button></span></nav>
+  <nav class="ttoktti-back" aria-label="계정 및 메인화면"><a href="./index.html" aria-label="메인화면으로 돌아가기">← 똑띠i 홈으로</a><span id="ttAccountNav" class="tt-account-nav" style="display:inline-flex;margin-left:12px"><button id="ttLoginOpen">로그인</button><button id="ttProfileOpen" hidden>내 정보</button><button id="ttAdminOpen" hidden>사용자 관리</button><button id="ttLogout" hidden>로그아웃</button><button type="button" id="ttSyncRefresh" class="tt-sync-refresh" title="서버의 최신 점검자료를 확인합니다" aria-label="점검자료 새로고침">↻ 새로고침</button></span><span id="ttNavSyncStatus" role="status" aria-live="polite" class="tt-nav-sync-status"></span></nav>
   <main class="m1-layout">
     <section class="m1-cloud-panel" id="m103Cloud" aria-label="PC·모바일 동기화">
       <div class="m1-cloud-heading"><strong>PC · 모바일 자동 저장·실시간 공유</strong><span id="m103CloudStatus" role="status" aria-live="polite">계정 연결을 확인 중…</span></div>
@@ -39,18 +44,19 @@
   <script src="./assets/offline-xlsx.js?v=M1.0.6"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../supabase-config.js"></script>
-  <script src="./assets/app-version.js?v=M1.3.13"></script>
-  <script src="./assets/ttoktti-ai-test-config.js?v=M1.3.13"></script>
-  <script src="./assets/account.js?v=M1.3.13"></script>
-  <script src="./assets/cloud-sync.js?v=M1.3.13"></script>
-  <script src="./assets/permission-gate.js?v=M1.3.13"></script>
-  <script src="./assets/legacy-recovery.js?v=M1.3.13" defer></script>
+  <script src="./assets/app-version.js?v=M1.3.14"></script>
+  <script src="./assets/ttoktti-ai-test-config.js?v=M1.3.14"></script>
+  <script src="./assets/account.js?v=M1.3.14"></script>
+  <script src="./assets/cloud-sync.js?v=M1.3.14"></script>
+  <script src="./assets/sync-refresh-button.js?v=M1.3.14" defer></script>
+  <script src="./assets/permission-gate.js?v=M1.3.14"></script>
+  <script src="./assets/legacy-recovery.js?v=M1.3.14" defer></script>
   <!-- Isolated help widget: no writes to existing reports, authentication or cloud storage. -->
-  <link rel="stylesheet" href="./assets/ttoktti-help.css?v=M1.3.13">
+  <link rel="stylesheet" href="./assets/ttoktti-help.css?v=M1.3.14">
   
-  <script src="./assets/ttoktti-help.js?v=M1.3.13-AI-TEST" defer></script>
-  <link rel="stylesheet" href="./assets/check-writing-focus.css?v=M1.3.13">
-  <script src="./assets/check-writing-focus.js?v=M1.3.13" defer></script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=M1.3.13').catch(console.warn));}</script>
+  <script src="./assets/ttoktti-help.js?v=M1.3.14-AI-TEST" defer></script>
+  <link rel="stylesheet" href="./assets/check-writing-focus.css?v=M1.3.14">
+  <script src="./assets/check-writing-focus.js?v=M1.3.14" defer></script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=M1.3.14').catch(console.warn));}</script>
 </body>
 </html>
