@@ -8,3 +8,6 @@
 /* M1.3.14 explicit cloud refresh button */
 .tt-account-nav .tt-sync-refresh{white-space:nowrap;background:#126451;border-color:#78e0c5;color:#fff;font-weight:800}
 .tt-account-nav .tt-sync-refresh:focus-visible{outline:3px solid #f7cf65;outline-offset:2px}
+
+/* M1.3.15: actionable account diagnostics on mobile */
+.tt-permission-banner{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px;margin:12px 16px;border:1px solid #d8a143;border-radius:12px;background:#fff8e8;color:#6d4708;font:600 14px/1.55 system-ui,sans-serif}.tt-permission-banner[hidden]{display:none!important}.tt-auth-retry{min-height:44px;padding:9px 15px;border-radius:8px;background:#173f72;color:white;border:1px solid #173f72;font-weight:800;cursor:pointer}.tt-auth-retry:disabled{opacity:.6}

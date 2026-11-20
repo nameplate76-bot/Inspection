@@ -1,10 +1,17 @@
 /* M1.3.2 permission boundary: the editor is not loaded before authentication. */
 (()=>{'use strict';
 const account=window.TTOKTTI_ACCOUNT,root=document.getElementById('reportComposerPage');
+window.addEventListener('ttoktti-auth-diagnostic',event=>{if(!loaded)message(event.detail?.message||'계정 확인 실패')});
 let loaded=false,initialId=null,checking=false;
 const banner=document.createElement('section');banner.className='tt-permission-banner';banner.setAttribute('role','status');root.before(banner);
 const has=p=>!!account?.has(p)&&(p!=='check_delete'||!!account?.has('check_edit'));
-function message(s){banner.textContent=s;banner.hidden=false}
+function message(s){
+ banner.replaceChildren();const info=document.createElement('span');info.textContent=s;banner.append(info);
+ const retry=document.createElement('button');retry.type='button';retry.textContent='↻ 계정 연결 재시도';retry.className='tt-auth-retry';
+ retry.onclick=async()=>{retry.disabled=true;info.textContent='계정·권한을 다시 확인 중…';try{await account?.refresh?.(true);await sync()}finally{retry.disabled=false}};
+ banner.append(retry);banner.hidden=false;
+ const status=document.getElementById('m103CloudStatus');if(status&&(!status.textContent||/확인 중/.test(status.textContent)))status.textContent=s;
+}
 function permissions(){
  const view=has('check_view'),edit=has('check_edit'),del=has('check_delete'),exp=has('check_export'),sync=has('sync');
  document.getElementById('m103Cloud').hidden=!sync;
@@ -49,12 +56,12 @@ async function sync(){
  if(checking)return;checking=true;
  try{
   await account?.refresh?.();const user=account?.getUser?.(),profile=account?.getProfile?.();
-  if(!user||!profile?.active){root.hidden=true;document.getElementById('m103Cloud').hidden=true;message('로그인이 필요합니다. 상단 로그인 버튼으로 접속하세요.');return}
+  if(!user||!profile?.active){root.hidden=true;document.getElementById('m103Cloud').hidden=false;message(!user?'로그인 정보가 확인되지 않았습니다. 로그인 후 다시 시도하세요.':'계정은 확인되었으나 사용 권한 조회에 실패했거나 승인되지 않았습니다. 연결 재시도를 누르세요.');return}
   if(initialId&&initialId!==user.id){location.reload();return}initialId=user.id;
   if(!has('check_view')){permissions();return}
-  if(!loaded){loaded=true;const script=document.createElement('script');script.src='./assets/legacy-checklist-engine.js?v='+encodeURIComponent(window.TTOKTTI_APP_VERSION||'M1.3.14');script.onerror=()=>message('점검표 프로그램을 불러오지 못했습니다.');document.body.appendChild(script)}
+  if(!loaded){loaded=true;const script=document.createElement('script');script.src='./assets/legacy-checklist-engine.js?v='+encodeURIComponent(window.TTOKTTI_APP_VERSION||'M1.3.15');script.onerror=()=>{loaded=false;message('점검표 파일 로딩 실패 · 인터넷이나 배포 경로를 확인하고 재시도하세요.');};document.body.appendChild(script)}
   permissions();
- }catch(e){root.hidden=true;message('권한을 확인할 수 없습니다. 다시 로그인해 주세요.')}finally{checking=false}
+ }catch(e){root.hidden=true;message('권한 확인 오류: '+String(e?.message||e)+' · 연결 재시도를 눌러주세요.')}finally{checking=false}
 }
 window.addEventListener('ttoktti-account-change',()=>{if(!checking)void sync()});
 // Revalidate roles for sessions that remain open. DB RLS is the ultimate enforcement.

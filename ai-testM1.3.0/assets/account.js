@@ -15,7 +15,7 @@
  const msg=t=>{const x=$('ttMessage');if(x)x.textContent=t};
  const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const has=p=>!!(profile?.active&&(profile?.role==='admin'||profile?.permissions?.[p]===true));
- // M1.3.14: share one authorization request across the account UI, permission gate,
+ // M1.3.15: share one authorization request across the account UI, permission gate,
  // and editor. Authorization is NEVER granted from an online local cache alone.
  let authFlight=null, verifiedAt=0;
  const withDeadline=(promise,ms,label)=>Promise.race([Promise.resolve(promise),new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' 응답 시간 초과')),ms))]);
@@ -23,7 +23,7 @@
   if(authFlight)return authFlight;
   if(!force&&verifiedAt&&Date.now()-verifiedAt<20000)return Promise.resolve();
   authFlight=(async()=>{
-   const s=get();if(!s){me=null;profile=null;updateNav();return}
+   const s=get();if(!s){me=null;profile=null;updateNav();window.dispatchEvent(new CustomEvent('ttoktti-auth-diagnostic',{detail:{message:'Supabase 스크립트 또는 공개 설정을 불러오지 못했습니다. 인터넷을 확인하고 연결 재시도를 누르세요.'}}));return}
    const offline=!navigator.onLine;let user=null,cached=null;
    try{
     // getSession reads the persisted local session, while the protected profile
@@ -31,7 +31,7 @@
     const r=await withDeadline(s.auth.getSession(),9000,'로그인 정보');
     if(r.error)throw r.error;
     user=r.data?.session?.user||null;
-    if(!user){me=null;profile=null;verifiedAt=Date.now();updateNav();return}
+    if(!user){me=null;profile=null;verifiedAt=Date.now();updateNav();window.dispatchEvent(new CustomEvent('ttoktti-auth-diagnostic',{detail:{message:'로그인 세션이 없습니다. 상단 로그인 버튼으로 로그인하세요.'}}));return}
     const key='ttoktti-offline-profile-v139-'+user.id;
     try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch{}
     let nextProfile=null;
@@ -48,12 +48,15 @@
     const changed=me?.id!==user.id||JSON.stringify(profile)!==JSON.stringify(nextProfile);
     me=user;profile=nextProfile;verifiedAt=Date.now();updateNav();
     if(changed)window.dispatchEvent(new CustomEvent('ttoktti-account-change',{detail:{authenticated:!!me,active:!!profile,offline}}));
+    if(!nextProfile)window.dispatchEvent(new CustomEvent('ttoktti-auth-diagnostic',{detail:{message:offline?'오프라인 계정 확인 정보를 찾을 수 없습니다. 온라인에서 한 번 로그인하세요.':'계정은 확인되었지만 사용 권한이 없습니다. 관리자에게 활성화 및 점검표 조회 권한을 확인하세요.'}}));
    }catch(err){
     console.warn('계정 확인 지연 또는 실패',err);
     // Fail closed for online authorization; never reuse outdated privilege cache.
     profile=null;me=user;verifiedAt=0;updateNav();
     const status=document.getElementById('m103CloudStatus');
-    if(status)status.textContent='계정 연결 지연 · 인터넷 상태를 확인한 뒤 다시 시도하세요 ('+String(err?.message||err)+')';
+    const diagnostic='계정 확인 실패: '+String(err?.message||err)+' · 연결 재시도로 다시 확인하세요.';
+    if(status)status.textContent=diagnostic;
+    window.dispatchEvent(new CustomEvent('ttoktti-auth-diagnostic',{detail:{message:diagnostic}}));
    }
   })().finally(()=>{authFlight=null});
   return authFlight;
@@ -69,5 +72,5 @@
  $('ttLoginOpen')?.addEventListener('click',login);$('ttProfileOpen')?.addEventListener('click',profileView);$('ttAdminOpen')?.addEventListener('click',admin);$('ttLogout')?.addEventListener('click',async()=>{await get()?.auth.signOut();verifiedAt=0;me=null;profile=null;await authReady(true)});
  window.TTOKTTI_ACCOUNT={getClient:get,getUser:()=>me,getProfile:()=>profile,has,refresh:authReady,ready:()=>authReady(),openLogin:login,openProfile:profileView};
  window.addEventListener('online',()=>{verifiedAt=0;void authReady(true)});window.addEventListener('offline',()=>{verifiedAt=0;void authReady(true)});
- const s=get();if(s){s.auth.onAuthStateChange((event)=>{if(event==='SIGNED_IN'||event==='SIGNED_OUT'||event==='USER_UPDATED'){verifiedAt=0;setTimeout(()=>void authReady(true),0)}});void authReady()}else updateNav();
+ const s=get();if(s){s.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){verifiedAt=0;me=null;profile=null;updateNav();setTimeout(()=>void authReady(true),0)}else if(event==='USER_UPDATED'||(event==='SIGNED_IN'&&session?.user?.id!==me?.id)){verifiedAt=0;setTimeout(()=>void authReady(true),0)}});void authReady()}else updateNav();
 })();

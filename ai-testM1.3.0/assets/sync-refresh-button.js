@@ -1,4 +1,4 @@
-/* M1.3.14: A non-destructive, explicit cloud refresh. Never reload the page. */
+/* M1.3.15: A non-destructive, explicit cloud refresh. Never reload the page. */
 (()=>{'use strict';
  const button=document.getElementById('ttSyncRefresh');
  const status=document.getElementById('ttNavSyncStatus');
