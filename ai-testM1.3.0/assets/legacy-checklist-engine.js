@@ -22,9 +22,9 @@ function input(key,value,large=false){
 }
 function itemField(i,k,v,large=false){return large?`<textarea data-item="${i}" data-key="${k}">${E(v)}</textarea>`:`<input data-item="${i}" data-key="${k}" value="${E(v)}">`}
 function equip(){return d.equipment.find(e=>e.uid===selected)}
-function render(){if(!root()||!window.TTOKTTI_ACCOUNT?.has('check_view'))return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">${E(window.TTOKTTI_APP_VERSION||"M1.3.12")}</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 기기 자동 저장 + 동일 계정 PC·모바일 클라우드 자동 동기화</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${k==='주소'?`<div class="m134-address-row">${input(k,d.info[k]||'')}<button type="button" class="m134-address-button" data-address-search>주소 검색</button></div><small class="m134-address-help">도로명·지번·건물명으로 검색 후 주소를 선택하세요. 직접 입력도 가능합니다.</small>`:input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
+function render(){if(!root()||!window.TTOKTTI_ACCOUNT?.has('check_view'))return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">${E(window.TTOKTTI_APP_VERSION||"M1.3.13")}</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 기기 자동 저장 + 동일 계정 PC·모바일 클라우드 자동 동기화</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${k==='주소'?`<div class="m134-address-row">${input(k,d.info[k]||'')}<button type="button" class="m134-address-button" data-address-search>주소 검색</button></div><small class="m134-address-help">도로명·지번·건물명으로 검색 후 주소를 선택하세요. 직접 입력도 가능합니다.</small>`:input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
 
-/* M1.3.12: embedded postcode search avoids browser popup blocking. */
+/* M1.3.13: embedded postcode search avoids browser popup blocking. */
 let m135PostcodeLoading=null;
 function m135EnsureAddressDialog(){
  let overlay=document.getElementById('m135AddressOverlay');
@@ -142,8 +142,50 @@ function equipmentFormatField(e){if(e.type!=='냉동기')return `<label>설비�
 function equipmentInfoUIV3(e){measurementRows(e);return `<section class="reEquipmentInfo"><div class="reEquipmentHead"><div><small>설비 기본정보</small><h3>${E(e.type)} / ${E(e.number)}</h3></div><button type="button" class="reStartCheck" data-start-check>점검항목 작성으로 이동 →</button></div><div class="reGrid">${equipmentFormatField(e)}${['용도','설치위치','제조사','설치년도','사양','점검자'].map(k=>`<label>${k}<input data-equipment="${k}" value="${E(e[k]||'')}"></label>`).join('')}<label>점검일<div class="reDateControl"><input data-equipment="점검일" value="${E(e['점검일']||'')}" placeholder="YYYY-MM-DD"><button type="button" data-date-pick>날짜 선택</button><input type="date" data-date-picker value="${E(e['점검일']||'')}" tabindex="-1" aria-hidden="true"></div></label></div>${measurementEditor(e)}${equipmentPhotoSlot(e)}<button data-action="remove" class="reDanger">이 설비 삭제</button></section>`}
 equipmentInfoUI=equipmentInfoUIV3;
 function basicInfoSummary(e){const keys=['설비형식','용도','설치위치','제조사','설치년도','사양','점검일','점검자'],values={...e,'설비형식':equipmentFormatName(e)},filled=keys.filter(key=>String(values[key]||'').trim()).length;return `<section class="reBasicSummary"><div><b>설비 기본정보</b><small>${filled} / ${keys.length}개 항목 입력 · ${E(equipmentFormatName(e))}</small></div><button type="button" data-basic-edit>입력·수정</button></section>`}
-function basicInfoDialogBody(e){return `<div class="reToolDialogBody reBasicDialogBody"><div class="reToolDialogHead"><div><h3>설비 기본정보 입력·수정</h3><p>${E(e.type)} · ${E(e.number)}</p></div><button type="button" data-dialog-close aria-label="닫기">×</button></div><div class="reGrid">${equipmentFormatField(e)}${['용도','설치위치','제조사','설치년도','사양','점검자'].map(key=>`<label>${key}<input data-basic-field="${key}" value="${E(e[key]||'')}"></label>`).join('')}<label>점검일<div class="reDateControl"><input data-basic-field="점검일" value="${E(e['점검일']||'')}" placeholder="YYYY-MM-DD"><button type="button" data-basic-date-pick>날짜 선택</button><input type="date" data-basic-date-picker value="${E(e['점검일']||'')}" tabindex="-1" aria-hidden="true"></div></label></div><div class="reDialogFooter"><button type="button" data-dialog-close>닫기</button></div></div>`}
-function bindBasicInfoDialog(dialog,e){dialog.querySelectorAll('[data-dialog-close]').forEach(button=>button.onclick=()=>dialog.close());dialog.querySelectorAll('[data-basic-field]').forEach(input=>input.oninput=()=>{e[input.dataset.basicField]=input.value;save()});dialog.querySelector('[data-format-select]')?.addEventListener('change',async event=>{applyMeasurementFormat(e,event.target.value);await save();dialog.querySelector('.reToolDialogBody').outerHTML=basicInfoDialogBody(e);bindBasicInfoDialog(dialog,e)});dialog.querySelector('[data-format-direct]')?.addEventListener('input',event=>{e.equipmentFormatDirect=event.target.value;save()});const picker=dialog.querySelector('[data-basic-date-picker]');dialog.querySelector('[data-basic-date-pick]')?.addEventListener('click',()=>picker?.showPicker?picker.showPicker():picker?.click());picker?.addEventListener('change',()=>{e['점검일']=picker.value;dialog.querySelector('[data-basic-field="점검일"]').value=picker.value;save()})}
+function basicInfoDialogBody(e){return `<div class="reToolDialogBody reBasicDialogBody"><div class="reToolDialogHead"><div><h3>설비 기본정보 입력·수정</h3><p>${E(e.type)} · ${E(e.number)}</p></div><button type="button" data-dialog-close aria-label="닫기">×</button></div><div class="reGrid">${equipmentFormatField(e)}${['용도','설치위치','제조사','설치년도','사양','점검자'].map(key=>`<label>${key}<input data-basic-field="${key}" value="${E(e[key]||'')}"></label>`).join('')}<label>점검일<div class="reDateControl"><input data-basic-field="점검일" value="${E(e['점검일']||'')}" placeholder="YYYY-MM-DD"><button type="button" data-basic-date-pick>날짜 선택</button><input type="date" data-basic-date-picker value="${E(e['점검일']||'')}" tabindex="-1" aria-hidden="true"></div></label></div><div class="reDialogFooter reBasicSaveFooter"><span class="reBasicSaveStatus" data-basic-save-status role="status" aria-live="polite">입력 후 저장하기를 눌러주세요.</span><button type="button" class="reBasicSaveButton" data-basic-save>저장하기</button><button type="button" class="reBasicCloseButton" data-dialog-close>닫기</button></div></div>`}
+/* M1.3.13: 8-digit inspection date normalization, with actual calendar validation. */
+function m1313NormalizeInspectionDate(value){
+ const raw=String(value||'').trim();if(!raw)return '';
+ const digits=raw.replace(/[-./\s]/g,'');
+ if(!/^\d{8}$/.test(digits))return null;
+ const y=Number(digits.slice(0,4)),m=Number(digits.slice(4,6)),day=Number(digits.slice(6,8));
+ const date=new Date(Date.UTC(y,m-1,day));
+ if(y<1900||y>2100||date.getUTCFullYear()!==y||date.getUTCMonth()!==m-1||date.getUTCDate()!==day)return null;
+ return `${digits.slice(0,4)}-${digits.slice(4,6)}-${digits.slice(6,8)}`;
+}
+function bindBasicInfoDialog(dialog,e){
+ const dateInput=dialog.querySelector('[data-basic-field="점검일"]');
+ const picker=dialog.querySelector('[data-basic-date-picker]');
+ const note=dialog.querySelector('[data-basic-save-status]');
+ const setNote=(message,error=false)=>{if(note){note.textContent=message;note.classList.toggle('reBasicSaveError',error)}};
+ const normalizeDate=()=>{
+  if(!dateInput)return true;
+  const normalized=m1313NormalizeInspectionDate(dateInput.value);
+  if(normalized===null){dateInput.setAttribute('aria-invalid','true');setNote('점검일은 YYYYMMDD(예: 20261120) 또는 YYYY-MM-DD로 입력하세요.',true);return false}
+  dateInput.removeAttribute('aria-invalid');dateInput.value=normalized;if(picker)picker.value=normalized;
+  e['점검일']=normalized;setNote('입력 내용이 이 기기에 자동 저장됩니다. 저장하기를 눌러 완료하세요.');return true;
+ };
+ dialog.querySelectorAll('[data-dialog-close]').forEach(button=>button.onclick=()=>{if(dateInput?.value&&!normalizeDate()){dateInput.focus();return}if(dateInput)save();dialog.close()});
+ dialog.querySelectorAll('[data-basic-field]').forEach(input=>{
+  if(input.dataset.basicField==='점검일'){
+   input.setAttribute('inputmode','numeric');input.setAttribute('maxlength','10');
+   input.setAttribute('placeholder','YYYYMMDD 또는 YYYY-MM-DD');
+   input.addEventListener('input',()=>{setNote('날짜 8자리를 입력하면 YYYY-MM-DD로 변환됩니다.');if(input.value.replace(/\D/g,'').length===8)normalizeDate()});
+   input.addEventListener('blur',()=>{if(normalizeDate())save()});
+   input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();if(normalizeDate()){save();dialog.querySelector('[data-basic-save]')?.focus()}}});
+  }else input.oninput=()=>{e[input.dataset.basicField]=input.value;save();setNote('변경 내용이 이 기기에 저장되었습니다. 저장하기를 눌러 완료하세요.')};
+ });
+ dialog.querySelector('[data-basic-save]')?.addEventListener('click',async event=>{
+  if(!normalizeDate()){dateInput?.focus();return}
+  for(const input of dialog.querySelectorAll('[data-basic-field]'))e[input.dataset.basicField]=input.value;
+  const button=event.currentTarget;button.disabled=true;button.textContent='저장 중…';
+  try{await save();setNote('저장 완료');dialog.close()}catch(error){console.error('설비 기본정보 저장 실패',error);setNote('저장에 실패했습니다. 다시 시도하거나 JSON 백업을 확인하세요.',true);button.disabled=false;button.textContent='저장하기'}
+ });
+ dialog.querySelector('[data-format-select]')?.addEventListener('change',async event=>{applyMeasurementFormat(e,event.target.value);await save();dialog.querySelector('.reToolDialogBody').outerHTML=basicInfoDialogBody(e);bindBasicInfoDialog(dialog,e)});
+ dialog.querySelector('[data-format-direct]')?.addEventListener('input',event=>{e.equipmentFormatDirect=event.target.value;save();setNote('변경 내용이 이 기기에 저장되었습니다.')});
+ dialog.querySelector('[data-basic-date-pick]')?.addEventListener('click',()=>picker?.showPicker?picker.showPicker():picker?.click());
+ picker?.addEventListener('change',()=>{dateInput.value=picker.value;if(normalizeDate())save()});
+}
 function openBasicInfoDialog(){const e=equip();if(!e)return;const dialog=document.createElement('dialog');dialog.className='reToolDialog reBasicDialog';dialog.innerHTML=basicInfoDialogBody(e);document.body.appendChild(dialog);dialog.addEventListener('close',()=>{dialog.remove();render()},{once:true});bindBasicInfoDialog(dialog,e);dialog.showModal()}
 function equipmentInfoUIV4(e){measurementRows(e);return `<section class="reEquipmentInfo"><div class="reEquipmentHead"><div><small>선택 설비</small><h3>${E(e.type)} / ${E(e.number)}</h3></div><button type="button" class="reStartCheck" data-start-check>점검항목 작성으로 이동 →</button></div>${basicInfoSummary(e)}${measurementEditor(e)}${equipmentPhotoSlot(e)}<button data-action="remove" class="reDanger">이 설비 삭제</button></section>`}
 equipmentInfoUI=equipmentInfoUIV4;
@@ -1233,7 +1275,7 @@ bindMeasurementDialog=function(dialog,e){
 
 
 
-/* M1.3.12: 출력 양식 통일 — 냉동기 출력은 원본 그대로 보존.
+/* M1.3.13: 출력 양식 통일 — 냉동기 출력은 원본 그대로 보존.
  * 냉각탑~방음방진내진 26종의 PDF 요약/항목 페이지에 냉동기 V85 표, 글꼴,
  * 배경색 및 여백을 재사용. 점검 기준 문장은 기존 템플릿을 그대로 출력. */
 function m1312CriteriaTable(item){

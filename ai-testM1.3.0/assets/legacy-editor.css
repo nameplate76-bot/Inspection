@@ -226,3 +226,12 @@
   .re .reCheckHeadActions button[data-show-info]{width:100%;min-height:52px;font-size:15px!important;padding:12px 10px!important}
   .re .reCheckHeadActions .reCheckMeasurement{width:100%;min-height:48px}
 }
+
+/* M1.3.13 basic equipment information save action */
+.reBasicDialog .reBasicSaveFooter{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.reBasicDialog .reBasicSaveStatus{margin-right:auto;color:#375c76;font-size:13px;line-height:1.4}
+.reBasicDialog .reBasicSaveStatus.reBasicSaveError{color:#ae2432;font-weight:700}
+.reBasicDialog .reBasicSaveButton{background:#12664d!important;border-color:#12664d!important;color:#fff!important;font-size:16px!important;font-weight:800!important;min-width:140px;min-height:48px}
+.reBasicDialog .reBasicCloseButton{background:#fff!important;color:#173f72!important;border-color:#a6bacb!important}
+.reBasicDialog [data-basic-field="점검일"][aria-invalid="true"]{border:2px solid #bf2c3a!important;background:#fff4f5!important}
+@media(max-width:600px){.reBasicDialog .reBasicSaveFooter{display:grid;grid-template-columns:1fr 1fr}.reBasicDialog .reBasicSaveStatus{grid-column:1/-1}.reBasicDialog .reBasicSaveFooter button{width:100%;min-width:0!important}}
