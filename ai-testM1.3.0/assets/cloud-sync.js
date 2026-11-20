@@ -7,13 +7,13 @@
   let cloudDirty=false, conflict=false, suppress=false, committing=false, refreshBusy=false;
   let generation=0, debounce=null, poll=null, channel=null, lastLocalHash=null, channelState='대기';
   let syncPausedByTimeout=false;
-  let pendingLocal=false;
+  let pendingLocal=false, recoveryCount=0, merging=false;
   const notify=(s)=>{if(statusText)statusText.textContent=s};
   // A persistent acknowledgement is the only evidence that this device's local data was uploaded.
   const ackKey=()=>account?'ttoktti-sync-ack-v137-'+account.id:null;
   const digest=obj=>{const str=JSON.stringify(obj);let h=2166136261;for(let i=0;i<str.length;i++)h=Math.imul(h^str.charCodeAt(i),16777619);return (h>>>0).toString(16)+':'+str.length};
   function readAck(){try{return JSON.parse(localStorage.getItem(ackKey())||'null')}catch{return null}}
-  function writeAck(snapshot,revision){try{localStorage.setItem(ackKey(),JSON.stringify({hash:digest(snapshot),revision:Number(revision)}))}catch(e){console.warn('동기화 확인 정보 저장 실패',e)}}
+  async function writeAck(snapshot,revision){try{localStorage.setItem(ackKey(),JSON.stringify({hash:digest(snapshot),revision:Number(revision)}))}catch(e){console.warn('동기화 확인 정보 저장 실패',e)}try{await adapter?.setBaseline?.(snapshot,Number(revision))}catch(e){console.warn('동기화 기준 문서 저장 실패',e)}}
   function alreadyUploaded(snapshot){return readAck()?.hash===digest(snapshot)}
   const isOffline=()=>!navigator.onLine;
   const localQueueLabel=()=>notify('오프라인 · 이 기기에 저장됨 · 클라우드 업로드 대기 (인터넷 연결 후 자동 전송)');
@@ -22,7 +22,7 @@
   function localEmpty(obj){return !Array.isArray(obj?.equipment)||(!obj.equipment.length&&!Object.values(obj.info||{}).some(v=>String(v??'').trim()))}
   function validSnapshot(obj){return !!obj&&obj.version===2&&Array.isArray(obj.equipment)&&obj.info&&typeof obj.info==='object'&&Array.isArray(obj.energy)}
   function showLogin(){login.hidden=true;actions.hidden=true;notify('메인화면에서 로그인하면 PC·모바일 동기화를 연결할 수 있습니다')}
-  function showAccount(){login.hidden=true;actions.hidden=false;const canWrite=window.TTOKTTI_ACCOUNT?.has('check_edit');$('m103Upload').hidden=!canWrite;$('m103Account').textContent='로그인 계정: '+String(account?.email||'인증됨')}
+  function showAccount(){login.hidden=true;actions.hidden=false;$('m103Account').textContent='로그인 계정: '+String(account?.email||'인증됨');const recovery=$('m1311Recovery');if(recovery)recovery.hidden=false;}
   function disengage(){enabled=false;conflict=false;cloudDirty=false;syncPausedByTimeout=false;remoteRevision=0;clearTimeout(debounce);if(channel&&sb){sb.removeChannel(channel);channel=null}if(poll){clearInterval(poll);poll=null}}
   async function getRemote(){
     if(!account||!sb)throw Error('로그인이 필요합니다.');
@@ -44,9 +44,90 @@
     suppress=true;
     try{await adapter.replace(row.document);if(row.document.reasonLibrary){localStorage.setItem('performance_m1_test_reasons_v1',JSON.stringify(row.document.reasonLibrary))}}
     finally{suppress=false}
-    remoteRevision=Number(row.revision||0);cloudDirty=false;conflict=false;enabled=true;pendingLocal=false;writeAck(row.document,remoteRevision);await adapter.ackPending?.();
+    remoteRevision=Number(row.revision||0);cloudDirty=false;conflict=false;enabled=true;pendingLocal=false;await writeAck(row.document,remoteRevision);await adapter.ackPending?.();
     startListening();notify(`클라우드 최신 자료 불러옴 · 버전 ${remoteRevision}`);
     return true;
+  }
+  const own=(v)=>v!==undefined&&v!==null&&v!=='';
+  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  // Non-destructive reconciliation. All inputs are backed up to a separate local store first.
+  // Arrays of equipment are matched by uid; inspection-item arrays by stable index,
+  // and photo slots by position. A deletion is NOT inferred without a common baseline.
+  function mergeNode(base,local,remote,path,issues){
+    if(same(local,remote))return structuredClone(local);
+    if(base!==undefined){
+      if(same(local,base))return structuredClone(remote);
+      if(same(remote,base))return structuredClone(local);
+    }
+    if(!own(local))return structuredClone(remote);
+    if(!own(remote))return structuredClone(local);
+    if(Array.isArray(local)&&Array.isArray(remote)){
+      if(path==='equipment'){
+        const r=new Map(remote.map(e=>[e.uid,e]));const l=new Map(local.map(e=>[e.uid,e]));const b=new Map((Array.isArray(base)?base:[]).map(e=>[e.uid,e]));
+        const keys=[...new Set([...r.keys(),...l.keys()])];
+        return keys.map(k=>{
+          if(!l.has(k))return structuredClone(r.get(k));
+          if(!r.has(k))return structuredClone(l.get(k));
+          return mergeNode(b.get(k),l.get(k),r.get(k),path+'['+k+']',issues);
+        });
+      }
+      const len=Math.max(local.length,remote.length);const result=[];
+      for(let i=0;i<len;i++){
+        if(i>=local.length){result.push(structuredClone(remote[i]));continue}
+        if(i>=remote.length){result.push(structuredClone(local[i]));continue}
+        result.push(mergeNode(Array.isArray(base)?base[i]:undefined,local[i],remote[i],path+'['+i+']',issues));
+      }
+      return result;
+    }
+    if(local&&remote&&typeof local==='object'&&typeof remote==='object'&&!Array.isArray(local)&&!Array.isArray(remote)){
+      const result={};for(const k of new Set([...Object.keys(remote),...Object.keys(local)])){
+        result[k]=mergeNode(base&&typeof base==='object'?base[k]:undefined,local[k],remote[k],path?path+'.'+k:k,issues);
+      }return result;
+    }
+    // Both sides changed the same populated value. Retain server value, but preserve
+    // the complete local snapshot in the recovery store; never silently discard it.
+    issues.push(path);return structuredClone(remote);
+  }
+  async function autoReconcile(row,local){
+    if(merging)return;
+    merging=true;
+    try{
+      const baseline=await adapter.getBaseline?.();
+      const base=baseline?.revision<=Number(row.revision)?baseline.document:undefined;
+      const nameLocal=String(local?.info?.['현장명']||'').trim();
+      const nameRemote=String(row.document?.info?.['현장명']||'').trim();
+      if(nameLocal&&nameRemote&&nameLocal!==nameRemote){
+        await adapter.saveRecovery?.(local,'서로 다른 현장명: '+nameLocal+' / '+nameRemote);
+        recoveryCount++;
+        enabled=false;conflict=true;
+        notify('서로 다른 현장 자료 감지 · 로컬 복구본 보관. 현장별 문서 분리 전에는 자동으로 합치지 않습니다.');
+        return;
+      }
+      // Preserve both raw snapshots before any merge to protect photos and measurements.
+      await adapter.saveRecovery?.(local,'자동 동기화 전 로컬 원본');
+      const issues=[];
+      const merged=mergeNode(base,local,row.document,'',issues);
+      if(!validSnapshot(merged))throw Error('병합된 점검표 형식이 올바르지 않습니다.');
+      if(issues.length){
+        await adapter.saveRecovery?.(row.document,'동시 수정 충돌 시 클라우드 원본');
+        recoveryCount++;
+      }
+      remoteRevision=Number(row.revision||0);
+      conflict=false;enabled=true;cloudDirty=false;
+      if(same(merged,row.document)){
+        await adoptRemote(row,true);
+        notify('자동 연결됨 · 클라우드 최신 자료 적용'+(issues.length?' · 중복 변경은 복구본에 보관':'') );
+        return;
+      }
+      // The local replace temporarily creates a queue item; flush will acknowledge it.
+      suppress=true;
+      try{await adapter.replace(merged)}finally{suppress=false}
+      cloudDirty=true;pendingLocal=true;generation++;
+      startListening();
+      notify('기기 자료 자동 병합 완료 · 클라우드 업로드 중…'+(issues.length?' (중복 변경 복구본 보관)':''));
+      void flush();
+    }catch(e){enabled=false;conflict=true;notify('자동 병합 보류 · 기기 자료는 유지됨: '+describeError(e));console.error(e)}
+    finally{merging=false}
   }
   async function connect(){
     if(!adapter||!sb)return;
@@ -64,17 +145,17 @@
       const row=await getRemote();
       if(!row){
         remoteRevision=0;
-        if(pendingLocal&&window.TTOKTTI_ACCOUNT?.has('check_edit')){
+        if(!localEmpty(adapter.get())&&window.TTOKTTI_ACCOUNT?.has('check_edit')){
           enabled=true;conflict=false;cloudDirty=true;generation++;startListening();
           notify('미전송 로컬 자료 발견 · 클라우드 최초 등록 중…');void flush();return;
         }
-        enabled=false;notify('클라우드 자료 없음 · 이 기기 자료 클라우드에 올리기를 먼저 실행하세요');return
+        enabled=true;conflict=false;cloudDirty=false;startListening();notify('자동 동기화 준비 완료 · 이 기기에서 기록하면 자동으로 클라우드 저장');return
       }
       remoteRevision=Number(row.revision||0);
       if(!validSnapshot(row.document)){enabled=false;notify('서버 문서 형식 오류 · 백업 후 관리자 확인 필요');return}
       const local=adapter.get();
       if(JSON.stringify(local)===JSON.stringify(row.document)){
-        enabled=true;conflict=false;cloudDirty=false;pendingLocal=false;writeAck(row.document,remoteRevision);
+        enabled=true;conflict=false;cloudDirty=false;pendingLocal=false;await writeAck(row.document,remoteRevision);
         await adapter.ackPending?.();startListening();notify(`PC·모바일 자동 동기화 연결됨 · 버전 ${remoteRevision}`);return;
       }
       if(!pendingLocal&&(localEmpty(local)||alreadyUploaded(local))){
@@ -88,7 +169,7 @@
         startListening();notify('오프라인 작성 내용 발견 · 클라우드에 안전하게 전송 중…');
         void flush();return;
       }
-      enabled=false;conflict=true;notify('이 기기와 클라우드 자료가 서로 다릅니다. JSON 백업 후 업로드/불러오기를 선택하세요. 자동 덮어쓰지 않습니다.');
+      await autoReconcile(row,local);
     }catch(e){console.error('클라우드 연결 실패',e);enabled=false;notify('클라우드 연결 실패 · 로컬은 안전하게 보관됨: '+describeError(e))}
   }
   function startListening(){
@@ -107,9 +188,8 @@
       if(!info)return;
       const latest=Number(info.revision||0);
       if(latest<=remoteRevision)return;
-      if(cloudDirty||conflict){conflict=true;enabled=false;notify('다른 기기에서 변경됨 · 현재 작성 내용 보존 · 변경 선택 필요');return}
       const row=await getRemote();
-      if(row&&Number(row.revision)>remoteRevision)await adoptRemote(row,true);
+      if(row&&Number(row.revision)>remoteRevision){if(cloudDirty){await autoReconcile(row,adapter.get())}else await adoptRemote(row,true)}
     }catch(e){notify('동기화 확인 지연 · 로컬은 보관됨: '+describeError(e))}
     finally{refreshBusy=false}
   }
@@ -134,17 +214,17 @@
       let next;
       if(remoteRevision===0){
         const {data,error}=await sb.from(TABLE).insert({owner_id:account.id,doc_key:KEY,document:snap,revision:1}).select('revision').single();
-        if(error){if(error.code==='23505'){conflict=true;enabled=false;notify('클라우드에 먼저 저장된 자료가 있습니다 · 수동으로 확인하세요');return}throw error}
+        if(error){if(error.code==='23505'){const fresh=await getRemote();if(fresh)setTimeout(()=>void autoReconcile(fresh,adapter.get()),0);return}throw error}
         next=Number(data.revision);
       }else{
         const {data,error}=await sb.from(TABLE).update({document:snap,revision:remoteRevision+1,updated_at:new Date().toISOString()}).eq('owner_id',account.id).eq('doc_key',KEY).eq('revision',remoteRevision).select('revision').maybeSingle();
         if(error)throw error;
-        if(!data){conflict=true;enabled=false;notify('다른 기기 변경과 충돌 · 이 기기 자료는 유지됨');return}
+        if(!data){const fresh=await getRemote();if(fresh)setTimeout(()=>void autoReconcile(fresh,adapter.get()),0);return}
         next=Number(data.revision);
       }
       syncPausedByTimeout=false;
       remoteRevision=next;
-      writeAck(snap,next);
+      await writeAck(snap,next);
       cloudDirty=(generation!==sentGen);
       if(!cloudDirty){try{await adapter.ackPending?.();pendingLocal=false}catch(e){console.warn('전송 완료 후 로컬 대기 표시 정리 실패',e)}}
       notify(`클라우드 저장 완료 · PC·모바일 자동 공유 · 버전 ${next}`+(cloudDirty?' · 추가 변경 동기화 대기':''));
@@ -216,6 +296,11 @@
       void connect();
     }catch(e){notify('클라우드 초기화 오류 · 로컬만 사용: '+describeError(e))}
   }
+  $('m1311Recovery')?.addEventListener('click',async()=>{
+    const data=await adapter?.listRecovery?.();if(!data?.length){alert('이 기기에 보관된 동기화 복구본이 없습니다.');return}
+    const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),recovery:data},null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TtokttiCheck_Sync_Recovery_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
   login?.addEventListener('submit',loginSubmit);window.addEventListener('ttoktti-account-change',()=>{if(sb)void connect()});
   $('m103Upload')?.addEventListener('click',()=>void manualUpload());
   $('m103Download')?.addEventListener('click',()=>void manualDownload());
@@ -224,5 +309,5 @@
   window.addEventListener('online',()=>{notify('인터넷 연결 복구 · 미전송 자료 확인 중…');setTimeout(()=>void connect(),700)});
   window.addEventListener('focus',()=>{if(enabled)void checkChanges()});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&enabled)void checkChanges()});
-  window.PERFORMANCE_M1_CLOUD={localReady,localSaved,debug:()=>({pendingLocal,isOffline:isOffline(),authenticated:!!account,enabled,remoteRevision,cloudDirty,conflict,syncPausedByTimeout,channelState,localBytes:adapter?sizeOf(adapter.get()):null})};
+  window.PERFORMANCE_M1_CLOUD={localReady,localSaved,debug:()=>({pendingLocal,isOffline:isOffline(),authenticated:!!account,enabled,remoteRevision,cloudDirty,conflict,recoveryCount,syncPausedByTimeout,channelState,localBytes:adapter?sizeOf(adapter.get()):null})};
 })();
