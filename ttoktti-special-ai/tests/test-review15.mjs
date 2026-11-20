@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {reviewFifteen} from '../engine/review15.mjs';
+import {readFileSync} from 'node:fs';
+const t=JSON.parse(readFileSync(new URL('../chiller-15.json',import.meta.url)));
+assert.equal(t.length,15);
+const data={data:{equipment:[{number:'CH-01',type:'냉동기',items:t.map((x,i)=>({index:i+1,title:x.title,result:'적합',reason0:'확인',photos:i===0?['image']:[]}))}]}};
+const r=reviewFifteen(data,'CH-01',t);
+assert.equal(r.status,'ready_for_review');assert.equal(r.items.length,15);assert.equal(r.items[0].photoCount,1);assert.equal(r.summary.missingPhotos,14);assert.equal(r.photoPixelsInterpreted,false);
+assert.equal(reviewFifteen(data,'XX',t).status,'hold');
+assert.equal(reviewFifteen({data:{equipment:[]}},'CH-01',t).status,'hold');
+assert.equal(reviewFifteen({data:{equipment:[data.data.equipment[0],data.data.equipment[0]]}},'CH-01',t).status,'hold');
+console.log('15-item review tests: PASS');
