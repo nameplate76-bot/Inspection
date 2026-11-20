@@ -5,9 +5,15 @@
   const statusText=$('m103CloudStatus'), login=$('m103CloudLogin'), actions=$('m103CloudActions');
   let sb=null, account=null, adapter=null, remoteRevision=0, enabled=false;
   let cloudDirty=false, conflict=false, suppress=false, committing=false, refreshBusy=false;
-  let generation=0, debounce=null, poll=null, channel=null;
+  let generation=0, debounce=null, poll=null, channel=null, lastLocalHash=null, channelState='대기';
   let syncPausedByTimeout=false;
   const notify=(s)=>{if(statusText)statusText.textContent=s};
+  // A persistent acknowledgement is the only evidence that this device's local data was uploaded.
+  const ackKey=()=>account?'ttoktti-sync-ack-v137-'+account.id:null;
+  const digest=obj=>{const str=JSON.stringify(obj);let h=2166136261;for(let i=0;i<str.length;i++)h=Math.imul(h^str.charCodeAt(i),16777619);return (h>>>0).toString(16)+':'+str.length};
+  function readAck(){try{return JSON.parse(localStorage.getItem(ackKey())||'null')}catch{return null}}
+  function writeAck(snapshot,revision){try{localStorage.setItem(ackKey(),JSON.stringify({hash:digest(snapshot),revision:Number(revision)}))}catch(e){console.warn('동기화 확인 정보 저장 실패',e)}}
+  function alreadyUploaded(snapshot){return readAck()?.hash===digest(snapshot)}
   const describeError=e=>String(e?.message||e?.error_description||e||'알 수 없는 오류');
   const sizeOf=obj=>{try{return new Blob([JSON.stringify(obj)]).size}catch{return Infinity}};
   function localEmpty(obj){return !Array.isArray(obj?.equipment)||(!obj.equipment.length&&!Object.values(obj.info||{}).some(v=>String(v??'').trim()))}
@@ -35,7 +41,7 @@
     suppress=true;
     try{await adapter.replace(row.document);if(row.document.reasonLibrary){localStorage.setItem('performance_m1_test_reasons_v1',JSON.stringify(row.document.reasonLibrary))}}
     finally{suppress=false}
-    remoteRevision=Number(row.revision||0);cloudDirty=false;conflict=false;enabled=true;
+    remoteRevision=Number(row.revision||0);cloudDirty=false;conflict=false;enabled=true;writeAck(row.document,remoteRevision);
     startListening();notify(`클라우드 최신 자료 불러옴 · 버전 ${remoteRevision}`);
     return true;
   }
@@ -50,28 +56,37 @@
       if(error||!profile?.active||!(profile.role==='admin'||(profile.permissions?.sync===true&&profile.permissions?.check_view===true))){account=null;disengage();showLogin();notify('동기화 권한이 있는 사용자만 공유 가능');return}
       showAccount();
       const row=await getRemote();
-      if(!row){enabled=false;remoteRevision=0;notify('클라우드 자료 없음 · 이 기기 자료 업로드를 눌러 공유 시작');return}
+      if(!row){enabled=false;remoteRevision=0;notify('클라우드 자료 없음 · 먼저 이 기기 자료 클라우드에 올리기를 한 번 실행하세요');return}
       remoteRevision=Number(row.revision||0);
       if(!validSnapshot(row.document)){enabled=false;notify('서버 문서 형식 오류 · 백업 후 관리자 확인 필요');return}
       const local=adapter.get();
       if(JSON.stringify(local)===JSON.stringify(row.document)){
-        enabled=true;conflict=false;cloudDirty=false;startListening();notify(`PC·모바일 동기화 연결됨 · 버전 ${remoteRevision}`);return;
+        enabled=true;conflict=false;cloudDirty=false;writeAck(row.document,remoteRevision);startListening();notify(`PC·모바일 자동 동기화 연결됨 · 버전 ${remoteRevision}`);return;
       }
-      if(localEmpty(local)){
+      if(localEmpty(local)||alreadyUploaded(local)){
         await adoptRemote(row,true);return;
       }
-      enabled=false;conflict=true;notify('이 기기와 클라우드 자료가 다릅니다 · 업로드 또는 불러오기 선택');
+      // Offline edits can be safely uploaded when the server has not advanced
+      // since this device's last acknowledged revision. Never overwrite newer work.
+      const ack=readAck();
+      if(ack?.revision===remoteRevision&&ack?.hash!==digest(local)){
+        enabled=true;conflict=false;cloudDirty=true;generation++;
+        startListening();notify('오프라인 작성 내용 발견 · 클라우드에 안전하게 전송 중…');
+        void flush();return;
+      }
+      enabled=false;conflict=true;notify('이 기기와 클라우드 자료가 서로 다릅니다. JSON 백업 후 업로드/불러오기를 선택하세요. 자동 덮어쓰지 않습니다.');
     }catch(e){console.error('클라우드 연결 실패',e);enabled=false;notify('클라우드 연결 실패 · 로컬은 안전하게 보관됨: '+describeError(e))}
   }
   function startListening(){
     if(!sb||!account||!enabled)return;
     if(channel){sb.removeChannel(channel);channel=null}
     if(poll)clearInterval(poll);
-    channel=sb.channel('performance-m103-'+account.id).on('postgres_changes',{event:'*',schema:'public',table:TABLE,filter:'owner_id=eq.'+account.id},()=>{void checkChanges()}).subscribe();
-    poll=setInterval(()=>{if(!document.hidden)void checkChanges();if(enabled&&cloudDirty&&!committing&&!conflict)void flush()},12000);
+    channel=sb.channel('performance-m137-'+account.id).on('postgres_changes',{event:'*',schema:'public',table:TABLE,filter:'owner_id=eq.'+account.id},()=>{void checkChanges()}).subscribe(state=>{channelState=state;if(state==='SUBSCRIBED'){void checkChanges()}else if(state==='CHANNEL_ERROR'||state==='TIMED_OUT'){notify('실시간 연결 지연 · 자동 재확인으로 동기화 유지')}});
+    // Polling is an intentional fallback: Supabase Realtime publication may not be enabled yet.
+    poll=setInterval(()=>{if(!document.hidden&&enabled)void checkChanges();if(enabled&&cloudDirty&&!committing&&!conflict)void flush()},5000);
   }
   async function checkChanges(){
-    if(refreshBusy||!enabled||committing||!account)return;
+    if(refreshBusy||!enabled||committing||!account||suppress)return;
     refreshBusy=true;
     try{
       const info=await getRemoteVersion();
@@ -88,8 +103,8 @@
     if(suppress)return;
     generation++;cloudDirty=true;
     if(!enabled||!account||syncPausedByTimeout)return;
-    notify('이 기기 저장 완료 · 클라우드 동기화 대기');
-    clearTimeout(debounce);debounce=setTimeout(()=>void flush(),1600);
+    notify('이 기기 저장됨 · 다른 기기에 자동 전송 중… (전송 완료 전 앱을 닫지 마세요)');
+    clearTimeout(debounce);debounce=setTimeout(()=>void flush(),900);
   }
   async function flush(force=false){
     if(committing||!account||!sb||!adapter||conflict||!enabled||syncPausedByTimeout)return;
@@ -113,8 +128,9 @@
       }
       syncPausedByTimeout=false;
       remoteRevision=next;
+      writeAck(snap,next);
       cloudDirty=(generation!==sentGen);
-      notify(`PC·모바일 공유 저장 완료 · 버전 ${next}`+(cloudDirty?' · 추가 변경 동기화 대기':''));
+      notify(`클라우드 저장 완료 · PC·모바일 자동 공유 · 버전 ${next}`+(cloudDirty?' · 추가 변경 동기화 대기':''));
       if(!poll)startListening();
     }catch(e){
       console.error('클라우드 업로드 실패',e);
@@ -130,7 +146,7 @@
         notify('클라우드 저장 실패 · 클라우드 미반영(이 기기 자료 보관): '+detail);
       }
     }
-    finally{committing=false;if(enabled&&cloudDirty&&!conflict&&!syncPausedByTimeout){clearTimeout(debounce);debounce=setTimeout(()=>void flush(),10000)}}
+    finally{committing=false;if(enabled&&cloudDirty&&!conflict&&!syncPausedByTimeout){clearTimeout(debounce);debounce=setTimeout(()=>void flush(),4000)}}
   }
   async function manualUpload(){
     if(!window.TTOKTTI_ACCOUNT?.has('check_edit')){notify('수정 권한이 없습니다.');return}
@@ -190,5 +206,5 @@
   window.addEventListener('online',()=>{if(enabled&&cloudDirty)void flush();else if(enabled)void checkChanges()});
   window.addEventListener('focus',()=>{if(enabled)void checkChanges()});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&enabled)void checkChanges()});
-  window.PERFORMANCE_M1_CLOUD={localReady,localSaved,debug:()=>({authenticated:!!account,enabled,remoteRevision,cloudDirty,conflict,syncPausedByTimeout,localBytes:adapter?sizeOf(adapter.get()):null})};
+  window.PERFORMANCE_M1_CLOUD={localReady,localSaved,debug:()=>({authenticated:!!account,enabled,remoteRevision,cloudDirty,conflict,syncPausedByTimeout,channelState,localBytes:adapter?sizeOf(adapter.get()):null})};
 })();
