@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#153f72">
   <meta name="robots" content="noindex,nofollow">
-  <title>똑띠체크 | 성능점검표 작성 M1.3.15</title>
-  <link rel="stylesheet" href="./assets/legacy-editor.css?v=M1.3.15">
+  <title>똑띠체크 | 성능점검표 작성 M1.3.16</title>
+  <link rel="stylesheet" href="./assets/legacy-editor.css?v=M1.3.16">
   <link rel="stylesheet" href="./assets/module.css?v=M1.0.6">
   <style>
   .ttoktti-back{background:#0c2945;padding:9px clamp(12px,3vw,24px);text-align:left}
@@ -19,7 +19,7 @@
   .tt-nav-sync-status{display:inline-block;margin:4px 0 0 10px;color:#c9f6ed;font:600 12px/1.45 "Malgun Gothic",sans-serif;max-width:360px;vertical-align:middle}
   @media(max-width:650px){.ttoktti-back .tt-sync-refresh{min-height:44px}.tt-nav-sync-status{display:block;margin:7px 0 0 0}}
   </style>
-<link rel="stylesheet" href="./assets/account.css?v=M1.3.15"></head>
+<link rel="stylesheet" href="./assets/account.css?v=M1.3.16"></head>
 <body>
   <nav class="ttoktti-back" aria-label="계정 및 메인화면"><a href="./index.html" aria-label="메인화면으로 돌아가기">← 똑띠i 홈으로</a><span id="ttAccountNav" class="tt-account-nav" style="display:inline-flex;margin-left:12px"><button id="ttLoginOpen">로그인</button><button id="ttProfileOpen" hidden>내 정보</button><button id="ttAdminOpen" hidden>사용자 관리</button><button id="ttLogout" hidden>로그아웃</button><button type="button" id="ttSyncRefresh" class="tt-sync-refresh" title="서버의 최신 점검자료를 확인합니다" aria-label="점검자료 새로고침">↻ 새로고침</button></span><span id="ttNavSyncStatus" role="status" aria-live="polite" class="tt-nav-sync-status"></span></nav>
   <main class="m1-layout">
@@ -44,12 +44,12 @@
   <script src="./assets/criteria-layout.js?v=M1.0.6"></script>
   <script src="./assets/offline-xlsx.js?v=M1.0.6"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./assets/app-version.js?v=M1.3.15"></script>
-  <script src="./assets/ttoktti-ai-test-config.js?v=M1.3.15"></script>
-  <script src="./assets/account.js?v=M1.3.15"></script>
-  <script src="./assets/cloud-sync.js?v=M1.3.15"></script>
-  <script src="./assets/sync-refresh-button.js?v=M1.3.15" defer></script>
-  <script src="./assets/permission-gate.js?v=M1.3.15"></script>
+  <script src="./assets/app-version.js?v=M1.3.16"></script>
+  <script src="./assets/ttoktti-ai-test-config.js?v=M1.3.16"></script>
+  <script src="./assets/account.js?v=M1.3.16"></script>
+  <script src="./assets/cloud-sync.js?v=M1.3.16"></script>
+  <script src="./assets/sync-refresh-button.js?v=M1.3.16" defer></script>
+  <script src="./assets/permission-gate.js?v=M1.3.16"></script>
   <script>
   (function(){
     const btn=document.getElementById('ttAccountRetry'),status=document.getElementById('m103CloudStatus'),diag=document.getElementById('ttAccountDiagnostic');
@@ -58,13 +58,13 @@
     setTimeout(()=>{if(status&&status.textContent.includes('확인 중')){status.textContent='계정 확인이 지연되고 있습니다. 연결 재시도를 누르세요.';if(diag)diag.textContent='모바일 네트워크·Supabase 계정 상태를 확인하세요.'}},12000);
   })();
   </script>
-  <script src="./assets/legacy-recovery.js?v=M1.3.15" defer></script>
+  <script src="./assets/legacy-recovery.js?v=M1.3.16" defer></script>
   <!-- Isolated help widget: no writes to existing reports, authentication or cloud storage. -->
-  <link rel="stylesheet" href="./assets/ttoktti-help.css?v=M1.3.15">
+  <link rel="stylesheet" href="./assets/ttoktti-help.css?v=M1.3.16">
   
-  <script src="./assets/ttoktti-help.js?v=M1.3.15-AI-TEST" defer></script>
-  <link rel="stylesheet" href="./assets/check-writing-focus.css?v=M1.3.15">
-  <script src="./assets/check-writing-focus.js?v=M1.3.15" defer></script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=M1.3.15').catch(console.warn));}</script>
+  <script src="./assets/ttoktti-help.js?v=M1.3.16-AI-TEST" defer></script>
+  <link rel="stylesheet" href="./assets/check-writing-focus.css?v=M1.3.16">
+  <script src="./assets/check-writing-focus.js?v=M1.3.16" defer></script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=M1.3.16').catch(console.warn));}</script>
 </body>
 </html>

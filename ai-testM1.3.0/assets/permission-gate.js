@@ -2,14 +2,28 @@
 (()=>{'use strict';
 const account=window.TTOKTTI_ACCOUNT,root=document.getElementById('reportComposerPage');
 window.addEventListener('ttoktti-auth-diagnostic',event=>{if(!loaded)message(event.detail?.message||'계정 확인 실패')});
-let loaded=false,initialId=null,checking=false;
+let loaded=false,initialId=null,checking=false,editorReady=false,engineWatch=null;
+function startupState(kind,text){
+ const status=document.getElementById('m103CloudStatus'),diag=document.getElementById('ttAccountDiagnostic');
+ if(status&&kind!=='ready')status.textContent=text;
+ if(diag)diag.textContent=kind==='ready'?'점검표 준비 완료':text;
+ if(kind==='error')message(text);
+ if(kind==='ready'){editorReady=true;clearTimeout(engineWatch);if(status&&/불러오는 중|연결을 확인 중|지연/.test(status.textContent))status.textContent='점검표 열림 · 클라우드 동기화 상태 확인 중';banner.hidden=true}
+}
+window.addEventListener('ttoktti-editor-startup',e=>startupState(e.detail?.phase||'storage',e.detail?.message||'점검표 초기화 중…'));
+window.addEventListener('error',e=>{const source=String(e.filename||'');if(source.includes('legacy-checklist-engine.js'))startupState('error','점검표 실행 오류: '+String(e.message||'알 수 없는 오류')+' · 브라우저 캐시/배포 파일을 확인하세요.')});
+
 const banner=document.createElement('section');banner.className='tt-permission-banner';banner.setAttribute('role','status');root.before(banner);
 const has=p=>!!account?.has(p)&&(p!=='check_delete'||!!account?.has('check_edit'));
 function message(s){
  banner.replaceChildren();const info=document.createElement('span');info.textContent=s;banner.append(info);
  const retry=document.createElement('button');retry.type='button';retry.textContent='↻ 계정 연결 재시도';retry.className='tt-auth-retry';
  retry.onclick=async()=>{retry.disabled=true;info.textContent='계정·권한을 다시 확인 중…';try{await account?.refresh?.(true);await sync()}finally{retry.disabled=false}};
- banner.append(retry);banner.hidden=false;
+ banner.append(retry);
+ if(/점검표 초기화|저장공간|점검표 실행 오류|점검표 파일/.test(s)){
+  const reopen=document.createElement('button');reopen.type='button';reopen.textContent='↻ 점검표 다시 열기';reopen.className='tt-auth-retry';reopen.onclick=()=>location.reload();banner.append(reopen);
+ }
+ banner.hidden=false;
  const status=document.getElementById('m103CloudStatus');if(status&&(!status.textContent||/확인 중/.test(status.textContent)))status.textContent=s;
 }
 function permissions(){
@@ -59,7 +73,7 @@ async function sync(){
   if(!user||!profile?.active){root.hidden=true;document.getElementById('m103Cloud').hidden=false;message(!user?'로그인 정보가 확인되지 않았습니다. 로그인 후 다시 시도하세요.':'계정은 확인되었으나 사용 권한 조회에 실패했거나 승인되지 않았습니다. 연결 재시도를 누르세요.');return}
   if(initialId&&initialId!==user.id){location.reload();return}initialId=user.id;
   if(!has('check_view')){permissions();return}
-  if(!loaded){loaded=true;const script=document.createElement('script');script.src='./assets/legacy-checklist-engine.js?v='+encodeURIComponent(window.TTOKTTI_APP_VERSION||'M1.3.15');script.onerror=()=>{loaded=false;message('점검표 파일 로딩 실패 · 인터넷이나 배포 경로를 확인하고 재시도하세요.');};document.body.appendChild(script)}
+  if(!loaded){loaded=true;editorReady=false;startupState('loading','계정 확인 완료 · 점검표 프로그램을 불러오는 중…');const script=document.createElement('script');script.src='./assets/legacy-checklist-engine.js?v='+encodeURIComponent(window.TTOKTTI_APP_VERSION||'M1.3.16');script.onerror=()=>{loaded=false;startupState('error','점검표 파일 다운로드 실패 · 배포 경로와 네트워크를 확인하세요.')};script.onload=()=>{if(!editorReady)startupState('loading','점검표 프로그램 실행됨 · 기기 저장자료를 확인 중…')};document.body.appendChild(script);clearTimeout(engineWatch);engineWatch=setTimeout(()=>{if(!editorReady)startupState('error','점검표 초기화가 완료되지 않았습니다(20초). 저장공간 잠금 또는 실행 오류를 확인하세요.')},20000)}
   permissions();
  }catch(e){root.hidden=true;message('권한 확인 오류: '+String(e?.message||e)+' · 연결 재시도를 눌러주세요.')}finally{checking=false}
 }
