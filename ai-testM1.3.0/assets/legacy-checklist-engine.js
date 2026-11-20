@@ -22,37 +22,81 @@ function input(key,value,large=false){
 }
 function itemField(i,k,v,large=false){return large?`<textarea data-item="${i}" data-key="${k}">${E(v)}</textarea>`:`<input data-item="${i}" data-key="${k}" value="${E(v)}">`}
 function equip(){return d.equipment.find(e=>e.uid===selected)}
-function render(){if(!root()||!window.TTOKTTI_ACCOUNT?.has('check_view'))return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">${E(window.TTOKTTI_APP_VERSION||"M1.3.4")}</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 브라우저 로컬 저장 + 선택적 계정별 시험자료 클라우드 공유</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${k==='주소'?`<div class="m134-address-row">${input(k,d.info[k]||'')}<button type="button" class="m134-address-button" data-address-search>주소 검색</button></div><small class="m134-address-help">도로명·지번·건물명으로 검색 후 주소를 선택하세요. 직접 입력도 가능합니다.</small>`:input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
+function render(){if(!root()||!window.TTOKTTI_ACCOUNT?.has('check_view'))return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">${E(window.TTOKTTI_APP_VERSION||"M1.3.5")}</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 브라우저 로컬 저장 + 선택적 계정별 시험자료 클라우드 공유</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${k==='주소'?`<div class="m134-address-row">${input(k,d.info[k]||'')}<button type="button" class="m134-address-button" data-address-search>주소 검색</button></div><small class="m134-address-help">도로명·지번·건물명으로 검색 후 주소를 선택하세요. 직접 입력도 가능합니다.</small>`:input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
 
-/* M1.3.4: Kakao(Daum) postcode lookup; no API key and no database schema change. */
-let m134PostcodeLoading=null;
-function openM134AddressSearch(){
- const addressInput=root()?.querySelector('[data-info="주소"]');
- if(!addressInput)return;
- const button=root().querySelector('[data-address-search]');
- if(button){button.disabled=true;button.textContent='검색창 준비 중…'}
- const restore=()=>{if(button){button.disabled=false;button.textContent='주소 검색'}};
- if(!m134PostcodeLoading){
-  m134PostcodeLoading=new Promise((resolve,reject)=>{
-   if(window.daum?.Postcode){resolve();return}
+/* M1.3.5: embedded postcode search avoids browser popup blocking. */
+let m135PostcodeLoading=null;
+function m135EnsureAddressDialog(){
+ let overlay=document.getElementById('m135AddressOverlay');
+ if(overlay)return overlay;
+ overlay=document.createElement('div');
+ overlay.id='m135AddressOverlay';
+ overlay.className='m135-address-overlay';
+ overlay.setAttribute('role','dialog');
+ overlay.setAttribute('aria-modal','true');
+ overlay.setAttribute('aria-label','주소 검색');
+ overlay.innerHTML=`<div class="m135-address-panel"><div class="m135-address-header"><strong>주소 검색</strong><button type="button" data-address-close aria-label="주소 검색 닫기">✕ 닫기</button></div><p>도로명, 지번 또는 건물명으로 주소를 검색하고 결과를 선택하세요.</p><div class="m135-address-result" id="m135AddressResult" aria-live="polite">주소 검색을 준비하고 있습니다…</div><div id="m135PostcodeContainer" class="m135-postcode-container"></div><div class="m135-address-footer"><button type="button" data-address-retry>다시 시도</button><button type="button" data-address-close>닫기</button></div></div>`;
+ const css=document.createElement('style');
+ css.id='m135AddressStyle';
+ css.textContent=`.m135-address-overlay{position:fixed;inset:0;z-index:2147483600;background:rgba(5,19,39,.72);display:flex;align-items:center;justify-content:center;padding:14px;box-sizing:border-box}.m135-address-panel{box-sizing:border-box;width:min(620px,100%);max-height:calc(100dvh - 28px);padding:16px;background:#fff;border-radius:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 50px #0005;color:#142e49}.m135-address-header{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:18px}.m135-address-panel button{background:#f6fbff;border:1px solid #adc6dd;padding:9px 12px;border-radius:8px;cursor:pointer;color:#143c65;min-height:40px}.m135-address-panel p{font-size:13px;margin:0}.m135-address-result{font-size:13px;color:#30547c;min-height:19px}.m135-postcode-container{width:100%;height:min(490px,60dvh);min-height:290px;border:1px solid #c5d7e8;overflow:hidden;background:#fff}.m135-address-footer{display:flex;justify-content:flex-end;gap:8px}.m135-address-panel button:focus-visible{outline:3px solid #4d90da}@media(max-width:550px){.m135-address-panel{padding:10px}.m135-postcode-container{height:55dvh;min-height:280px}}`;
+ document.head.appendChild(css);
+ document.body.appendChild(overlay);
+ const close=()=>{overlay.remove();document.removeEventListener('keydown',escapeHandler)};
+ const escapeHandler=e=>{if(e.key==='Escape')close()};
+ document.addEventListener('keydown',escapeHandler);
+ overlay.querySelectorAll('[data-address-close]').forEach(button=>button.addEventListener('click',close));
+ overlay.querySelector('[data-address-retry]').addEventListener('click',()=>m135LaunchAddressSearch(true));
+ overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+ overlay.querySelector('[data-address-close]').focus();
+ return overlay;
+}
+function m135LoadPostcode(forceRetry=false){
+ if(window.daum?.Postcode)return Promise.resolve();
+ if(forceRetry){m135PostcodeLoading=null;document.querySelectorAll('script[data-m135-postcode]').forEach(s=>s.remove())}
+ if(!m135PostcodeLoading){
+  m135PostcodeLoading=new Promise((resolve,reject)=>{
    const script=document.createElement('script');
    script.src='https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
-   script.async=true;script.onload=()=>window.daum?.Postcode?resolve():reject(new Error('주소 검색 서비스 초기화 실패'));
-   script.onerror=()=>reject(new Error('주소 검색 서비스를 불러올 수 없습니다.'));
+   script.async=true;
+   script.dataset.m135Postcode='1';
+   let finished=false;
+   const finish=err=>{if(finished)return;finished=true;clearTimeout(timer);err?reject(err):resolve()};
+   const timer=setTimeout(()=>finish(new Error('주소 검색 서비스 연결 시간이 초과되었습니다. 인터넷 연결이나 브라우저의 외부 스크립트 차단 설정을 확인하세요.')),12000);
+   script.onload=()=>window.daum?.Postcode?finish():finish(new Error('주소 검색 서비스를 초기화하지 못했습니다.'));
+   script.onerror=()=>finish(new Error('주소 검색 서비스를 불러오지 못했습니다. 네트워크 또는 차단 설정을 확인하세요.'));
    document.head.appendChild(script);
-  }).catch(error=>{m134PostcodeLoading=null;throw error});
+  }).catch(error=>{m135PostcodeLoading=null;throw error});
  }
- m134PostcodeLoading.then(()=>{
-  restore();
-  new window.daum.Postcode({oncomplete(result){
-   const address=(result.userSelectedType==='R'?result.roadAddress:result.jibunAddress)||result.roadAddress||result.jibunAddress||'';
-   if(!address)return;
-   addressInput.value=address;
-   addressInput.dispatchEvent(new Event('input',{bubbles:true}));
-   addressInput.focus();
-  }}).open({q:addressInput.value.trim()});
- }).catch(error=>{restore();alert(error.message+'\n인터넷 연결을 확인하거나 주소를 직접 입력해 주세요.')});
+ return m135PostcodeLoading;
 }
+async function m135LaunchAddressSearch(retry=false){
+ const overlay=m135EnsureAddressDialog(),result=overlay.querySelector('#m135AddressResult'),host=overlay.querySelector('#m135PostcodeContainer');
+ result.textContent='주소 검색 서비스를 불러오는 중입니다…';
+ host.replaceChildren();
+ try{
+  await m135LoadPostcode(retry);
+  if(!overlay.isConnected)return;
+  const field=root()?.querySelector('[data-info="주소"]');
+  const initialQuery=(field?.value||'').trim();
+  const postcode=new window.daum.Postcode({width:'100%',height:'100%',oncomplete(data){
+   const address=(data.userSelectedType==='R'?data.roadAddress:data.jibunAddress)||data.roadAddress||data.jibunAddress||'';
+   const currentField=root()?.querySelector('[data-info="주소"]');
+   if(!currentField){result.textContent='주소 입력란을 찾을 수 없습니다. 화면을 새로고침한 후 다시 시도하세요.';return}
+   if(!address){result.textContent='선택된 주소가 없습니다. 다른 검색 결과를 선택하세요.';return}
+   currentField.value=address;
+   currentField.dispatchEvent(new Event('input',{bubbles:true}));
+   result.textContent='주소를 입력했습니다: '+address;
+   overlay.querySelector('[data-address-close]').click();
+   currentField.focus();
+  }});
+  postcode.embed(host,{q:initialQuery,autoClose:false});
+  result.textContent='검색 결과에서 주소를 선택하면 입력란에 자동 반영됩니다.';
+ }catch(error){
+  if(!overlay.isConnected)return;
+  result.textContent='주소 검색 오류: '+(error?.message||String(error))+' 직접 주소 입력은 계속 사용할 수 있습니다.';
+ }
+}
+function openM134AddressSearch(){m135LaunchAddressSearch();}
 
 function energyUI(){return `<h4>월별 사용량 (동일 단위로 입력)</h4><div class="reGrid">${Array.from({length:12},(_,i)=>`<label>${i+1}월<input type="number" min="0" step="any" data-month="${i}" value="${E(d.energy[i]??'')}"></label>`).join('')}</div>`}
 function isVacuumPumpItem(e,item){return e?.type==='냉동기'&&String(item?.title||'').includes('⑤ 펌프(용액, 냉매, 진공) 상태(흡수식 냉동기)')}
