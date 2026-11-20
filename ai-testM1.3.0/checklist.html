@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#153f72">
   <meta name="robots" content="noindex,nofollow">
-  <title>똑띠체크 | 성능점검표 작성 M1.3.16</title>
-  <link rel="stylesheet" href="./assets/legacy-editor.css?v=M1.3.16">
+  <title>똑띠체크 | 성능점검표 작성 M1.3.17</title>
+  <link rel="stylesheet" href="./assets/legacy-editor.css?v=M1.3.17">
   <link rel="stylesheet" href="./assets/module.css?v=M1.0.6">
   <style>
   .ttoktti-back{background:#0c2945;padding:9px clamp(12px,3vw,24px);text-align:left}
@@ -19,7 +19,7 @@
   .tt-nav-sync-status{display:inline-block;margin:4px 0 0 10px;color:#c9f6ed;font:600 12px/1.45 "Malgun Gothic",sans-serif;max-width:360px;vertical-align:middle}
   @media(max-width:650px){.ttoktti-back .tt-sync-refresh{min-height:44px}.tt-nav-sync-status{display:block;margin:7px 0 0 0}}
   </style>
-<link rel="stylesheet" href="./assets/account.css?v=M1.3.16"></head>
+<link rel="stylesheet" href="./assets/account.css?v=M1.3.17"></head>
 <body>
   <nav class="ttoktti-back" aria-label="계정 및 메인화면"><a href="./index.html" aria-label="메인화면으로 돌아가기">← 똑띠i 홈으로</a><span id="ttAccountNav" class="tt-account-nav" style="display:inline-flex;margin-left:12px"><button id="ttLoginOpen">로그인</button><button id="ttProfileOpen" hidden>내 정보</button><button id="ttAdminOpen" hidden>사용자 관리</button><button id="ttLogout" hidden>로그아웃</button><button type="button" id="ttSyncRefresh" class="tt-sync-refresh" title="서버의 최신 점검자료를 확인합니다" aria-label="점검자료 새로고침">↻ 새로고침</button></span><span id="ttNavSyncStatus" role="status" aria-live="polite" class="tt-nav-sync-status"></span></nav>
   <main class="m1-layout">
@@ -29,7 +29,7 @@
       <p class="m1-cloud-help">점검표를 작성하면 이 기기에 먼저 저장한 뒤 동일 계정의 PC·모바일에 자동 공유합니다. 업로드/불러오기 버튼을 누르지 않아도 됩니다. 오프라인 작성분은 연결 복구 후 자동 업로드를 시도합니다. 동시 수정으로 내용이 겹칠 때에는 복구본을 보관합니다. 클라우드 저장 완료 표시를 확인하세요.</p>
       <form id="m103CloudLogin" class="m1-cloud-login" hidden><input id="m103Email" type="email" autocomplete="username" placeholder="업무포털 로그인 이메일" required><input id="m103Password" type="password" autocomplete="current-password" placeholder="비밀번호" required><button type="submit">로그인 및 연결</button></form>
       <div id="m103CloudActions" class="m1-cloud-actions" hidden><span id="m103Account"></span><button type="button" id="m103Upload" hidden>이 기기 자료 클라우드에 올리기</button><button type="button" id="m103Download" hidden>클라우드 자료 불러오기</button><button type="button" id="m103Refresh" hidden>다른 기기 변경 확인</button><button type="button" id="m1311Recovery" hidden style="background:#fff;color:#214c75;border:1px solid #aac5db">동기화 복구본 백업</button></div>
-      <p class="m1-cloud-warning">오프라인 저장은 해당 기기의 브라우저에만 보관됩니다. 앱 삭제·브라우저 데이터 삭제 시 소실될 수 있으므로 JSON 백업을 권장합니다. 사진은 점검표 문서와 함께 전송되며 문서 전체 24MB 초과 시 저장되지 않습니다. 시험용 공유 테이블에만 저장합니다. 기존 업무포털·영업·점검배정 및 운영 보고서 자료는 변경하지 않습니다. 동일 계정의 단일 시험 점검표(demo/current) 기준으로 공유됩니다. 서로 다른 현장은 자동 병합하지 않습니다.</p>
+      <p class="m1-cloud-warning">오프라인 저장은 해당 기기의 브라우저에만 보관됩니다. 앱 삭제·브라우저 데이터 삭제 시 소실될 수 있으므로 JSON 백업을 권장합니다. M1.3.17부터 사진은 비공개 Supabase Storage에 개별 업로드하고 점검표에는 사진 경로를 저장합니다. 최초 사용 전 TEST 사진 버킷 설정이 필요합니다. 클라우드 저장 완료 표시를 반드시 확인하세요. 시험용 공유 테이블에만 저장합니다. 기존 업무포털·영업·점검배정 및 운영 보고서 자료는 변경하지 않습니다. 동일 계정의 단일 시험 점검표(demo/current) 기준으로 공유됩니다. 서로 다른 현장은 자동 병합하지 않습니다.</p>
     </section>
     <section class="m132-recovery" aria-label="이전 버전 점검자료 복구" style="margin:14px 0;padding:16px;border:1px solid #b1cbdc;border-radius:12px;background:#f7fbff;color:#17334f;font-family:system-ui,sans-serif">
       <h3 style="margin:0 0 6px;font-size:17px">이전 버전 점검자료 복구 (M1.2.8 이전 저장자료)</h3>
@@ -44,12 +44,12 @@
   <script src="./assets/criteria-layout.js?v=M1.0.6"></script>
   <script src="./assets/offline-xlsx.js?v=M1.0.6"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./assets/app-version.js?v=M1.3.16"></script>
-  <script src="./assets/ttoktti-ai-test-config.js?v=M1.3.16"></script>
-  <script src="./assets/account.js?v=M1.3.16"></script>
-  <script src="./assets/cloud-sync.js?v=M1.3.16"></script>
-  <script src="./assets/sync-refresh-button.js?v=M1.3.16" defer></script>
-  <script src="./assets/permission-gate.js?v=M1.3.16"></script>
+  <script src="./assets/app-version.js?v=M1.3.17"></script>
+  <script src="./assets/ttoktti-ai-test-config.js?v=M1.3.17"></script>
+  <script src="./assets/account.js?v=M1.3.17"></script>
+  <script src="./assets/cloud-sync.js?v=M1.3.17"></script>
+  <script src="./assets/sync-refresh-button.js?v=M1.3.17" defer></script>
+  <script src="./assets/permission-gate.js?v=M1.3.17"></script>
   <script>
   (function(){
     const btn=document.getElementById('ttAccountRetry'),status=document.getElementById('m103CloudStatus'),diag=document.getElementById('ttAccountDiagnostic');
@@ -58,13 +58,13 @@
     setTimeout(()=>{if(status&&status.textContent.includes('확인 중')){status.textContent='계정 확인이 지연되고 있습니다. 연결 재시도를 누르세요.';if(diag)diag.textContent='모바일 네트워크·Supabase 계정 상태를 확인하세요.'}},12000);
   })();
   </script>
-  <script src="./assets/legacy-recovery.js?v=M1.3.16" defer></script>
+  <script src="./assets/legacy-recovery.js?v=M1.3.17" defer></script>
   <!-- Isolated help widget: no writes to existing reports, authentication or cloud storage. -->
-  <link rel="stylesheet" href="./assets/ttoktti-help.css?v=M1.3.16">
+  <link rel="stylesheet" href="./assets/ttoktti-help.css?v=M1.3.17">
   
-  <script src="./assets/ttoktti-help.js?v=M1.3.16-AI-TEST" defer></script>
-  <link rel="stylesheet" href="./assets/check-writing-focus.css?v=M1.3.16">
-  <script src="./assets/check-writing-focus.js?v=M1.3.16" defer></script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=M1.3.16').catch(console.warn));}</script>
+  <script src="./assets/ttoktti-help.js?v=M1.3.17-AI-TEST" defer></script>
+  <link rel="stylesheet" href="./assets/check-writing-focus.css?v=M1.3.17">
+  <script src="./assets/check-writing-focus.js?v=M1.3.17" defer></script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=M1.3.17').catch(console.warn));}</script>
 </body>
 </html>

@@ -22,9 +22,9 @@ function input(key,value,large=false){
 }
 function itemField(i,k,v,large=false){return large?`<textarea data-item="${i}" data-key="${k}">${E(v)}</textarea>`:`<input data-item="${i}" data-key="${k}" value="${E(v)}">`}
 function equip(){return d.equipment.find(e=>e.uid===selected)}
-function render(){if(!root()||!window.TTOKTTI_ACCOUNT?.has('check_view'))return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">${E(window.TTOKTTI_APP_VERSION||"M1.3.16")}</span></h2><p>V86 기능 보존형 1단계 · 27종 설비 · 이 기기 자동 저장 + 동일 계정 PC·모바일 클라우드 자동 동기화</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${k==='주소'?`<div class="m134-address-row">${input(k,d.info[k]||'')}<button type="button" class="m134-address-button" data-address-search>주소 검색</button></div><small class="m134-address-help">도로명·지번·건물명으로 검색 후 주소를 선택하세요. 직접 입력도 가능합니다.</small>`:input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
+function render(){if(!root()||!window.TTOKTTI_ACCOUNT?.has('check_view'))return;tab=3;root().innerHTML=`<div class="re m1-editor"><header><h2>성능점검표 독립 개발 모듈 <span class="m1-version">${E(window.TTOKTTI_APP_VERSION||"M1.3.17")}</span></h2><p>V86 사진 분리 동기화 · 27종 설비 · 이 기기 자동 저장 + 동일 계정 PC·모바일 클라우드 자동 동기화</p><div class="reTools"><button type="button" data-action="preview">점검표 PDF 미리보기</button><button type="button" data-action="excel">점검표 Excel 다운로드</button><button type="button" data-action="backup">테스트 JSON 백업</button><label class="reBtn">백업 불러오기<input type="file" id="reRestore" accept=".json,application/json" hidden></label><button type="button" data-action="sample">예시 냉동기 생성</button><button type="button" data-action="reset">테스트 자료 초기화</button></div><div class="m1-status" id="reStatus" role="status">이 브라우저 로컬에 저장 · 공유는 위 동기화 연결 상태 확인</div></header><details class="m1-site" open><summary>현장 기본정보 (테스트 전용)</summary><div class="reGrid">${['현장명','주소','관리주체','점검자','점검시작일','점검종료일'].map(k=>`<label>${k}${k==='주소'?`<div class="m134-address-row">${input(k,d.info[k]||'')}<button type="button" class="m134-address-button" data-address-search>주소 검색</button></div><small class="m134-address-help">도로명·지번·건물명으로 검색 후 주소를 선택하세요. 직접 입력도 가능합니다.</small>`:input(k,d.info[k]||'')}</label>`).join('')}</div></details><h3>설비별 성능점검표</h3>${equipmentUI()}</div>`;bind()}
 
-/* M1.3.16: embedded postcode search avoids browser popup blocking. */
+/* M1.3.17: embedded postcode search avoids browser popup blocking. */
 let m135PostcodeLoading=null;
 function m135EnsureAddressDialog(){
  let overlay=document.getElementById('m135AddressOverlay');
@@ -143,7 +143,7 @@ function equipmentInfoUIV3(e){measurementRows(e);return `<section class="reEquip
 equipmentInfoUI=equipmentInfoUIV3;
 function basicInfoSummary(e){const keys=['설비형식','용도','설치위치','제조사','설치년도','사양','점검일','점검자'],values={...e,'설비형식':equipmentFormatName(e)},filled=keys.filter(key=>String(values[key]||'').trim()).length;return `<section class="reBasicSummary"><div><b>설비 기본정보</b><small>${filled} / ${keys.length}개 항목 입력 · ${E(equipmentFormatName(e))}</small></div><button type="button" data-basic-edit>입력·수정</button></section>`}
 function basicInfoDialogBody(e){return `<div class="reToolDialogBody reBasicDialogBody"><div class="reToolDialogHead"><div><h3>설비 기본정보 입력·수정</h3><p>${E(e.type)} · ${E(e.number)}</p></div><button type="button" data-dialog-close aria-label="닫기">×</button></div><div class="reGrid">${equipmentFormatField(e)}${['용도','설치위치','제조사','설치년도','사양','점검자'].map(key=>`<label>${key}<input data-basic-field="${key}" value="${E(e[key]||'')}"></label>`).join('')}<label>점검일<div class="reDateControl"><input data-basic-field="점검일" value="${E(e['점검일']||'')}" placeholder="YYYY-MM-DD"><button type="button" data-basic-date-pick>날짜 선택</button><input type="date" data-basic-date-picker value="${E(e['점검일']||'')}" tabindex="-1" aria-hidden="true"></div></label></div><div class="reDialogFooter reBasicSaveFooter"><span class="reBasicSaveStatus" data-basic-save-status role="status" aria-live="polite">입력 후 저장하기를 눌러주세요.</span><button type="button" class="reBasicSaveButton" data-basic-save>저장하기</button><button type="button" class="reBasicCloseButton" data-dialog-close>닫기</button></div></div>`}
-/* M1.3.16: 8-digit inspection date normalization, with actual calendar validation. */
+/* M1.3.17: 8-digit inspection date normalization, with actual calendar validation. */
 function m1313NormalizeInspectionDate(value){
  const raw=String(value||'').trim();if(!raw)return '';
  const digits=raw.replace(/[-./\s]/g,'');
@@ -1211,7 +1211,7 @@ window.PERFORMANCE_M1_RECOVER_LOCAL=async snapshot=>{
 window.PERFORMANCE_M1_TEST_RESET=()=>actions.reset();
 /* === end standalone boundary === */
 
-/* M1.3.16: expose a non-destructive startup diagnostic if Safari IndexedDB stalls. */
+/* M1.3.17: expose a non-destructive startup diagnostic if Safari IndexedDB stalls. */
 let m1316DbReady=false;
 const m1316Signal=(phase,detail)=>{try{window.dispatchEvent(new CustomEvent('ttoktti-editor-startup',{detail:{phase,message:detail||''}}))}catch{}};
 const m1316StorageError=msg=>{m1316Signal('error',msg+' · 기존 자료는 삭제하지 않았습니다. 다른 탭을 닫고 다시 시도하세요.');};
@@ -1285,7 +1285,7 @@ bindMeasurementDialog=function(dialog,e){
 
 
 
-/* M1.3.16: 출력 양식 통일 — 냉동기 출력은 원본 그대로 보존.
+/* M1.3.17: 출력 양식 통일 — 냉동기 출력은 원본 그대로 보존.
  * 냉각탑~방음방진내진 26종의 PDF 요약/항목 페이지에 냉동기 V85 표, 글꼴,
  * 배경색 및 여백을 재사용. 점검 기준 문장은 기존 템플릿을 그대로 출력. */
 function m1312CriteriaTable(item){

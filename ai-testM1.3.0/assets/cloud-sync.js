@@ -1,6 +1,8 @@
 /* M1.0.3 — Account-scoped test-only Supabase sync. No existing portal table is accessed for writes. */
 (()=>{'use strict';
   const TABLE='pjt_performance_test_docs_v1', KEY='demo/current';
+  const PHOTO_BUCKET='ttoktti-test-photos', PHOTO_PREFIX='ttoktti-photo://';
+  const photoUploaded=new Set(), photoDownloaded=new Map();
   const $=id=>document.getElementById(id);
   const statusText=$('m103CloudStatus'), login=$('m103CloudLogin'), actions=$('m103CloudActions');
   let sb=null, account=null, adapter=null, remoteRevision=0, enabled=false;
@@ -24,10 +26,67 @@
   function showLogin(){login.hidden=true;actions.hidden=true;notify('메인화면에서 로그인하면 PC·모바일 동기화를 연결할 수 있습니다')}
   function showAccount(){login.hidden=true;actions.hidden=false;$('m103Account').textContent='로그인 계정: '+String(account?.email||'인증됨');const recovery=$('m1311Recovery');if(recovery)recovery.hidden=false;}
   function disengage(){enabled=false;conflict=false;cloudDirty=false;syncPausedByTimeout=false;remoteRevision=0;clearTimeout(debounce);if(channel&&sb){sb.removeChannel(channel);channel=null}if(poll){clearInterval(poll);poll=null}}
+  // V86 used Supabase Storage for report payloads. M1.3.17 keeps original photo
+  // data URLs in IndexedDB and stores their immutable bytes separately in a
+  // private Storage bucket. Only path references are written into JSONB.
+  const isPhoto=v=>typeof v==='string'&&/^data:image\/(?:jpeg|jpg|png|webp|gif|heic|heif);base64,/i.test(v);
+  const isPhotoRef=v=>typeof v==='string'&&v.startsWith(PHOTO_PREFIX);
+  const photoError=e=>new Error('사진 클라우드 업로드 실패: '+describeError(e)+' · Supabase 사진 버킷/접근 정책을 확인하세요. 이 기기의 원본 사진은 유지됩니다.');
+  async function photoPath(dataUrl){
+    const comma=dataUrl.indexOf(','), binary=atob(dataUrl.slice(comma+1)), bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    const sha=new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));
+    const hash=Array.from(sha).map(x=>x.toString(16).padStart(2,'0')).join('');
+    const mime=(dataUrl.slice(5,comma).split(';')[0]||'image/jpeg').toLowerCase();
+    const ext=mime.includes('png')?'png':mime.includes('webp')?'webp':mime.includes('gif')?'gif':mime.includes('heic')?'heic':mime.includes('heif')?'heif':'jpg';
+    return {path:account.id+'/'+hash+'.'+ext,bytes,mime};
+  }
+  async function uploadPhoto(dataUrl){
+    const file=await photoPath(dataUrl);
+    if(photoUploaded.has(file.path))return PHOTO_PREFIX+file.path;
+    const {error}=await sb.storage.from(PHOTO_BUCKET).upload(file.path,file.bytes,{contentType:file.mime,upsert:false,cacheControl:'31536000'});
+    // Immutable content-addressed files: an existing object is already valid.
+    if(error&&!(/409|already exists|duplicate/i.test(describeError(error))||error.statusCode===409))throw photoError(error);
+    photoUploaded.add(file.path);
+    return PHOTO_PREFIX+file.path;
+  }
+  async function downloadPhoto(ref){
+    const path=ref.slice(PHOTO_PREFIX.length);
+    if(!account||!path.startsWith(account.id+'/'))throw Error('사진의 계정 소유권이 일치하지 않습니다.');
+    if(photoDownloaded.has(path))return photoDownloaded.get(path);
+    const download=(async()=>{
+      const {data,error}=await sb.storage.from(PHOTO_BUCKET).download(path);
+      if(error)throw new Error('클라우드 사진 불러오기 실패 ('+path.split('/').pop()+'): '+describeError(error));
+      return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(Error('사진 읽기 오류'));reader.onload=()=>resolve(reader.result);reader.readAsDataURL(data)});
+    })();
+    photoDownloaded.set(path,download);
+    try{return await download}catch(e){photoDownloaded.delete(path);throw e}
+  }
+  async function transformPhotos(doc,mode){
+    const output=structuredClone(doc), refs=new Map();
+    async function walk(value){
+      if(mode==='upload'&&isPhoto(value)){
+        if(!refs.has(value))refs.set(value,uploadPhoto(value));
+        return await refs.get(value);
+      }
+      if(mode==='download'&&isPhotoRef(value)){
+        if(!refs.has(value))refs.set(value,downloadPhoto(value));
+        return await refs.get(value);
+      }
+      if(Array.isArray(value))return await Promise.all(value.map(walk));
+      if(value&&typeof value==='object'){
+        const entries=await Promise.all(Object.entries(value).map(async([k,v])=>[k,await walk(v)]));
+        return Object.fromEntries(entries);
+      }
+      return value;
+    }
+    return await walk(output);
+  }
   async function getRemote(){
     if(!account||!sb)throw Error('로그인이 필요합니다.');
     const {data,error}=await sb.from(TABLE).select('document,revision,updated_at').eq('owner_id',account.id).eq('doc_key',KEY).maybeSingle();
     if(error)throw error;
+    if(data?.document) data.document=await transformPhotos(data.document,'download');
     return data;
   }
   async function getRemoteVersion(){
@@ -184,7 +243,7 @@
     if(!sb||!account||!enabled)return;
     if(channel){sb.removeChannel(channel);channel=null}
     if(poll)clearInterval(poll);
-    channel=sb.channel('performance-m137-'+account.id).on('postgres_changes',{event:'*',schema:'public',table:TABLE,filter:'owner_id=eq.'+account.id},()=>{void checkChanges()}).subscribe(state=>{channelState=state;if(state==='SUBSCRIBED'){void checkChanges()}else if(state==='CHANNEL_ERROR'||state==='TIMED_OUT'){notify('실시간 연결 지연 · 자동 재확인으로 동기화 유지')}});
+    channel=sb.channel('performance-m1317-'+account.id).on('postgres_changes',{event:'*',schema:'public',table:TABLE,filter:'owner_id=eq.'+account.id},()=>{void checkChanges()}).subscribe(state=>{channelState=state;if(state==='SUBSCRIBED'){void checkChanges()}else if(state==='CHANNEL_ERROR'||state==='TIMED_OUT'){notify('실시간 연결 지연 · 자동 재확인으로 동기화 유지')}});
     // Polling is an intentional fallback: Supabase Realtime publication may not be enabled yet.
     poll=setInterval(()=>{if(!isOffline()&&!document.hidden&&enabled)void checkChanges();if(!isOffline()&&enabled&&cloudDirty&&!committing&&!conflict)void flush()},5000);
   }
@@ -216,16 +275,18 @@
     committing=true;clearTimeout(debounce);
     const sentGen=generation, snap=adapter.get();
     try{
-      const bytes=sizeOf(snap);
-      if(bytes>24*1024*1024)throw Error('점검표가 24MB를 초과했습니다. 사진을 줄이거나 JSON 백업 후 분할하세요.');
-      notify('클라우드 저장 중…');
+      notify('사진 개별 업로드 확인 중… (기기 원본 유지)');
+      const cloudDocument=await transformPhotos(snap,'upload');
+      const bytes=sizeOf(cloudDocument);
+      if(bytes>24*1024*1024)throw Error('사진을 분리한 뒤에도 점검표 텍스트 데이터가 24MB를 초과했습니다. JSON 백업 후 관리자에게 문의하세요.');
+      notify('클라우드 점검표 저장 중…');
       let next;
       if(remoteRevision===0){
-        const {data,error}=await sb.from(TABLE).insert({owner_id:account.id,doc_key:KEY,document:snap,revision:1}).select('revision').single();
+        const {data,error}=await sb.from(TABLE).insert({owner_id:account.id,doc_key:KEY,document:cloudDocument,revision:1}).select('revision').single();
         if(error){if(error.code==='23505'){const fresh=await getRemote();if(fresh)setTimeout(()=>void autoReconcile(fresh,adapter.get()),0);return}throw error}
         next=Number(data.revision);
       }else{
-        const {data,error}=await sb.from(TABLE).update({document:snap,revision:remoteRevision+1,updated_at:new Date().toISOString()}).eq('owner_id',account.id).eq('doc_key',KEY).eq('revision',remoteRevision).select('revision').maybeSingle();
+        const {data,error}=await sb.from(TABLE).update({document:cloudDocument,revision:remoteRevision+1,updated_at:new Date().toISOString()}).eq('owner_id',account.id).eq('doc_key',KEY).eq('revision',remoteRevision).select('revision').maybeSingle();
         if(error)throw error;
         if(!data){const fresh=await getRemote();if(fresh)setTimeout(()=>void autoReconcile(fresh,adapter.get()),0);return}
         next=Number(data.revision);
@@ -240,8 +301,12 @@
     }catch(e){
       console.error('클라우드 업로드 실패',e);
       const detail=describeError(e);
+      const setupMissing=/Bucket not found|bucket.*not found|Storage bucket.*not found/i.test(detail);
       const timedOut=/statement timeout|canceling statement|57014|query timeout/i.test(detail);
-      if(timedOut){
+      if(setupMissing){
+        syncPausedByTimeout=true;clearTimeout(debounce);
+        notify('사진 저장소 미설정 · TEST 사진 버킷 SQL 적용 후 점검표를 다시 열어주세요. 기기 원본은 보존됩니다.');
+      }else if(timedOut){
         // A timed-out write may have been canceled by PostgreSQL. Do NOT replay
         // an expensive full-document update indefinitely or mark it as saved.
         syncPausedByTimeout=true;
@@ -325,5 +390,5 @@
   window.addEventListener('online',()=>{notify('인터넷 연결 복구 · 미전송 자료 확인 중…');setTimeout(()=>void connect(),700)});
   window.addEventListener('focus',()=>{if(enabled)void checkChanges()});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&enabled)void checkChanges()});
-  window.PERFORMANCE_M1_CLOUD={localReady,localSaved,refreshNow:manualRefresh,debug:()=>({pendingLocal,isOffline:isOffline(),authenticated:!!account,enabled,remoteRevision,cloudDirty,conflict,recoveryCount,syncPausedByTimeout,channelState,localBytes:adapter?sizeOf(adapter.get()):null})};
+  window.PERFORMANCE_M1_CLOUD={localReady,localSaved,refreshNow:manualRefresh,debug:()=>({pendingLocal,isOffline:isOffline(),authenticated:!!account,enabled,remoteRevision,cloudDirty,conflict,recoveryCount,syncPausedByTimeout,channelState,localBytes:adapter?sizeOf(adapter.get()):null,photoBucket:PHOTO_BUCKET})};
 })();
