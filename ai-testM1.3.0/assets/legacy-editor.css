@@ -199,3 +199,11 @@
 
 /* V86 measurement ratio fields */
 .reMeasurementDialog input.reAutoPercent{background:#edf6ff!important;color:#075b91!important;font-weight:800!important;cursor:default}
+
+/* M1.3.4 address search */
+.m134-address-row{display:flex;gap:8px;align-items:stretch;min-width:0}
+.m134-address-row input{flex:1;min-width:0}
+.m134-address-button{flex:0 0 auto;padding:0 15px;border:1px solid #1b548c;border-radius:7px;background:#eaf4ff;color:#143f72;font-weight:700;cursor:pointer;min-height:45px}
+.m134-address-button:disabled{opacity:.65;cursor:wait}
+.m134-address-help{display:block;margin-top:5px;color:#52677b;font-size:12px}
+@media(max-width:480px){.m134-address-row{flex-wrap:wrap}.m134-address-button{min-height:40px}}
