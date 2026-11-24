@@ -235,3 +235,9 @@
 .reBasicDialog .reBasicCloseButton{background:#fff!important;color:#173f72!important;border-color:#a6bacb!important}
 .reBasicDialog [data-basic-field="점검일"][aria-invalid="true"]{border:2px solid #bf2c3a!important;background:#fff4f5!important}
 @media(max-width:600px){.reBasicDialog .reBasicSaveFooter{display:grid;grid-template-columns:1fr 1fr}.reBasicDialog .reBasicSaveStatus{grid-column:1/-1}.reBasicDialog .reBasicSaveFooter button{width:100%;min-width:0!important}}
+
+/* M1.3.19 - Offline original photo recovery vault */
+.tt-photo-vault{margin:14px 0;padding:16px;border:2px solid #73adbd;border-radius:12px;background:#f3fafb;color:#16364f;font-family:system-ui,sans-serif}
+.tt-photo-vault h3{margin:0 0 7px;font-size:18px}.tt-photo-vault p{font-size:13px;line-height:1.6}
+.tt-photo-vault button{min-height:44px;padding:8px 12px;border-radius:9px;border:1px solid #17527e;background:#184570;color:#fff;font-weight:700;cursor:pointer}
+.tt-photo-vault-item{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:9px 0;border-bottom:1px solid #bad3df;font-size:13px;overflow-wrap:anywhere}
