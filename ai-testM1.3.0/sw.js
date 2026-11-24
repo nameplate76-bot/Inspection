@@ -1,5 +1,5 @@
-/* M1.3.20 offline shell cache. No Supabase API responses or private documents cached here. */
-const CACHE='ttoktti-static-m1320';
+/* M1.3.21 offline shell cache. No Supabase API responses or private documents cached here. */
+const CACHE='ttoktti-static-m1321';
 const SHELL=['./','./index.html','./checklist.html','./assets/app-version.js','./assets/account.js','./assets/cloud-sync.js','./assets/offline-photo-vault.js','./assets/sync-refresh-button.js','./assets/legacy-checklist-engine.js','./assets/permission-gate.js','./assets/legacy-editor.css','./assets/module.css','./assets/account.css','./assets/home.css','./assets/check-templates.js','./assets/criteria-layout.js','./assets/offline-xlsx.js','./vendor/jszip.min.js','./assets/legacy-recovery.js','./assets/ttoktti-help.js','./assets/ttoktti-help.css','./assets/ttoktti-help-knowledge.json','./assets/check-writing-focus.css','./assets/check-writing-focus.js','./assets/ttoktti-ai-test-config.js','./assets/home-motion.js','./assets/home-cta-cue.js','./assets/ttoktti-i-official-locked.png','./assets/ttoktti-check-wordmark-locked.png','../supabase-config.js'];
 const SUPABASE_CDN='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 self.addEventListener('install',event=>{event.waitUntil((async()=>{const c=await caches.open(CACHE);await Promise.allSettled(SHELL.map(x=>c.add(new Request(x,{cache:'reload'}))));try{const response=await fetch(SUPABASE_CDN);if(response.ok)await c.put(SUPABASE_CDN,response)}catch{} await self.skipWaiting()})())});
