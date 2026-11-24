@@ -241,3 +241,17 @@
 .tt-photo-vault h3{margin:0 0 7px;font-size:18px}.tt-photo-vault p{font-size:13px;line-height:1.6}
 .tt-photo-vault button{min-height:44px;padding:8px 12px;border-radius:9px;border:1px solid #17527e;background:#184570;color:#fff;font-weight:700;cursor:pointer}
 .tt-photo-vault-item{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:9px 0;border-bottom:1px solid #bad3df;font-size:13px;overflow-wrap:anywhere}
+
+/* M1.3.20 photo vault: small mobile-friendly grid; no redundant button per photograph */
+.tt-photo-vault-toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:12px 0}
+.tt-photo-vault-toolbar strong{font-size:14px}
+.tt-photo-vault .tt-photo-vault-secondary{background:#fff;color:#184570}
+.tt-photo-vault .tt-photo-vault-danger{background:#8b3341;border-color:#8b3341}
+.tt-photo-vault button:disabled{opacity:.4;cursor:not-allowed}
+.tt-photo-vault-selectall{display:flex;align-items:center;gap:8px;font-weight:700}
+.tt-photo-vault-selectall input,.tt-photo-vault-item input{width:20px;height:20px;flex:none}
+.tt-photo-vault-item{display:grid;grid-template-columns:22px 68px minmax(0,1fr);gap:12px;align-items:center;min-height:78px}
+.tt-photo-vault-thumb{height:64px;width:68px;object-fit:cover;border-radius:7px;background:#e8f1f6}
+.tt-photo-vault-meta{display:grid;gap:5px;min-width:0}.tt-photo-vault-meta strong{font-size:14px}.tt-photo-vault-meta small{font-size:12px;line-height:1.5}
+.tt-photo-vault [hidden]{display:none!important}
+@media(max-width:600px){.tt-photo-vault-toolbar{align-items:stretch}.tt-photo-vault-toolbar button{width:100%}.tt-photo-vault-toolbar .tt-photo-vault-selectall{margin:5px 0}}
