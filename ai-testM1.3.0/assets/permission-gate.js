@@ -73,7 +73,7 @@ async function sync(){
   if(!user||!profile?.active){root.hidden=true;document.getElementById('m103Cloud').hidden=false;message(!user?'로그인 정보가 확인되지 않았습니다. 로그인 후 다시 시도하세요.':'계정은 확인되었으나 사용 권한 조회에 실패했거나 승인되지 않았습니다. 연결 재시도를 누르세요.');return}
   if(initialId&&initialId!==user.id){location.reload();return}initialId=user.id;
   if(!has('check_view')){permissions();return}
-  if(!loaded){loaded=true;editorReady=false;startupState('loading','계정 확인 완료 · 점검표 프로그램을 불러오는 중…');const script=document.createElement('script');script.src='./assets/legacy-checklist-engine.js?v='+encodeURIComponent(window.TTOKTTI_APP_VERSION||'M1.3.21');script.onerror=()=>{loaded=false;startupState('error','점검표 파일 다운로드 실패 · 배포 경로와 네트워크를 확인하세요.')};script.onload=()=>{if(!editorReady)startupState('loading','점검표 프로그램 실행됨 · 기기 저장자료를 확인 중…')};document.body.appendChild(script);clearTimeout(engineWatch);engineWatch=setTimeout(()=>{if(!editorReady)startupState('error','점검표 초기화가 완료되지 않았습니다(20초). 저장공간 잠금 또는 실행 오류를 확인하세요.')},20000)}
+  if(!loaded){loaded=true;editorReady=false;startupState('loading','계정 확인 완료 · 점검표 프로그램을 불러오는 중…');const script=document.createElement('script');script.src='./assets/legacy-checklist-engine.js?v='+encodeURIComponent(window.TTOKTTI_APP_VERSION||'M1.3.22');script.onerror=()=>{loaded=false;startupState('error','점검표 파일 다운로드 실패 · 배포 경로와 네트워크를 확인하세요.')};script.onload=()=>{if(!editorReady)startupState('loading','점검표 프로그램 실행됨 · 기기 저장자료를 확인 중…')};document.body.appendChild(script);clearTimeout(engineWatch);engineWatch=setTimeout(()=>{if(!editorReady)startupState('error','점검표 초기화가 완료되지 않았습니다(20초). 저장공간 잠금 또는 실행 오류를 확인하세요.')},20000)}
   permissions();
  }catch(e){root.hidden=true;message('권한 확인 오류: '+String(e?.message||e)+' · 연결 재시도를 눌러주세요.')}finally{checking=false}
 }

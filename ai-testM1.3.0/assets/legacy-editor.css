@@ -255,3 +255,15 @@
 .tt-photo-vault-meta{display:grid;gap:5px;min-width:0}.tt-photo-vault-meta strong{font-size:14px}.tt-photo-vault-meta small{font-size:12px;line-height:1.5}
 .tt-photo-vault [hidden]{display:none!important}
 @media(max-width:600px){.tt-photo-vault-toolbar{align-items:stretch}.tt-photo-vault-toolbar button{width:100%}.tt-photo-vault-toolbar .tt-photo-vault-selectall{margin:5px 0}}
+
+/* M1.3.22: verdict-driven editor visibility; export preview is unaffected. */
+.re .reCheck .m1322Hidden{display:none!important}
+.re .reCheck .rePhotos{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+.re .reCheck .rePhotos:has(> .rePhotoSection:nth-child(2).m1322Hidden):has(> .rePhotoSection:nth-child(3).m1322Hidden){grid-template-columns:minmax(0,1fr)}
+.re .reCheck .reVacuumPhotos{grid-template-columns:repeat(2,minmax(0,1fr))}
+.re .reCheck .m1322Hint{margin:14px 0 6px;padding:10px 12px;background:#eef6fc;border-left:4px solid #17658a;border-radius:5px;color:#234c69;font-size:14px}
+.re .reCheck .m1322OtherToggle{display:block;width:100%;min-height:44px;margin:12px 0;padding:10px 14px;border:1px solid #8daac0;background:#f4f9fc;color:#17436b;font-weight:700}
+.re .reCheck .m1322More{margin:14px 0;padding:12px;border:1px solid #c0d3e1;border-radius:8px}
+.re .reCheck .m1322More summary{cursor:pointer;font-weight:700;color:#17436b}
+.re .reCheck .m1322More label{margin:12px 0}
+@media(max-width:700px){.re .reCheck .rePhotos,.re .reCheck .reVacuumPhotos{grid-template-columns:1fr}}
