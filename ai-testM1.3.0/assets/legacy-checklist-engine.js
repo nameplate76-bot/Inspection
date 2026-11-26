@@ -5,6 +5,29 @@ const fields=[['현장명','주소','관리주체','수행기관','보고서번�
 let d={version:2,info:{},equipment:[],energy:[]},tab=3,selected='',db,queue=Promise.resolve(),sharedReportLoaded=false,sharedReportLoading=null,localReportAvailable=false;
 const itemPositions=new Map();
 const equipmentViews=new Map();
+/* M1.3.25: one-time deep link from the dashboard equipment list.
+   The requested UID is verified against the locally loaded report (or a later cloud snapshot).
+   The URL is a UI hint only, never an authorization or storage key. */
+const m1325LinkParams=new URLSearchParams(location.search);
+let m1325Target=m1325LinkParams.has('equipmentUid')||m1325LinkParams.has('equipmentNumber')?{
+ uid:m1325LinkParams.get('equipmentUid')||'',
+ type:m1325LinkParams.get('equipmentType')||'',
+ number:m1325LinkParams.get('equipmentNumber')||''
+}:null;
+function m1325SelectRequested(){
+ if(!m1325Target)return false;
+ const t=m1325Target;
+ const found=d.equipment.find(e=>t.uid&&e.uid===t.uid) ||
+   d.equipment.find(e=>t.type&&t.number&&e.type===t.type&&e.number===t.number);
+ if(!found)return false;
+ selected=found.uid;
+ equipmentViews.set(selected,'check');
+ equipmentListVisible=false;
+ m1325Target=null;
+ try{const url=new URL(location.href);['equipmentUid','equipmentType','equipmentNumber'].forEach(k=>url.searchParams.delete(k));history.replaceState(history.state,'',url.pathname+url.search+url.hash)}catch{}
+ return true;
+}
+
 let equipmentListVisible=false;
 const equipmentDeleteSelection=new Set();
 const REASON_LIBRARY_KEY='performance_m1_test_reasons_v1';
@@ -370,10 +393,11 @@ function m1318CaptureView(){
 function m1318RestoreView(state){
  const found=d.equipment.find(x=>x.uid===state.uid) ||
    d.equipment.find(x=>x.type===state.type&&x.number===state.number);
- selected=found?.uid||d.equipment[0]?.uid||'';
+ selected=found?.uid||(m1325Target?'':(d.equipment[0]?.uid||''));
  if(found&&state.view&&!equipmentViews.has(found.uid))equipmentViews.set(found.uid,state.view);
  // Old UID is sometimes remapped on cloud reconciliation.
  if(found&&found.uid!==state.uid&&state.view)equipmentViews.set(found.uid,state.view);
+ m1325SelectRequested();
  // Ignore stale selection and retain all remaining equipment views as local UI state.
 }
 function m1318RestoreScroll(state){
@@ -1231,7 +1255,7 @@ bind=function(){
   m104RefreshItemStyles();
  }));
 };
-/* M1.3.24 — Conditional verdict entry view (editor only). No photo/reason data is removed.
+/* M1.3.25 — Conditional verdict entry view (editor only). No photo/reason data is removed.
    Export renderers continue to display both suitable and deficient photo/reason columns. */
 const m1322BeforeBind=bind;
 const m1322Expanded=new Set();
@@ -1318,7 +1342,7 @@ catch(err){m1316StorageError('기기 저장공간 접근 오류: '+String(err?.m
 m1316Signal('storage','점검표 기기 저장공간을 여는 중…');
 const m1316Wait=setTimeout(()=>{if(!m1316DbReady)m1316StorageError('점검표 저장공간 응답 지연(15초). 다른 탭에서 이전 버전 점검표를 사용 중인지 확인하세요.')},15000);
 request.onblocked=()=>m1316StorageError('저장공간 업데이트가 다른 탭에 의해 차단되었습니다. 이 사이트의 다른 탭을 닫아주세요.');
-request.onupgradeneeded=()=>{const database=request.result;if(!database.objectStoreNames.contains('reports'))database.createObjectStore('reports');if(!database.objectStoreNames.contains('sync_outbox'))database.createObjectStore('sync_outbox');if(!database.objectStoreNames.contains('sync_baseline'))database.createObjectStore('sync_baseline');if(!database.objectStoreNames.contains('sync_recovery'))database.createObjectStore('sync_recovery',{keyPath:'id'});};request.onerror=()=>{clearTimeout(m1316Wait);m1316StorageError('점검표 저장공간 열기 실패: '+String(request.error?.message||'브라우저 저장 설정을 확인하세요.'))};request.onsuccess=()=>{clearTimeout(m1316Wait);m1316DbReady=true;db=request.result;db.onversionchange=()=>{db.close();m1316StorageError('다른 탭에서 점검표 저장공간 버전을 변경했습니다. 이 탭을 새로 열어주세요.')};m1316Signal('storage','저장공간 연결 완료 · 점검자료 확인 중…');let get=db.transaction('reports').objectStore('reports').get('demo/current');get.onerror=()=>m1316StorageError('저장된 점검자료 읽기 실패: '+String(get.error?.message||'기기 저장공간 오류'));get.onsuccess=()=>{try{if(get.result){const viewState=m1318CaptureView();d=get.result;localReportAvailable=true;m1318RestoreView(viewState)}else if(!selected){selected=d.equipment[0]?.uid||''}window.renderComposer=render;window.openLandManualReport=(page,key)=>{tab=3;render()};if(root()?.classList.contains('active')){render();loadSharedReport()}window.PERFORMANCE_M1_CLOUD?.localReady?.({get:()=>structuredClone(d),getPending:()=>new Promise((resolve,reject)=>{const req=db.transaction('sync_outbox').objectStore('sync_outbox').get('demo/current');req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error)}),ackPending:()=>new Promise((resolve,reject)=>{const tx=db.transaction('sync_outbox','readwrite');tx.objectStore('sync_outbox').delete('demo/current');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}),getBaseline:()=>new Promise((resolve,reject)=>{const req=db.transaction('sync_baseline').objectStore('sync_baseline').get('demo/current');req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error)}),setBaseline:(snapshot,revision)=>new Promise((resolve,reject)=>{const tx=db.transaction('sync_baseline','readwrite');tx.objectStore('sync_baseline').put({document:structuredClone(snapshot),revision},'demo/current');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}),saveRecovery:(snapshot,reason)=>new Promise((resolve,reject)=>{const tx=db.transaction('sync_recovery','readwrite');tx.objectStore('sync_recovery').put({id:Date.now()+'-'+crypto.randomUUID(),at:new Date().toISOString(),reason,document:structuredClone(snapshot)});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}),listRecovery:()=>new Promise((resolve,reject)=>{const req=db.transaction('sync_recovery').objectStore('sync_recovery').getAll();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error)}),replace:async snapshot=>{const viewState=m1318CaptureView();d=structuredClone(snapshot);m1318RestoreView(viewState);await save();render();m1318RestoreScroll(viewState)}});m1316Signal('ready','점검표가 정상적으로 열렸습니다.')}catch(err){console.error('점검표 초기화 오류',err);m1316StorageError('점검표 초기화 오류: '+String(err?.message||err))}}};
+request.onupgradeneeded=()=>{const database=request.result;if(!database.objectStoreNames.contains('reports'))database.createObjectStore('reports');if(!database.objectStoreNames.contains('sync_outbox'))database.createObjectStore('sync_outbox');if(!database.objectStoreNames.contains('sync_baseline'))database.createObjectStore('sync_baseline');if(!database.objectStoreNames.contains('sync_recovery'))database.createObjectStore('sync_recovery',{keyPath:'id'});};request.onerror=()=>{clearTimeout(m1316Wait);m1316StorageError('점검표 저장공간 열기 실패: '+String(request.error?.message||'브라우저 저장 설정을 확인하세요.'))};request.onsuccess=()=>{clearTimeout(m1316Wait);m1316DbReady=true;db=request.result;db.onversionchange=()=>{db.close();m1316StorageError('다른 탭에서 점검표 저장공간 버전을 변경했습니다. 이 탭을 새로 열어주세요.')};m1316Signal('storage','저장공간 연결 완료 · 점검자료 확인 중…');let get=db.transaction('reports').objectStore('reports').get('demo/current');get.onerror=()=>m1316StorageError('저장된 점검자료 읽기 실패: '+String(get.error?.message||'기기 저장공간 오류'));get.onsuccess=()=>{try{if(get.result){const viewState=m1318CaptureView();d=get.result;localReportAvailable=true;m1318RestoreView(viewState)}else if(!selected&&!m1325Target){selected=d.equipment[0]?.uid||''}m1325SelectRequested();window.renderComposer=render;window.openLandManualReport=(page,key)=>{tab=3;render()};if(root()?.classList.contains('active')){render();loadSharedReport()}window.PERFORMANCE_M1_CLOUD?.localReady?.({get:()=>structuredClone(d),getPending:()=>new Promise((resolve,reject)=>{const req=db.transaction('sync_outbox').objectStore('sync_outbox').get('demo/current');req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error)}),ackPending:()=>new Promise((resolve,reject)=>{const tx=db.transaction('sync_outbox','readwrite');tx.objectStore('sync_outbox').delete('demo/current');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}),getBaseline:()=>new Promise((resolve,reject)=>{const req=db.transaction('sync_baseline').objectStore('sync_baseline').get('demo/current');req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error)}),setBaseline:(snapshot,revision)=>new Promise((resolve,reject)=>{const tx=db.transaction('sync_baseline','readwrite');tx.objectStore('sync_baseline').put({document:structuredClone(snapshot),revision},'demo/current');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}),saveRecovery:(snapshot,reason)=>new Promise((resolve,reject)=>{const tx=db.transaction('sync_recovery','readwrite');tx.objectStore('sync_recovery').put({id:Date.now()+'-'+crypto.randomUUID(),at:new Date().toISOString(),reason,document:structuredClone(snapshot)});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)}),listRecovery:()=>new Promise((resolve,reject)=>{const req=db.transaction('sync_recovery').objectStore('sync_recovery').getAll();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error)}),replace:async snapshot=>{const viewState=m1318CaptureView();d=structuredClone(snapshot);m1318RestoreView(viewState);await save();render();m1318RestoreScroll(viewState)}});m1316Signal('ready','점검표가 정상적으로 열렸습니다.')}catch(err){console.error('점검표 초기화 오류',err);m1316StorageError('점검표 초기화 오류: '+String(err?.message||err))}}};
 
 /* M1.2.4: V86-style live measurement ratios and general-chiller calculated heat.
    Existing direct-fired calculations and AI review remain untouched. */
