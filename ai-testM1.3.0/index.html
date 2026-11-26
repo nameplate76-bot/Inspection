@@ -3,81 +3,89 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#061528">
-  <meta name="description" content="똑띠체크와 함께하는 AI 기반 기계설비 성능점검 및 보고서 작성 독립 모듈">
+  <meta name="theme-color" content="#f4fbfc">
+  <meta name="description" content="똑띠체크 기계설비 성능점검 전문 웹앱">
   <meta name="robots" content="noindex,nofollow">
-  <title>똑띠체크 | 기계설비 성능점검 플랫폼 M1.3.22</title>
+  <title>똑띠체크 | 기계설비 성능점검 플랫폼 M1.3.23</title>
   <link rel="icon" type="image/png" href="./assets/ttoktti-check-wordmark-locked.png">
-  <link rel="stylesheet" href="./assets/home.css?v=M1.3.22">
-<link rel="stylesheet" href="./assets/account.css?v=M1.3.22"></head>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./assets/home.css?v=M1.3.23">
+  <link rel="stylesheet" href="./assets/account.css?v=M1.3.23">
+</head>
 <body>
-  <div class="page">
-    <div class="shell">
-      <header class="topbar">
-        <a class="brand" href="./" aria-label="똑띠체크 홈">
-          <img class="official-wordmark" src="./assets/ttoktti-check-wordmark-locked.png" alt="똑띠체크 공식 문자상표" width="158" height="144">
-        </a>
-        <div class="top-right"><div id="ttAccountNav" class="tt-account-nav"><button type="button" id="ttLoginOpen">로그인</button><button type="button" id="ttProfileOpen" hidden>내 정보</button><button type="button" id="ttAdminOpen" hidden>사용자 관리</button><button type="button" id="ttLogout" hidden>로그아웃</button></div>
-          <span class="version">독립 점검 모듈 <strong id="ttHomeVersion">M1.3.22</strong></span>
-          <a class="nav-link" href="./checklist.html">점검표 바로가기 &nbsp;↗</a>
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="./index.html" aria-label="똑띠체크 홈"><img src="./assets/ttoktti-check-wordmark-locked.png" alt="똑띠체크 공식 상표 원본" width="105" height="105"></a>
+    <div class="brand-caption"><strong>기계설비 성능점검 전문 웹앱</strong><span>현장점검 · 사진 · 보고서 · 동기화</span></div>
+    <div class="top-controls"><span id="networkChip" class="network-chip" role="status" aria-live="polite">연결 확인 중</span><span class="version-chip" id="ttHomeVersion">M1.3.23</span><div id="ttAccountNav" class="tt-account-nav"><button type="button" id="ttLoginOpen">로그인</button><button type="button" id="ttProfileOpen" hidden>내 정보</button><button type="button" id="ttAdminOpen" hidden>사용자 관리</button><button type="button" id="ttLogout" hidden>로그아웃</button></div></div>
+  </header>
+  <div class="layout">
+    <nav class="side-nav" aria-label="메인 메뉴">
+      <a class="active" href="./index.html"><span aria-hidden="true">⌂</span> 홈</a>
+      <a href="./checklist.html"><span aria-hidden="true">☑</span> 점검표 작성</a>
+      <a href="./checklist.html#equipment"><span aria-hidden="true">▦</span> 점검 현황</a>
+      <a href="./checklist.html"><span aria-hidden="true">▧</span> 사진 관리</a>
+      <a href="./checklist.html"><span aria-hidden="true">▤</span> 보고서</a>
+      <a href="./checklist.html"><span aria-hidden="true">↻</span> 동기화</a>
+      <a href="#offline-guide"><span aria-hidden="true">◉</span> 오프라인 안내</a>
+      <div class="sidebar-note">현장 업무가 한눈에 들어오는<br>밝고 간결한 작업 공간</div>
+    </nav>
+    <main id="mainContent">
+      <section class="hero" aria-label="메인 소개">
+        <div class="hero-copy">
+          <span class="hero-kicker">TTOKTTI CHECK · FIELD WORKSPACE</span>
+          <h1>기계설비 성능점검 <em>전문 웹앱</em></h1>
+          <p>현장에서도 쉽고 정확하게.<br>점검 기록부터 보고서 작성까지 하나의 화면에서 시작하세요.</p>
+          <div class="hero-pills"><span id="onlinePill">● 연결 상태 확인 중</span><span>✓ 오프라인 점검 지원</span><span id="pendingPill">↻ 업로드 상태는 점검표에서 확인</span></div>
+          <a class="hero-main-action" href="./checklist.html">점검표 작성 시작하기 <b aria-hidden="true">›</b></a>
         </div>
-      </header>
+        <img class="hero-mascot" src="./assets/ttoktti-i-official-locked.png" alt="똑띠i 공식 캐릭터 원본" width="270" height="270">
+      </section>
 
-      <main>
-        <section class="hero" aria-label="똑띠체크 메인 소개">
-          <div class="hero-copy">
-            <p class="eyebrow">AI FACILITY CHECK APP</p>
-            <h1><span class="headline-brand">기계설비 성능점검</span><br><span class="headline-ai">AI 도우미 똑띠i</span><span class="headline-tail">와 <span class="mobile-break">함께</span></span></h1>
-          </div>
+      <section class="metrics" aria-label="이 기기의 점검 현황">
+        <article class="metric metric-a"><div class="metric-icon">▣</div><div><small>등록 설비</small><strong id="dashTotal">—</strong><span>이 기기에 저장된 점검표</span></div></article>
+        <article class="metric metric-b"><div class="metric-icon">✎</div><div><small>작성 중</small><strong id="dashProgress">—</strong><span>추가 작성 필요</span></div></article>
+        <article class="metric metric-c"><div class="metric-icon">✓</div><div><small>작성 완료</small><strong id="dashComplete">—</strong><span>항목 판정 완료</span></div></article>
+        <article class="metric metric-d"><div class="metric-icon">⇧</div><div><small>업로드 대기</small><strong id="dashPending">—</strong><span>로컬 동기화 대기 여부</span></div></article>
+      </section>
 
-          <div class="hero-art" aria-label="똑띠체크와 똑띠i 메인 비주얼">
-            <div class="mascot-glow" aria-hidden="true"></div>
-            <div class="brand-backdrop" aria-hidden="true">
-              <img class="backdrop-wordmark" src="./assets/ttoktti-check-wordmark-locked.png" alt="" width="158" height="144">
-            </div>
-            <div class="orbit orbit-a" aria-hidden="true"></div>
-            <div class="orbit orbit-b" aria-hidden="true"></div>
-            <div class="mascot-stage">
-              <div class="mascot-motion">
-                <img class="mascot" src="./assets/ttoktti-i-official-locked.png" alt="안전모를 쓰고 점검표를 들고 엄지척하는 AI 도우미 똑띠i" width="1254" height="1254" fetchpriority="high">
+      <section class="quick card-area" aria-labelledby="quickTitle">
+        <div class="section-heading"><h2 id="quickTitle">빠른 업무 시작</h2><p>자주 사용하는 기능으로 바로 이동하세요.</p></div>
+        <div class="quick-grid">
+          <a href="./checklist.html" class="quick-item emphasis"><span class="quick-icon">☑</span><strong>점검표 작성</strong><small>점검항목·판정·사유</small></a>
+          <a href="./checklist.html" class="quick-item"><span class="quick-icon">▧</span><strong>사진 촬영·관리</strong><small>현장 사진·원본 보관</small></a>
+          <a href="./checklist.html" class="quick-item"><span class="quick-icon">▥</span><strong>설계·측정값</strong><small>설비별 값 입력·비교</small></a>
+          <a href="./checklist.html" class="quick-item"><span class="quick-icon">▤</span><strong>보고서 출력</strong><small>PDF·Excel 점검표</small></a>
+          <a href="./checklist.html" class="quick-item"><span class="quick-icon">↻</span><strong>동기화 상태</strong><small>업로드 결과 확인</small></a>
+          <a href="#offline-guide" class="quick-item"><span class="quick-icon">◫</span><strong>사용 안내</strong><small>오프라인 점검 요령</small></a>
+        </div>
+      </section>
 
-              </div>
-              <span class="mascot-sparkle sparkle-a" aria-hidden="true">✦</span>
-              <span class="mascot-sparkle sparkle-b" aria-hidden="true">✧</span>
-              <span class="mascot-sparkle sparkle-c" aria-hidden="true">✦</span>
-            </div>
-          </div>
-
-          <div class="hero-actions">
-            <p class="hero-sub">기계설비 성능점검을 더 쉽고 정확하게.<br>점검 기록부터 보고서 작성까지 한 번에 이어서 작업할 수 있습니다.</p>
-            <div class="cta-row">
-              <a class="hero-cta" id="startChecklist" href="./checklist.html">점검표 작성 시작하기 <span aria-hidden="true">↗</span></a>
-            </div>
-          </div>
+      <div class="lower-grid">
+        <section class="offline-card" id="offline-guide" aria-labelledby="offlineTitle">
+          <span class="pill">FIELD READY</span><h2 id="offlineTitle">지하층·기계실에서도<br><em>오프라인 점검 가능</em></h2>
+          <p>통신이 되는 곳에서 먼저 점검표를 열어 준비하세요. 점검 기록과 사진은 이 기기에 저장되고, 다시 연결되면 업로드를 시도합니다.</p>
+          <div class="offline-steps"><div><b>01</b> 온라인에서 점검표 준비</div><div><b>02</b> 오프라인 기록·사진 촬영</div><div><b>03</b> 재연결 후 업로드 확인</div></div>
+          <div class="offline-foot"><span id="offlineCurrent">현재 네트워크 확인 중</span><a href="./checklist.html">점검표 열기 ›</a></div>
         </section>
-
-      </main>
-
-      <footer class="footer">
-        <span><strong>똑띠체크</strong> · AI 점검 도우미 <strong>똑띠i</strong></span>
-        <span><span id="ttFooterVersion">M1.3.22</span> · 기존 점검표 기능과 운영 데이터 보호</span>
-      </footer>
-    </div>
+        <section class="recent-card" aria-labelledby="recentTitle">
+          <div class="section-heading"><h2 id="recentTitle">최근 점검 설비</h2><a href="./checklist.html">점검표에서 전체 보기 ›</a></div>
+          <div id="recentList" class="recent-list"><div class="empty-state">이 기기에 저장된 점검자료를 확인하고 있습니다.</div></div>
+          <p class="data-note">※ 표시는 이 기기의 시험 점검표 기준입니다. 클라우드와 동기화된 최신 현황은 점검표에서 확인해 주세요.</p>
+        </section>
+      </div>
+      <footer class="footer">© 똑띠체크 · <span id="ttFooterVersion">M1.3.23</span> <span>기존 점검자료 및 상표·똑띠i 원본 보호</span></footer>
+    </main>
   </div>
-  <!-- 메인·점검표가 공통 버전 설정 파일을 참조합니다. -->
-  <script src="./assets/app-version.js?v=M1.3.22-home-fix1"></script>
-  <script>
-    (function () {
-      var version = window.TTOKTTI_APP_VERSION;
-      if (!/^M\d+\.\d+\.\d+$/.test(String(version || ''))) return;
-      var headerVersion = document.getElementById('ttHomeVersion');
-      var footerVersion = document.getElementById('ttFooterVersion');
-      if (headerVersion) headerVersion.textContent = version;
-      if (footerVersion) footerVersion.textContent = version;
-      document.title = '똑띠체크 | 기계설비 성능점검 플랫폼 ' + version;
-    })();
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="./assets/ttoktti-ai-test-config.js"></script><script src="./assets/account.js?v=M1.3.22"></script><script src="./assets/home-cta-cue.js?v=M1.3.22" defer></script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=M1.3.22').catch(console.warn));}</script>
+  <a class="assistant-fab" href="./checklist.html" aria-label="점검표에서 똑띠i 도움말 열기"><img src="./assets/ttoktti-i-official-locked.png" alt="똑띠i 공식 원본 캐릭터" width="100" height="100"><span>똑띠i 도움말</span></a>
+  <nav class="mobile-nav" aria-label="모바일 빠른 메뉴"><a href="./index.html" aria-current="page">⌂<small>홈</small></a><a href="./checklist.html">☑<small>점검표</small></a><a href="./checklist.html">▧<small>사진</small></a><a href="./checklist.html">▤<small>보고서</small></a></nav>
+</div>
+<script src="./assets/app-version.js?v=M1.3.23"></script>
+<script>if(window.TTOKTTI_APP_VERSION){document.querySelectorAll('#ttHomeVersion,#ttFooterVersion').forEach(el=>el.textContent=window.TTOKTTI_APP_VERSION);document.title='똑띠체크 | 기계설비 성능점검 플랫폼 '+window.TTOKTTI_APP_VERSION;}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./assets/ttoktti-ai-test-config.js"></script>
+<script src="./assets/account.js?v=M1.3.23"></script>
+<script src="./assets/home-dashboard.js?v=M1.3.23" defer></script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=M1.3.23').catch(console.warn));}</script>
 </body>
 </html>

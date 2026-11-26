@@ -1231,7 +1231,7 @@ bind=function(){
   m104RefreshItemStyles();
  }));
 };
-/* M1.3.22 — Conditional verdict entry view (editor only). No photo/reason data is removed.
+/* M1.3.23 — Conditional verdict entry view (editor only). No photo/reason data is removed.
    Export renderers continue to display both suitable and deficient photo/reason columns. */
 const m1322BeforeBind=bind;
 const m1322Expanded=new Set();

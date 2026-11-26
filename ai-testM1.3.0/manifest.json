@@ -5,8 +5,8 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#05111f",
-  "theme_color": "#061528",
+  "background_color": "#f5fafc",
+  "theme_color": "#f4fbfc",
   "lang": "ko",
   "icons": [
     {
@@ -15,5 +15,5 @@
       "type": "image/png"
     }
   ],
-  "version": "M1.2.3"
+  "version": "M1.3.23"
 }
